@@ -170,40 +170,351 @@ flowchart LR
 
 # Layer 3 — Primitive Services
 
-A **Primitive Service** represents a hardware or software capability exposed through a standardized interface.
+The **Primitive Services** layer contains small, reusable component drivers and the abstractions used to compose them into higher-level device capabilities.
+
+Every driver is managed as a Primitive Service and therefore participates in the common lifecycle, configuration, discovery, health, and signaling model. Hardware-specific code remains behind stable capability interfaces.
+
+## Service-layer decomposition
+
+| Concept | Responsibility | Example |
+|---|---|---|
+| **Capability Interface** | Defines a stable, hardware-independent contract | Position observer, motion actuator |
+| **Individual Driver** | Controls or observes one physical or software component | TMC5160 stepper driver, VL53 ToF driver |
+| **Adapter** | Translates one capability or representation into another | Distance-to-linear-position adapter |
+| **Composite Driver** | Combines multiple capabilities into a higher-level capability | Observed linear actuator |
+| **Service Manifest** | Declares identity, lifecycle, capabilities, dependencies, actions, and signals | YAML or Python manifest |
+
+A **Primitive Service** is the runtime-managed unit. Individual drivers, adapters, and composite drivers are all kinds of Primitive Service.
+
+```mermaid
+flowchart TB
+    CI["Capability Interfaces"]
+    ID["Individual Drivers"]
+    AD["Adapters"]
+    CD["Composite Drivers"]
+    RT["Primitive Runtime"]
+
+    ID -. implements .-> CI
+    AD -. implements .-> CI
+    CD -. implements .-> CI
+
+    RT --> ID
+    RT --> AD
+    RT --> CD
+```
+
+## Design rules
+
+1. Drivers expose capabilities through interfaces rather than concrete device APIs.
+2. Composite drivers depend on capability interfaces and constraints, not vendor or model names.
+3. Raw measurements retain their physical meaning; adapters add installation-specific interpretation.
+4. Units, reference frames, validity, timestamps, and quality are explicit at interface boundaries.
+5. The runtime binds dependencies from manifests and the Device Manifest.
+6. Hardware-specific configuration remains with the individual driver.
+7. Device-specific calibration belongs to an adapter or deployed-device configuration.
+8. A composite driver may know the roles of its subsystems, but it should not construct or import their concrete implementations.
+
+---
+
+## Capability Interfaces
+
+A **Capability Interface** defines what a component can do without defining how a particular device implements it.
+
+Interfaces are narrower than services:
+
+* The **Primitive Service contract** defines lifecycle and runtime management.
+* A **Capability Interface** defines a functional API such as observing position or commanding motion.
+* One service may implement several capability interfaces.
+* Multiple unrelated drivers may implement the same capability interface.
 
 Examples include:
 
 ```text
-services/
-├── camera/
-├── object_detector/
-├── tof_array/
-├── servo/
-├── stepper/
-├── imu/
-├── gripper/
-└── gps/
+PositionObserver
+DistanceObserver
+MotionActuator
+PositionActuator
+VelocityActuator
+DigitalInput
+DigitalOutput
+ImageSource
+ObjectDetector
 ```
 
-A Primitive Service should provide:
+An interface should have an independently versioned identifier:
 
-* Identity
-* Configuration
-* Lifecycle
-* Capabilities
-* Actions
-* Signals consumed
-* Signals produced
-* Health information
+```yaml
+interface: motion.position_observer
+version: 1
+```
+
+The major version is part of compatibility resolution. Implementations can evolve without forcing composites to depend on their package or class names.
+
+### Interface capability descriptors
+
+Manifests should describe semantic constraints in addition to the interface name.
+
+```yaml
+capability:
+  interface: motion.position_observer
+  version: 1
+  dimensions: 1
+  quantity: linear
+  canonical_unit: m
+  reference_frame: carriage
+```
+
+This prevents a composite requiring linear position from accidentally binding to an angular observer merely because both implement `PositionObserver`.
+
+---
+
+## Physical quantities and position
+
+`PositionObserver` can represent both linear and angular position, but every sample must identify the quantity being measured.
+
+Conceptually:
+
+```python
+class PositionSample:
+    kind: str            # "linear" or "angular"
+    value: float
+    unit: str            # canonical: "m" or "rad"
+    reference_frame: str
+    timestamp_ns: int
+    valid: bool
+    quality: float       # normalized 0.0 through 1.0
+```
+
+The interface can be kept small:
+
+```python
+class PositionObserver:
+
+    def position(self) -> PositionSample:
+        ...
+
+    def start_observing(self, rate_hz=None):
+        ...
+
+    def stop_observing(self):
+        ...
+```
+
+Typical implementations include:
+
+| Implementation | Position kind | Source |
+|---|---|---|
+| Servo feedback | Angular | Encoder or internal servo feedback |
+| Rotary encoder | Angular | Shaft angle |
+| Linear encoder | Linear | Carriage displacement |
+| ToF position adapter | Linear | Distance transformed through installation calibration |
+| Step-count estimator | Linear or angular | Motor steps transformed through mechanism geometry |
+
+The canonical interface units should normally be SI units:
+
+* Linear position: metres (`m`)
+* Angular position: radians (`rad`)
+* Linear velocity: metres per second (`m/s`)
+* Angular velocity: radians per second (`rad/s`)
+
+A driver may use native units internally. Conversion occurs at the interface boundary. Constrained devices may use documented scaled integers on the wire while preserving the same physical-unit semantics.
+
+### Raw observation versus installed meaning
+
+A ToF sensor natively observes **distance along a sensing ray**. It does not inherently know that the reading represents a carriage position.
+
+For that reason, the preferred decomposition is:
+
+```mermaid
+flowchart LR
+    TOF["ToF Driver"]
+    DIST["DistanceObserver"]
+    ADAPT["Distance-to-Position Adapter"]
+    POS["PositionObserver<br/>linear"]
+
+    TOF -. implements .-> DIST
+    DIST --> ADAPT
+    ADAPT -. implements .-> POS
+```
+
+The adapter owns installation-specific information such as:
+
+* zero offset,
+* direction or inversion,
+* usable range,
+* reference frame,
+* filtering,
+* calibration curve,
+* out-of-range handling.
+
+A tightly integrated product may implement `PositionObserver` directly in its ToF driver, but keeping the adapter separate makes the raw sensor driver reusable.
+
+---
+
+## Individual Drivers
+
+An **Individual Driver** represents one independently addressable component or software endpoint.
+
+Examples include:
+
+```text
+drivers/
+├── tmc5160_stepper/
+├── servo42c/
+├── vl53l1x_tof/
+├── vl53l7cx_array/
+├── mt6816_encoder/
+├── bno085_imu/
+└── camera/
+```
+
+An individual driver should:
+
+* own the hardware protocol and device-specific configuration,
+* implement the Primitive Service lifecycle,
+* expose one or more capability interfaces,
+* publish normalized signals,
+* report health and diagnostics,
+* avoid embedding knowledge of the larger mechanism.
+
+A ToF driver, for example, should know how to initialize the sensor, obtain valid ranges, and report sensor faults. It should not need to know that it is mounted on a linear actuator.
+
+---
+
+## Adapters
+
+An **Adapter** is a small Primitive Service that changes representation or semantics without coordinating a multi-component operation.
+
+Examples include:
+
+* distance to linear position,
+* encoder counts to angular position,
+* PWM duty cycle to normalized effort,
+* local signal to ROS message schema,
+* raw switch state to a debounced limit observation.
+
+Adapters make installation knowledge explicit and keep both individual and composite drivers reusable.
+
+```python
+class DistanceToPositionAdapter(PositionObserver):
+
+    def __init__(self, distance_observer, calibration):
+        self.distance_observer = distance_observer
+        self.calibration = calibration
+
+    def position(self):
+        distance = self.distance_observer.distance()
+        return self.calibration.to_linear_position(distance)
+```
+
+---
+
+## Composite Drivers
+
+A **Composite Driver** combines two or more component capabilities and exposes a higher-level, consistent interface.
+
+A composite driver:
+
+* implements the same lifecycle contract as an individual driver,
+* declares required and optional capability dependencies,
+* receives bound service instances from the runtime,
+* coordinates actions and observations,
+* owns mechanism-level safety and completion logic,
+* exposes a capability that hides the internal composition.
+
+A composite driver should depend on roles, interfaces, and constraints:
+
+```yaml
+requires:
+  motor:
+    interface: motion.motion_actuator
+    version: 1
+
+  position:
+    interface: motion.position_observer
+    version: 1
+    constraints:
+      quantity: linear
+      dimensions: 1
+```
+
+It should not depend directly on concrete package names such as `TMC5160` or `VL53L1X`.
+
+This allows the same composite implementation to use:
+
+* a different stepper controller,
+* an encoder instead of a ToF sensor,
+* simulated components during testing,
+* a remote capability exposed through Lighthouse,
+* a ROS-backed capability supplied through a bridge.
+
+---
+
+## Example: observed linear actuator
+
+Consider a linear actuator driven by a stepper motor, with a ToF sensor measuring carriage position.
+
+The components are decomposed as follows:
+
+| Role | Implementation | Interface exposed |
+|---|---|---|
+| Motor | Stepper motor driver | `MotionActuator` |
+| Raw sensor | ToF distance driver | `DistanceObserver` |
+| Position conversion | Distance-to-position adapter | `PositionObserver` with `quantity: linear` |
+| Mechanism | Observed linear actuator composite | `PositionActuator` |
+
+```mermaid
+flowchart TB
+    BEHAVIOR["Behavior Graph"]
+    LINEAR["Observed Linear Actuator<br/>Composite Driver"]
+    MOTOR["Stepper Driver<br/>MotionActuator"]
+    POSITION["Distance-to-Position Adapter<br/>PositionObserver"]
+    TOF["ToF Driver<br/>DistanceObserver"]
+
+    BEHAVIOR -->|"move_to(target)"| LINEAR
+    LINEAR --> MOTOR
+    LINEAR --> POSITION
+    POSITION --> TOF
+```
+
+The composite driver can have detailed knowledge of how a linear actuator behaves—target tolerance, approach direction, homing, limits, timeout, stall detection, and completion—but it communicates with its components only through the declared interfaces.
+
+Conceptually:
+
+```python
+class ObservedLinearActuator(PositionActuator):
+
+    def __init__(self, motor: MotionActuator,
+                 position: PositionObserver,
+                 config):
+        self.motor = motor
+        self.position_observer = position
+        self.config = config
+
+    def move_to(self, target):
+        current = self.position_observer.position()
+        self._validate_target(target, current)
+        self.motor.command(self._motion_for(target, current))
+
+    def update(self):
+        current = self.position_observer.position()
+
+        if self._target_reached(current):
+            self.motor.stop()
+            self.publish("motion.target.reached", current)
+
+        elif self._unsafe_or_timed_out(current):
+            self.motor.stop()
+            self.publish("motion.target.failed", current)
+```
+
+The composite may implement closed-loop control itself or delegate it to the motor controller. That choice is an implementation detail; the external `PositionActuator` contract remains consistent.
 
 ---
 
 ## Service Lifecycle
 
-Every service should implement a common lifecycle.
-
-For example:
+Every individual driver, adapter, and composite driver implements the common Primitive Service lifecycle.
 
 ```python
 class PrimitiveService:
@@ -227,57 +538,134 @@ class PrimitiveService:
         ...
 ```
 
-The exact implementation may vary, but the service contract should remain consistent.
+The lifecycle contract should remain independent of the functional interfaces. For example, a stepper service can implement both `PrimitiveService` and `MotionActuator`.
 
 ---
 
 # Service Manifest
 
-Rather than requiring every service to manually register its capabilities, the service should expose a declarative **Service Manifest**.
+Rather than requiring every service to register itself procedurally, each service exposes a declarative **Service Manifest**.
 
-Example:
+An individual ToF driver might declare:
 
-```python
-manifest = {
-    "name": "object_detector",
-    "type": "vision.object_detector",
+```yaml
+service:
+  name: vl53l1x
+  kind: individual_driver
+  type: sensor.tof
 
-    "provides": [
-        "vision.object.detected",
-        "vision.object.lost"
-    ],
+  implements:
+    - interface: sensing.distance_observer
+      version: 1
 
-    "consumes": [
-        "camera.frame"
-    ],
-
-    "optional": [
-        "range.distance"
-    ]
-}
+  provides_signals:
+    - range.distance.updated
+    - device.health.changed
 ```
 
-The runtime can then use the manifest to automatically configure the service.
+The distance-to-position adapter might declare:
+
+```yaml
+service:
+  name: carriage_position
+  kind: adapter
+  type: adapter.distance_to_position
+
+  implements:
+    - interface: motion.position_observer
+      version: 1
+      quantity: linear
+
+  requires:
+    distance:
+      interface: sensing.distance_observer
+      version: 1
+```
+
+The composite linear actuator might declare:
+
+```yaml
+service:
+  name: observed_linear_actuator
+  kind: composite_driver
+  type: motion.linear_actuator
+
+  implements:
+    - interface: motion.position_actuator
+      version: 1
+      quantity: linear
+
+  requires:
+    motor:
+      interface: motion.motion_actuator
+      version: 1
+
+    position:
+      interface: motion.position_observer
+      version: 1
+      constraints:
+        quantity: linear
+
+  actions:
+    - motion.move_to
+    - motion.home
+    - motion.stop
+
+  provides_signals:
+    - motion.started
+    - motion.position.updated
+    - motion.target.reached
+    - motion.target.failed
+```
+
+The runtime uses these manifests to discover capabilities, validate compatibility, resolve dependencies, and start services in dependency order.
 
 ```mermaid
 flowchart TB
-    DISC["Discover Service"]
-    READ["Read Manifest"]
-    REG["Register Service"]
-    SIG["Register Signals"]
-    DEP["Resolve Dependencies"]
-    INIT["Initialize"]
-    START["Start"]
+    DISC["Discover Services"]
+    READ["Read Manifests"]
+    MATCH["Match Interfaces<br/>and Constraints"]
+    BIND["Bind Roles"]
+    START["Start in Dependency Order"]
 
     DISC --> READ
-    READ --> REG
-    REG --> SIG
-    SIG --> DEP
-    DEP --> INIT
-    INIT --> START
+    READ --> MATCH
+    MATCH --> BIND
+    BIND --> START
 ```
 
-This provides a foundation for automatic dependency resolution and device composition.
+### Explicit device binding
+
+Automatic matching is useful, but a Device Manifest should be able to bind a role explicitly when multiple compatible providers exist.
+
+```yaml
+device:
+  id: axis.lift
+
+  services:
+    stepper:
+      package: drivers.tmc5160_stepper
+
+    tof:
+      package: drivers.vl53l1x_tof
+
+    carriage_position:
+      package: adapters.distance_to_position
+      bind:
+        distance: tof
+      config:
+        zero_offset_m: 0.018
+        direction: -1
+        reference_frame: lift.base
+
+    lift:
+      package: composites.observed_linear_actuator
+      bind:
+        motor: stepper
+        position: carriage_position
+```
+
+The composite knows that it has a `motor` and a `position` role. It does not need to know which hardware models fulfill those roles.
 
 ---
 
@@ -285,7 +673,7 @@ This provides a foundation for automatic dependency resolution and device compos
 
 A **Robot Primitive** can be formally defined as:
 
-> A discoverable capability with a defined lifecycle, configuration schema, traits, actions, signals, and health state.
+> A discoverable capability with a defined lifecycle, configuration schema, interfaces, traits, actions, signals, and health state.
 
 Conceptually:
 
@@ -295,6 +683,7 @@ mindmap
     Identity
     Configuration
     Lifecycle
+    Interfaces
     Traits
     Actions
     Signals
@@ -303,7 +692,7 @@ mindmap
     Health
 ```
 
-A single Primitive Service may expose one or more Robot Primitives.
+A single Primitive Service may expose one or more Robot Primitives or capability interfaces.
 
 For example, an object-detection camera might expose:
 
@@ -311,14 +700,15 @@ For example, an object-detection camera might expose:
 Primitive Node: front_camera
 
 Provides:
-    camera
-    object_detector
-    range_sensor
+    ImageSource
+    ObjectDetector
+    DistanceObserver
 ```
 
-This keeps the physical device separate from its logical capabilities.
+This keeps the physical device, service implementation, and logical capabilities distinct.
 
 ---
+
 
 # Signals
 
@@ -807,11 +1197,15 @@ robot-primitives/
 │   └── cli/
 │
 ├── rp-services/
-│   ├── camera/
-│   ├── object_detection/
-│   ├── tof/
-│   ├── servo/
-│   └── imu/
+│   ├── interfaces/
+│   │   ├── motion/
+│   │   ├── sensing/
+│   │   └── vision/
+│   ├── drivers/
+│   │   ├── individual/
+│   │   └── composite/
+│   ├── adapters/
+│   └── schemas/
 │
 ├── rp-behaviors/
 │   ├── schemas/
