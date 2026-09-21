@@ -1,0 +1,11 @@
+{
+  "urls": [
+    ["PrimitiveRuntime/__init__.py", "src/PrimitiveRuntime/__init__.py"],
+    ["PrimitiveRuntime/manifest.py", "src/PrimitiveRuntime/manifest.py"],
+    ["PrimitiveRuntime/registry.py", "src/PrimitiveRuntime/registry.py"],
+    ["PrimitiveRuntime/supervisor.py", "src/PrimitiveRuntime/supervisor.py"],
+    ["PrimitiveRuntime/testing.py", "src/PrimitiveRuntime/testing.py"]
+  ],
+  "deps": [],
+  "version": "0.1.0"
+}

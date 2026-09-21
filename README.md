@@ -544,6 +544,8 @@ The lifecycle contract should remain independent of the functional interfaces. F
 
 # Service Manifest
 
+> **Implementation status:** `component.yaml` is the canonical `rp.service/v1` manifest. It combines lifecycle, capability binding, configuration, operations, signals, concrete implementations, and declarative tests in one generic contract. See `RPStack/spec/SERVICE_MANIFEST.md` and its JSON Schema. The Primitive Runtime loads this contract to bind and supervise services; future UI tooling can derive operation and test forms from the same data.
+
 Rather than requiring every service to register itself procedurally, each service exposes a declarative **Service Manifest**.
 
 An individual ToF driver might declare:

@@ -1,36 +1,33 @@
-contract_version: "1.0"
+manifest: rp.service/v1
 package:
   name: rube-goldberg-linear-slide
   version: 0.3.0
   import: LinearSlide
-  entry_point: LinearSlide:LinearSlide
-
-dependencies:
-  motor-control: ">=0.3.0,<1.0.0"
-  distance-sensor: ">=0.3.0,<1.0.0"
-  distance-to-position: ">=0.1.0,<1.0.0"
 
 service:
   name: observed-linear-actuator
+  version: 0.3.0
   kind: composite_driver
   type: motion.linear_actuator
+  description: Closed-loop linear slide composed from motion and position capabilities.
   entry_point: LinearSlide:LinearSlide
-  implements:
-    - interface: motion.position_actuator
-      version: 1
-      quantity: linear
-      dimensions: 1
-      canonical_unit: m
-  requires:
-    motor:
-      interface: motion.motion_actuator
-      version: 1
-      constraints: {mode: incremental}
-    position:
-      interface: motion.position_observer
-      version: 1
-      constraints: {quantity: linear, dimensions: 1, canonical_unit: m}
-  config:
+  capabilities:
+    provides:
+      - interface: motion.position_actuator
+        version: 1
+        quantity: linear
+        dimensions: 1
+        canonical_unit: m
+    requires:
+      motor:
+        interface: motion.motion_actuator
+        version: 1
+        constraints: {mode: incremental}
+      position:
+        interface: motion.position_observer
+        version: 1
+        constraints: {quantity: linear, dimensions: 1, canonical_unit: m}
+  configuration:
     positive_direction: {type: boolean, default: true}
     tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
     max_steps: {type: integer, minimum: 1, default: 10000}
@@ -43,34 +40,76 @@ service:
     stop: stop
     reset: reset
     status: status
-  actions: [motion.move_to, motion.stop]
-  provides_signals:
-    - motion.started
-    - motion.position.updated
-    - motion.target.reached
-    - motion.target.failed
-  safe_state: stop
-
-# Legacy WebTester operation descriptions remain until its manifest renderer is
-# updated to understand service interfaces and runtime role binding.
-components:
-  LinearSlide:
-    description: Closed-loop slide composed from runtime-bound capabilities.
-    binds:
-      joint: {urdf_type: prismatic, required: true}
-      motor_driver: {component: MotorController, driver: step_dir}
-      position_observer: {component: DistanceSensorController, driver: vl53l4cd}
-    operations:
-      get_position:
-        implementation: get_position
-        returns: {type: integer, unit: mm}
-        concurrency: read_only
-      goto_position:
-        implementation: goto_position
-        args:
-          position_mm: {type: integer, unit: mm}
-        cancellable: true
-        errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled]
-      stop: {implementation: stop, idempotent: true}
-      shutdown: {implementation: shutdown, idempotent: true}
-    safe_state: stop
+  operations:
+    observe_position:
+      method: position
+      description: Read current linear position in metres.
+      arguments: {}
+      returns: {type: PositionSample, quantity: linear, unit: m}
+      concurrency: read_only
+    move_to:
+      method: move_to
+      description: Move the carriage to an absolute linear position.
+      arguments:
+        target: {type: number, required: true, unit: m}
+      returns: {type: PositionSample, quantity: linear, unit: m}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
+      errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled]
+    stop:
+      method: stop
+      description: Cancel motion and stop the bound motion actuator.
+      arguments: {}
+      returns: {type: boolean}
+      idempotent: true
+    get_position_mm:
+      method: get_position
+      description: Compatibility operation returning integer millimetres.
+      arguments: {}
+      returns: {type: integer, unit: mm}
+      concurrency: read_only
+    goto_position_mm:
+      method: goto_position
+      description: Compatibility operation accepting integer millimetres.
+      arguments:
+        position_mm: {type: integer, required: true, unit: mm}
+      returns: {type: integer, unit: mm}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
+  signals:
+    provides:
+      motion.started: {payload: object}
+      motion.position.updated: {payload: PositionSample}
+      motion.target.reached: {payload: PositionSample}
+      motion.target.failed: {payload: object}
+    consumes: {}
+  implementations: {}
+  tests:
+    observe_position:
+      description: Read the current carriage position without moving it.
+      mode: automatic
+      steps:
+        - operation: observe_position
+          arguments: {}
+          expect:
+            fields: {kind: linear, unit: m, valid: true}
+    stop_motion:
+      description: Exercise the safe-state operation.
+      mode: automatic
+      steps:
+        - operation: stop
+          arguments: {}
+    move_to_target:
+      description: Move to an operator-selected target using the move_to operation.
+      mode: hardware
+      preconditions:
+        - Replace target with a safe value inside the configured travel range.
+        - Verify physical clearance and emergency power removal.
+      parameters:
+        target: {type: number, required: true, unit: m}
+      steps:
+        - operation: move_to
+          arguments:
+            target: {$parameter: target}

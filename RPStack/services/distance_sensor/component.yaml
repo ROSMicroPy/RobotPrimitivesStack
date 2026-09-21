@@ -1,4 +1,4 @@
-contract_version: "1.0"
+manifest: rp.service/v1
 package:
   name: distance-sensor
   version: 0.3.0
@@ -6,14 +6,23 @@ package:
 
 service:
   name: distance-sensor
+  version: 0.3.0
   kind: individual_driver
   type: sensor.distance
+  description: A runtime-managed scalar distance sensor with selectable hardware driver.
   entry_point: DistanceSensor:DistanceSensor
-  implements:
-    - interface: sensing.distance_observer
-      version: 1
-      dimensions: 1
-      canonical_unit: m
+  capabilities:
+    provides:
+      - interface: sensing.distance_observer
+        version: 1
+        dimensions: 1
+        quantity: distance
+        canonical_unit: m
+    requires: {}
+  configuration:
+    name: {type: string, required: true}
+    reference_frame: {type: string, required: false}
+    poll_frequency_hz: {type: number, minimum: 0, default: 0, unit: Hz}
   lifecycle:
     configure: configure
     init: init
@@ -21,62 +30,64 @@ service:
     stop: stop
     reset: reset
     status: status
-  provides_signals:
-    - range.distance.updated
-    - device.health.changed
-
-implementations:
-  hcsr04:
-    entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
-    sensor_type: ultrasonic
-    config:
-      trigger_pin: {type: pin_ref, required: true}
-      echo_pin: {type: pin_ref, required: true}
-      timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
-      temperature_c: {type: number, default: 20, unit: C}
-  vl53l4cd:
-    entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
-    sensor_type: time_of_flight
-    config:
-      i2c: {type: i2c_ref, required: true}
-      address: {type: integer, minimum: 8, maximum: 119, default: 41}
-      timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
-      inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
-      read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
-
-# Retained while RPStack_WebTester is redesigned; it describes the existing
-# controller/factory API used to build its forms.
-components:
-  DistanceSensorController:
-    entry_point: DistanceSensor:DistanceSensorController
-    operations: [create_sensor, get_sensor, remove_sensor, shutdown]
-    lifecycle:
-      shutdown: shutdown
-    drivers:
-      hcsr04:
-        entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
-        sensor_type: ultrasonic
-        config:
-          trigger_pin: {type: pin_ref, required: true}
-          echo_pin: {type: pin_ref, required: true}
-          timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
-          temperature_c: {type: number, default: 20, unit: C}
-        operations: [read_distance_mm, set_active, shutdown]
-        safe_state: shutdown
-      vl53l4cd:
-        entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
-        sensor_type: time_of_flight
-        config:
-          i2c: {type: i2c_ref, required: true}
-          address: {type: integer, minimum: 8, maximum: 119, default: 41}
-          timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
-          inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
-          read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
-        operations: [read_distance_mm, set_active, shutdown]
-        safe_state: shutdown
-
-events:
-  distance_alert:
-    payload:
-      sensor: {type: string}
-      distance_mm: {type: integer, unit: mm}
+  operations:
+    observe_distance:
+      method: distance
+      description: Read one canonical distance sample.
+      arguments: {}
+      returns: {type: DistanceSample, unit: m}
+      concurrency: read_only
+    read_distance_mm:
+      method: read_distance_mm
+      description: Compatibility operation returning integer millimetres.
+      arguments: {}
+      returns: {type: integer, unit: mm}
+      concurrency: read_only
+    set_active:
+      method: set_active
+      description: Enable or disable sensor acquisition.
+      arguments:
+        active: {type: boolean, required: true}
+      returns: {type: boolean}
+      idempotent: true
+      safe_state: inactive
+    status:
+      method: status
+      description: Return current health and most recent observation.
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+  signals:
+    provides:
+      range.distance.updated: {payload: DistanceSample}
+      device.health.changed: {payload: object}
+    consumes: {}
+  implementations:
+    hcsr04:
+      entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
+      description: Trigger/echo ultrasonic range sensor.
+      configuration:
+        trigger_pin: {type: pin_ref, required: true}
+        echo_pin: {type: pin_ref, required: true}
+        timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
+        temperature_c: {type: number, default: 20, unit: C}
+      safe_state: shutdown
+    vl53l4cd:
+      entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
+      description: ST VL53L4CD time-of-flight distance sensor.
+      configuration:
+        i2c: {type: i2c_ref, required: true}
+        address: {type: integer, minimum: 8, maximum: 119, default: 41}
+        timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
+        inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
+        read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
+      safe_state: shutdown
+  tests:
+    observe_once:
+      description: Acquire one sample and verify its canonical representation.
+      mode: automatic
+      steps:
+        - operation: observe_distance
+          arguments: {}
+          expect:
+            fields: {unit: m, valid: true}
