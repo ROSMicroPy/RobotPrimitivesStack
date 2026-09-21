@@ -67,7 +67,7 @@ The service supports:
 ## Direct construction
 
 ~~~python
-from DistanceSensor import DistanceSensorController
+from rpstack.distance_sensor import DistanceSensorController
 
 sensors = DistanceSensorController()
 
@@ -132,3 +132,31 @@ Install the package manifest with MicroPython mip or mpremote.
 - `package.json` maps source files to their MIP installation paths.
 - `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/distance_sensor/`, allowing applications to import `rpstack.distance_sensor`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/services/distance_sensor/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/services/distance_sensor/package.json
+~~~

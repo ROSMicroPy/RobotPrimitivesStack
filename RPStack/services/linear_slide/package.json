@@ -3,12 +3,16 @@
   "version": "0.3.0",
   "urls": [
     [
-      "LinearSlide/__init__.py",
-      "src/LinearSlide/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
     ],
     [
-      "LinearSlide/LinearSlide.py",
-      "src/LinearSlide/LinearSlide.py"
+      "rpstack/linear_slide/LinearSlide.py",
+      "src/rpstack/linear_slide/LinearSlide.py"
+    ],
+    [
+      "rpstack/linear_slide/__init__.py",
+      "src/rpstack/linear_slide/__init__.py"
     ]
   ],
   "deps": [

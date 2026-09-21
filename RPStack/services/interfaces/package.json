@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "urls": [
     [
-      "RPInterfaces/__init__.py",
-      "src/RPInterfaces/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/interfaces/__init__.py",
+      "src/rpstack/interfaces/__init__.py"
     ]
   ],
   "deps": []

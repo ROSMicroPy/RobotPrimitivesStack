@@ -108,3 +108,31 @@ A boot script commonly constructs a **ServiceSupervisor**, registers the device 
 - `test/` contains host tests or hardware-test guidance.
 - `package.json` maps source files to their MIP installation paths.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/bootmgr/`, allowing applications to import `rpstack.bootmgr`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/runtime/bootmgr/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/bootmgr@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/runtime/bootmgr/package.json
+~~~

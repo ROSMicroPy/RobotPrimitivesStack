@@ -2,7 +2,7 @@
 
 The shell provides an interactive and programmatic command environment for RPStack devices. It supplies common filesystem, networking, diagnostic, and device-management commands.
 
-The package installs as **mpshell**.
+The package installs as **rpstack.shell**.
 
 ## Role in RPStack
 
@@ -13,7 +13,7 @@ The shell is the operator-facing runtime component. It can inspect a device, lau
 Execute one command:
 
 ~~~python
-from mpshell import sh
+from rpstack.shell import sh
 
 sh.cmd("help")
 sh.cmd("ls /lib")
@@ -22,7 +22,7 @@ sh.cmd("ls /lib")
 Start the interactive loop:
 
 ~~~python
-from mpshell import sh
+from rpstack.shell import sh
 
 sh.start()
 ~~~
@@ -56,7 +56,7 @@ Command extensions are recorded in:
 An external command implements the shell contract:
 
 ~~~python
-from mpshell import ExternalCommand
+from rpstack.shell import ExternalCommand
 
 class ServiceStatusCommand(ExternalCommand):
     name = "service-status"
@@ -68,7 +68,7 @@ class ServiceStatusCommand(ExternalCommand):
 Register the module path and class:
 
 ~~~python
-from mpshell import registercommand
+from rpstack.shell import registercommand
 
 registercommand(
     "/lib/device_commands.py",
@@ -117,3 +117,31 @@ Commands such as telnet, HTTP serving, file editing, and arbitrary Python evalua
 - `test/` contains host tests or hardware-test guidance.
 - `package.json` maps source files to their MIP installation paths.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/shell/`, allowing applications to import `rpstack.shell`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/runtime/shell/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/shell@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/runtime/shell/package.json
+~~~

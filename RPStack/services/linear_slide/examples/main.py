@@ -2,7 +2,7 @@
 
 from machine import I2C, Pin
 
-from LinearSlide import LinearSlide
+from rpstack.linear_slide import LinearSlide
 
 
 ENABLE_PIN = 21

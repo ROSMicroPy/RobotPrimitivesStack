@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from PrimitiveRuntime import ServiceManifest  # noqa: E402
+from rpstack.primitive_runtime import ServiceManifest  # noqa: E402
 
 
 def main():

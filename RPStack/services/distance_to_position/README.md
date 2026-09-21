@@ -51,7 +51,7 @@ canonical_unit: m
 ## Use
 
 ~~~python
-from DistanceToPosition import DistanceToPositionAdapter
+from rpstack.distance_to_position import DistanceToPositionAdapter
 
 position = DistanceToPositionAdapter(
     distance_observer=tof,
@@ -88,3 +88,31 @@ The **transform_once** automatic test reads one sample and verifies that the res
 - `package.json` maps source files to their MIP installation paths.
 - `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/distance_to_position/`, allowing applications to import `rpstack.distance_to_position`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/services/distance_to_position/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/services/distance_to_position/package.json
+~~~

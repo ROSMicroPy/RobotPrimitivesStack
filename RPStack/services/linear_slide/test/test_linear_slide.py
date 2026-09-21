@@ -7,9 +7,9 @@ SERVICES_DIR = COMPONENT_DIR.parent
 for component in ("interfaces", "distance_to_position", "linear_slide"):
     sys.path.insert(0, str(SERVICES_DIR / component / "src"))
 
-from DistanceToPosition import DistanceToPositionAdapter
-from LinearSlide import LinearSlide
-from RPInterfaces import DistanceSample, PositionSample
+from rpstack.distance_to_position import DistanceToPositionAdapter
+from rpstack.linear_slide import LinearSlide
+from rpstack.interfaces import DistanceSample, PositionSample
 
 
 class FakePositionObserver:

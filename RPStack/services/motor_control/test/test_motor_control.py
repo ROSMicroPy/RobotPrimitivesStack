@@ -7,8 +7,8 @@ SERVICES_DIR = COMPONENT_DIR.parent
 sys.path.insert(0, str(SERVICES_DIR / "interfaces" / "src"))
 sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-from MotorControl import MotorController, MotorType
-from MotorControl.motor_drivers.step_dir import StepDirDriver
+from rpstack.motor_control import MotorController, MotorType
+from rpstack.motor_control.motor_drivers.step_dir import StepDirDriver
 
 
 class FakePin:

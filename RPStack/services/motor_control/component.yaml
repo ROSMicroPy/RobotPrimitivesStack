@@ -2,7 +2,7 @@ manifest: rp.service/v1
 package:
   name: motor-control
   version: 0.3.0
-  import: MotorControl
+  import: rpstack.motor_control
 
 service:
   name: motor-control
@@ -10,7 +10,7 @@ service:
   kind: individual_driver
   type: actuator.motor
   description: A runtime-managed motor with a selectable concrete driver.
-  entry_point: MotorControl:Motor
+  entry_point: rpstack.motor_control:Motor
   capabilities: {provides: [], requires: {}}
   configuration:
     name: {type: string, required: true}
@@ -70,7 +70,7 @@ service:
     consumes: {}
   implementations:
     step_dir:
-      entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
+      entry_point: rpstack.motor_control.motor_drivers.step_dir:StepDirDriver
       description: Incremental STEP/DIR motor controller.
       capabilities:
         provides:
@@ -89,12 +89,12 @@ service:
         microsteps: {type: integer, minimum: 1, default: 1}
       safe_state: stop
     pwm_servo:
-      entry_point: MotorControl.motor_drivers.pwm_servo:PWMServoDriver
+      entry_point: rpstack.motor_control.motor_drivers.pwm_servo:PWMServoDriver
       description: Hobby servo PWM driver.
       configuration: {}
       safe_state: shutdown
     pwm_bldc:
-      entry_point: MotorControl.motor_drivers.pwm_bldc:PWMBLDCDriver
+      entry_point: rpstack.motor_control.motor_drivers.pwm_bldc:PWMBLDCDriver
       description: Open-loop PWM/ESC BLDC driver.
       configuration: {}
       safe_state: stop

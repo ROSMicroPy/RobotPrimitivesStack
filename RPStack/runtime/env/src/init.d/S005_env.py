@@ -9,8 +9,8 @@
 #
 print("Registering env commands")
 
-from mpenv import loadPersistent
-import mpshell
+from rpstack.env import loadPersistent
+import rpstack.shell as mpshell
 
 
 # Load persisted variables before registering commands so shell usage sees
@@ -18,8 +18,8 @@ import mpshell
 loadPersistent()
 
 _COMMANDS = (
-    ("/lib/mpenv/cmds/exportcmd.py", "ExportCommand"),
-    ("/lib/mpenv/cmds/envcmd.py", "EnvCommand"),
+    ("/lib/rpstack/env/cmds/exportcmd.py", "ExportCommand"),
+    ("/lib/rpstack/env/cmds/envcmd.py", "EnvCommand"),
 )
 
 # Register each command module with mp_shell's external command registry.

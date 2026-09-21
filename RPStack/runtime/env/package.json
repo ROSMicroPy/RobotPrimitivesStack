@@ -3,24 +3,28 @@
   "version": "1.0.0",
   "urls": [
     [
-      "mpenv/__init__.py",
-      "src/mpenv/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
     ],
     [
-      "mpenv/envstore.py",
-      "src/mpenv/envstore.py"
+      "rpstack/env/__init__.py",
+      "src/rpstack/env/__init__.py"
     ],
     [
-      "mpenv/cmds/__init__.py",
-      "src/mpenv/cmds/__init__.py"
+      "rpstack/env/cmds/__init__.py",
+      "src/rpstack/env/cmds/__init__.py"
     ],
     [
-      "mpenv/cmds/envcmd.py",
-      "src/mpenv/cmds/envcmd.py"
+      "rpstack/env/cmds/envcmd.py",
+      "src/rpstack/env/cmds/envcmd.py"
     ],
     [
-      "mpenv/cmds/exportcmd.py",
-      "src/mpenv/cmds/exportcmd.py"
+      "rpstack/env/cmds/exportcmd.py",
+      "src/rpstack/env/cmds/exportcmd.py"
+    ],
+    [
+      "rpstack/env/envstore.py",
+      "src/rpstack/env/envstore.py"
     ],
     [
       "init.d/S005_env.py",

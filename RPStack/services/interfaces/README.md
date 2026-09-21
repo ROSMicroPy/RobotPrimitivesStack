@@ -2,7 +2,7 @@
 
 RPInterfaces defines the hardware-independent contracts shared by Primitive Services, composites, bridges, simulations, and test doubles.
 
-The package installs as **RPInterfaces** and avoids CPython-only dependencies.
+The package installs as **rpstack.interfaces** and avoids CPython-only dependencies.
 
 ## Lifecycle contract
 
@@ -38,7 +38,7 @@ A service manifest maps lifecycle stages to implementation methods. Functional c
 - angular values use radians.
 
 ~~~python
-from RPInterfaces import PositionSample
+from rpstack.interfaces import PositionSample
 
 sample = PositionSample(
     PositionSample.LINEAR,
@@ -140,3 +140,31 @@ Native-unit convenience operations can exist, but inter-service binding uses can
 - `package.json` maps source files to their MIP installation paths.
 - `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/interfaces/`, allowing applications to import `rpstack.interfaces`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/services/interfaces/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/services/interfaces/package.json
+~~~

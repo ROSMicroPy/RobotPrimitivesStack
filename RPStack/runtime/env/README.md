@@ -38,7 +38,7 @@ export OTEL_ENDPOINT != http://collector.local:4318
 ## Python API
 
 ~~~python
-from mpenv import getEnv, setEnv, items, printEnv
+from rpstack.env import getEnv, setEnv, items, printEnv
 
 setEnv("DEVICE_NAME", "lift-controller")
 setEnv("OTEL_ENDPOINT", "http://collector.local:4318", True)
@@ -93,3 +93,31 @@ mip.install(
 - `test/` contains host tests or hardware-test guidance.
 - `package.json` maps source files to their MIP installation paths.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/env/`, allowing applications to import `rpstack.env`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/runtime/env/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/env@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/runtime/env/package.json
+~~~

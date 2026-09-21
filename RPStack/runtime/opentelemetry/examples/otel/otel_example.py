@@ -15,7 +15,7 @@ import wifi
 
 OTEL_EXPORTER_OTLP_ENDPOINT ="http://192.168.8.192:4318"
 
-from otel import (
+from rpstack.opentelemetry import (
     get_logger,
     get_meter,
     get_tracer,

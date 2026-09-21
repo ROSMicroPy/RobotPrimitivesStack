@@ -17,7 +17,7 @@ The package is designed for MicroPython and host-side simulation.
 ## Loading manifests
 
 ~~~python
-from PrimitiveRuntime import ServiceManifest
+from rpstack.primitive_runtime import ServiceManifest
 
 slide_manifest = ServiceManifest.load(
     "RPStack/services/linear_slide/component.yaml"
@@ -35,7 +35,7 @@ python tools/compile_manifest.py     ../../services/linear_slide/component.yaml 
 ## Registering services
 
 ~~~python
-from PrimitiveRuntime import ServiceSupervisor
+from rpstack.primitive_runtime import ServiceSupervisor
 
 runtime = ServiceSupervisor()
 
@@ -129,7 +129,7 @@ The supervisor permits only operations declared by the manifest. It rejects unde
 ## Declarative tests
 
 ~~~python
-from PrimitiveRuntime import ManifestTestRunner
+from rpstack.primitive_runtime import ManifestTestRunner
 
 runner = ManifestTestRunner(runtime)
 
@@ -156,7 +156,7 @@ Automatic tests run without an approval flag. Manual and hardware tests require 
 
 ## Installation
 
-Install the package through its **package.json**. It places the runtime modules under **PrimitiveRuntime/**.
+Install the package through its **package.json**. It places the runtime modules under **rpstack/primitive_runtime/**.
 
 ## Tests
 
@@ -174,3 +174,31 @@ The tests cover manifest loading, capability binding, dependency order, reverse 
 - `test/` contains host tests or hardware-test guidance.
 - `package.json` maps source files to their MIP installation paths.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/primitive_runtime/`, allowing applications to import `rpstack.primitive_runtime`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/runtime/primitive_runtime/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/primitive_runtime@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/runtime/primitive_runtime/package.json
+~~~

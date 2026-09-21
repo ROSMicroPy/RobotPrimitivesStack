@@ -7,7 +7,7 @@ Pin numbers are MicroPython GPIO numbers, not physical header pin numbers.
 import time
 
 # MotorControl is installed into the MicroPython library path by mip.
-from MotorControl import MotorController, MotorType
+from rpstack.motor_control import MotorController, MotorType
 
 
 ENABLE_PIN = 21

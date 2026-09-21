@@ -9,9 +9,9 @@ SERVICES_DIR = COMPONENT_DIR.parent
 sys.path.insert(0, str(SERVICES_DIR / "interfaces" / "src"))
 sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-from DistanceSensor import DistanceSensor, DistanceSensorDriver
-from DistanceSensor.distance_drivers.hcsr04 import HCSR04Driver
-from DistanceSensor.distance_drivers.vl53l4cd_core import DEFAULT_CONFIGURATION, VL53L4CD
+from rpstack.distance_sensor import DistanceSensor, DistanceSensorDriver
+from rpstack.distance_sensor.distance_drivers.hcsr04 import HCSR04Driver
+from rpstack.distance_sensor.distance_drivers.vl53l4cd_core import DEFAULT_CONFIGURATION, VL53L4CD
 
 
 class FakeDriver(DistanceSensorDriver):

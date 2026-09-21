@@ -3,24 +3,28 @@
   "version": "0.3.0",
   "urls": [
     [
-      "DistanceSensor/__init__.py",
-      "src/DistanceSensor/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
     ],
     [
-      "DistanceSensor/distance_drivers/__init__.py",
-      "src/DistanceSensor/distance_drivers/__init__.py"
+      "rpstack/distance_sensor/__init__.py",
+      "src/rpstack/distance_sensor/__init__.py"
     ],
     [
-      "DistanceSensor/distance_drivers/hcsr04.py",
-      "src/DistanceSensor/distance_drivers/hcsr04.py"
+      "rpstack/distance_sensor/distance_drivers/__init__.py",
+      "src/rpstack/distance_sensor/distance_drivers/__init__.py"
     ],
     [
-      "DistanceSensor/distance_drivers/vl53l4cd.py",
-      "src/DistanceSensor/distance_drivers/vl53l4cd.py"
+      "rpstack/distance_sensor/distance_drivers/hcsr04.py",
+      "src/rpstack/distance_sensor/distance_drivers/hcsr04.py"
     ],
     [
-      "DistanceSensor/distance_drivers/vl53l4cd_core.py",
-      "src/DistanceSensor/distance_drivers/vl53l4cd_core.py"
+      "rpstack/distance_sensor/distance_drivers/vl53l4cd.py",
+      "src/rpstack/distance_sensor/distance_drivers/vl53l4cd.py"
+    ],
+    [
+      "rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py",
+      "src/rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py"
     ]
   ],
   "deps": [

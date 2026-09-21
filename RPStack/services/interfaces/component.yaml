@@ -2,7 +2,7 @@ manifest: rp.service/v1
 package:
   name: rp-interfaces
   version: 0.1.0
-  import: RPInterfaces
+  import: rpstack.interfaces
 
 service:
   name: rp-interfaces

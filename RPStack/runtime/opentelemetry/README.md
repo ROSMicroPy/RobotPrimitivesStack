@@ -2,7 +2,7 @@
 
 This package provides lightweight traces, logs, metrics, context propagation, and HTTP export for MicroPython devices.
 
-It installs as **otel**.
+It installs as **rpstack.opentelemetry**.
 
 ## Role in RPStack
 
@@ -27,7 +27,7 @@ The package follows familiar OpenTelemetry concepts while remaining practical on
 ## Basic tracing
 
 ~~~python
-from otel import (
+from rpstack.opentelemetry import (
     HTTPSpanExporter,
     SimpleSpanProcessor,
     TracerProvider,
@@ -59,7 +59,7 @@ with tracer.start_as_current_span("move_to") as span:
 **setup_otlp()** configures the providers and exporters together:
 
 ~~~python
-from otel import setup_otlp
+from rpstack.opentelemetry import setup_otlp
 
 telemetry = setup_otlp(
     endpoint="http://collector.local:4318",
@@ -78,7 +78,7 @@ Queued export moves network work away from latency-sensitive service operations.
 Use traceparent helpers when an operation crosses a bridge or network boundary:
 
 ~~~python
-from otel import inject_to_carrier, extract_from_carrier
+from rpstack.opentelemetry import inject_to_carrier, extract_from_carrier
 
 headers = {}
 inject_to_carrier(headers)
@@ -91,7 +91,7 @@ This allows a device operation to remain part of an end-to-end trace across REST
 ## Metrics and logs
 
 ~~~python
-from otel import get_logger, get_meter
+from rpstack.opentelemetry import get_logger, get_meter
 
 logger = get_logger("distance-sensor")
 logger.info("sensor started", {"service.instance": "lift_tof"})
@@ -140,3 +140,31 @@ mip.install(
 - `test/` contains host tests or hardware-test guidance.
 - `package.json` maps source files to their MIP installation paths.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/opentelemetry/`, allowing applications to import `rpstack.opentelemetry`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/runtime/opentelemetry/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/opentelemetry@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/runtime/opentelemetry/package.json
+~~~

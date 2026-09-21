@@ -1,6 +1,6 @@
 """On-device examples using the package's real hardware drivers."""
 
-from MotorControl import MotorController, MotorType
+from rpstack.motor_control import MotorController, MotorType
 
 
 def stepper_example():

@@ -5,7 +5,7 @@ import unittest
 COMPONENT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-from RPInterfaces import DistanceSample, PositionSample
+from rpstack.interfaces import DistanceSample, PositionSample
 
 
 class InterfaceTests(unittest.TestCase):

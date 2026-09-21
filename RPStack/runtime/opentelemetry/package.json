@@ -3,48 +3,52 @@
   "version": "2.6.0",
   "urls": [
     [
-      "otel/__init__.py",
-      "src/otel/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
     ],
     [
-      "otel/api.py",
-      "src/otel/api.py"
+      "rpstack/opentelemetry/__init__.py",
+      "src/rpstack/opentelemetry/__init__.py"
     ],
     [
-      "otel/context.py",
-      "src/otel/context.py"
+      "rpstack/opentelemetry/api.py",
+      "src/rpstack/opentelemetry/api.py"
     ],
     [
-      "otel/exporter.py",
-      "src/otel/exporter.py"
+      "rpstack/opentelemetry/context.py",
+      "src/rpstack/opentelemetry/context.py"
     ],
     [
-      "otel/http.py",
-      "src/otel/http.py"
+      "rpstack/opentelemetry/exporter.py",
+      "src/rpstack/opentelemetry/exporter.py"
     ],
     [
-      "otel/logging.py",
-      "src/otel/logging.py"
+      "rpstack/opentelemetry/http.py",
+      "src/rpstack/opentelemetry/http.py"
     ],
     [
-      "otel/metric.py",
-      "src/otel/metric.py"
+      "rpstack/opentelemetry/logging.py",
+      "src/rpstack/opentelemetry/logging.py"
     ],
     [
-      "otel/processor.py",
-      "src/otel/processor.py"
+      "rpstack/opentelemetry/metric.py",
+      "src/rpstack/opentelemetry/metric.py"
     ],
     [
-      "otel/propagation.py",
-      "src/otel/propagation.py"
+      "rpstack/opentelemetry/processor.py",
+      "src/rpstack/opentelemetry/processor.py"
     ],
     [
-      "otel/trace.py",
-      "src/otel/trace.py"
+      "rpstack/opentelemetry/propagation.py",
+      "src/rpstack/opentelemetry/propagation.py"
     ],
     [
-      "otel/util.py",
-      "src/otel/util.py"
+      "rpstack/opentelemetry/trace.py",
+      "src/rpstack/opentelemetry/trace.py"
+    ],
+    [
+      "rpstack/opentelemetry/util.py",
+      "src/rpstack/opentelemetry/util.py"
     ],
     [
       "examples/otel/otel_example.py",

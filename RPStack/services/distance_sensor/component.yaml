@@ -2,7 +2,7 @@ manifest: rp.service/v1
 package:
   name: distance-sensor
   version: 0.3.0
-  import: DistanceSensor
+  import: rpstack.distance_sensor
 
 service:
   name: distance-sensor
@@ -10,7 +10,7 @@ service:
   kind: individual_driver
   type: sensor.distance
   description: A runtime-managed scalar distance sensor with selectable hardware driver.
-  entry_point: DistanceSensor:DistanceSensor
+  entry_point: rpstack.distance_sensor:DistanceSensor
   capabilities:
     provides:
       - interface: sensing.distance_observer
@@ -64,7 +64,7 @@ service:
     consumes: {}
   implementations:
     hcsr04:
-      entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
+      entry_point: rpstack.distance_sensor.distance_drivers.hcsr04:HCSR04Driver
       description: Trigger/echo ultrasonic range sensor.
       configuration:
         trigger_pin: {type: pin_ref, required: true}
@@ -73,7 +73,7 @@ service:
         temperature_c: {type: number, default: 20, unit: C}
       safe_state: shutdown
     vl53l4cd:
-      entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
+      entry_point: rpstack.distance_sensor.distance_drivers.vl53l4cd:VL53L4CDDriver
       description: ST VL53L4CD time-of-flight distance sensor.
       configuration:
         i2c: {type: i2c_ref, required: true}

@@ -6,7 +6,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "runtime" / "primitive_runtime" / "src"))
 
-from PrimitiveRuntime import (  # noqa: E402
+from rpstack.primitive_runtime import (  # noqa: E402
     LifecycleError,
     ManifestTestError,
     ManifestTestRunner,

@@ -136,3 +136,31 @@ python -m unittest discover     -s RPStack/services/linear_slide/test     -v
 - `package.json` maps source files to their MIP installation paths.
 - `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
 - Optional `examples/` and `tools/` directories contain development-only resources.
+
+## MIP installation
+
+All file sources in `package.json` are relative to this component directory. The package installs its Python modules under `/lib/rpstack/linear_slide/`, allowing applications to import `rpstack.linear_slide`.
+
+From this component directory:
+
+~~~bash
+mpremote mip install ./package.json
+~~~
+
+From the repository root:
+
+~~~bash
+mpremote mip install RPStack/services/linear_slide/package.json
+~~~
+
+From GitHub on the development branch:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/linear_slide@archdef
+~~~
+
+A raw manifest URL is also supported:
+
+~~~bash
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/services/linear_slide/package.json
+~~~

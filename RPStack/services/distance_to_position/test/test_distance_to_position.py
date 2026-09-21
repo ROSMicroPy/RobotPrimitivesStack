@@ -7,8 +7,8 @@ SERVICES_DIR = COMPONENT_DIR.parent
 sys.path.insert(0, str(SERVICES_DIR / "interfaces" / "src"))
 sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-from DistanceToPosition import DistanceToPositionAdapter
-from RPInterfaces import DistanceSample
+from rpstack.distance_to_position import DistanceToPositionAdapter
+from rpstack.interfaces import DistanceSample
 
 
 class FakeDistanceObserver:

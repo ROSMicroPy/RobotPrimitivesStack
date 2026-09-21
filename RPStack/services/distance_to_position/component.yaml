@@ -2,7 +2,7 @@ manifest: rp.service/v1
 package:
   name: distance-to-position
   version: 0.1.0
-  import: DistanceToPosition
+  import: rpstack.distance_to_position
 
 service:
   name: distance-to-position
@@ -10,7 +10,7 @@ service:
   kind: adapter
   type: adapter.distance_to_position
   description: Convert a ray distance into installed linear position.
-  entry_point: DistanceToPosition:DistanceToPositionAdapter
+  entry_point: rpstack.distance_to_position:DistanceToPositionAdapter
   capabilities:
     provides:
       - interface: motion.position_observer

@@ -180,7 +180,7 @@ If startup fails after some services are running, the supervisor stops the servi
 The following example shows the shape of a device assembly:
 
 ~~~python
-from PrimitiveRuntime import ServiceManifest, ServiceSupervisor
+from rpstack.primitive_runtime import ServiceManifest, ServiceSupervisor
 
 runtime = ServiceSupervisor()
 
@@ -478,7 +478,7 @@ manifest: rp.service/v1
 package:
   name: distance-to-position
   version: 0.1.0
-  import: DistanceToPosition
+  import: rpstack.distance_to_position
 
 service:
   name: distance-to-position
@@ -486,7 +486,7 @@ service:
   kind: adapter
   type: adapter.distance_to_position
   description: Convert a ray distance into installed linear position.
-  entry_point: DistanceToPosition:DistanceToPositionAdapter
+  entry_point: rpstack.distance_to_position:DistanceToPositionAdapter
 ~~~
 
 The remaining service sections describe capabilities, configuration, lifecycle, operations, signals, implementations, and tests.
@@ -596,7 +596,7 @@ A service package can contain multiple hardware implementations:
 ~~~yaml
 implementations:
   step_dir:
-    entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
+    entry_point: rpstack.motor_control.motor_drivers.step_dir:StepDirDriver
     description: Incremental STEP/DIR motor controller.
     capabilities:
       provides:
@@ -681,7 +681,7 @@ move_to_target:
 The test runner refuses to execute manual or hardware tests unless approval is supplied. Test steps can assert an exact return value or selected fields in a returned object or measurement sample.
 
 ~~~python
-from PrimitiveRuntime import ManifestTestRunner
+from rpstack.primitive_runtime import ManifestTestRunner
 
 runner = ManifestTestRunner(runtime)
 
@@ -955,6 +955,28 @@ Provides reusable motor services with STEP/DIR, PWM servo, and PWM BLDC implemen
 Combines an incremental motion actuator and a linear position observer into a closed-loop position actuator. It exposes SI-based capability operations and millimetre convenience operations.
 
 ## Package installation
+
+Every runtime and service component is an independent MIP package whose file sources are relative to its own `package.json`. The installed Python namespace is `rpstack.<component>` on both host and device.
+
+Use an explicit manifest path for local installation:
+
+~~~bash
+# From a component directory
+mpremote mip install ./package.json
+
+# From the repository root
+mpremote mip install RPStack/services/distance_sensor/package.json
+~~~
+
+Use MicroPython's GitHub shorthand or a raw manifest URL for repository installation:
+
+~~~bash
+mpremote mip install github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor@archdef
+mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/archdef/RPStack/services/distance_sensor/package.json
+~~~
+
+Local directory names are not package arguments in the current `mpremote mip` implementation, so `mpremote mip install .` and a directory-only local path do not resolve `package.json` automatically.
+
 
 Service and runtime packages include MicroPython **package.json** files where applicable. A package manifest specifies installed files and dependent RPStack packages.
 

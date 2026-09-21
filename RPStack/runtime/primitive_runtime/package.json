@@ -3,24 +3,28 @@
   "version": "0.1.0",
   "urls": [
     [
-      "PrimitiveRuntime/__init__.py",
-      "src/PrimitiveRuntime/__init__.py"
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
     ],
     [
-      "PrimitiveRuntime/manifest.py",
-      "src/PrimitiveRuntime/manifest.py"
+      "rpstack/primitive_runtime/__init__.py",
+      "src/rpstack/primitive_runtime/__init__.py"
     ],
     [
-      "PrimitiveRuntime/registry.py",
-      "src/PrimitiveRuntime/registry.py"
+      "rpstack/primitive_runtime/manifest.py",
+      "src/rpstack/primitive_runtime/manifest.py"
     ],
     [
-      "PrimitiveRuntime/supervisor.py",
-      "src/PrimitiveRuntime/supervisor.py"
+      "rpstack/primitive_runtime/registry.py",
+      "src/rpstack/primitive_runtime/registry.py"
     ],
     [
-      "PrimitiveRuntime/testing.py",
-      "src/PrimitiveRuntime/testing.py"
+      "rpstack/primitive_runtime/supervisor.py",
+      "src/rpstack/primitive_runtime/supervisor.py"
+    ],
+    [
+      "rpstack/primitive_runtime/testing.py",
+      "src/rpstack/primitive_runtime/testing.py"
     ]
   ],
   "deps": []
