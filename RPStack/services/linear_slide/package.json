@@ -3,8 +3,10 @@
     ["LinearSlide.py", "LinearSlide.py"]
   ],
   "deps": [
-    ["github:ROSMicroPy/mpylib_MotorControl", "main"],
-    ["github:ROSMicroPy/mpylib_DistanceSensor", "main"]
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"],
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control", "archdef"],
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor", "archdef"],
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position", "archdef"]
   ],
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

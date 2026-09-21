@@ -1,36 +1,67 @@
-contract_version: "0.2"
+contract_version: "1.0"
 package:
   name: distance-sensor
-  version: 0.2.0
+  version: 0.3.0
   import: DistanceSensor
+
+service:
+  name: distance-sensor
+  kind: individual_driver
+  type: sensor.distance
+  entry_point: DistanceSensor:DistanceSensor
+  implements:
+    - interface: sensing.distance_observer
+      version: 1
+      dimensions: 1
+      canonical_unit: m
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  provides_signals:
+    - range.distance.updated
+    - device.health.changed
+
+implementations:
+  hcsr04:
+    entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
+    sensor_type: ultrasonic
+    config:
+      trigger_pin: {type: pin_ref, required: true}
+      echo_pin: {type: pin_ref, required: true}
+      timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
+      temperature_c: {type: number, default: 20, unit: C}
+  vl53l4cd:
+    entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
+    sensor_type: time_of_flight
+    config:
+      i2c: {type: i2c_ref, required: true}
+      address: {type: integer, minimum: 8, maximum: 119, default: 41}
+      timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
+      inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
+      read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
+
+# Retained while RPStack_WebTester is redesigned; it describes the existing
+# controller/factory API used to build its forms.
 components:
   DistanceSensorController:
     entry_point: DistanceSensor:DistanceSensorController
     operations: [create_sensor, get_sensor, remove_sensor, shutdown]
-    lifecycle:
-      shutdown: shutdown
     drivers:
       hcsr04:
         entry_point: DistanceSensor.distance_drivers.hcsr04:HCSR04Driver
-        sensor_type: ultrasonic
         config:
           trigger_pin: {type: pin_ref, required: true}
           echo_pin: {type: pin_ref, required: true}
-          timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
-          temperature_c: {type: number, default: 20, unit: C}
-        operations: [read_distance_mm, set_active, shutdown]
-        safe_state: shutdown
       vl53l4cd:
         entry_point: DistanceSensor.distance_drivers.vl53l4cd:VL53L4CDDriver
-        sensor_type: time_of_flight
         config:
           i2c: {type: i2c_ref, required: true}
-          address: {type: integer, minimum: 8, maximum: 119, default: 41}
-          timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
-          inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
-          read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
-        operations: [read_distance_mm, set_active, shutdown]
-        safe_state: shutdown
+          address: {type: integer, default: 41}
+
 events:
   distance_alert:
     payload:

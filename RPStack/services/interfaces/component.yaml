@@ -1,0 +1,30 @@
+contract_version: "1.0"
+package:
+  name: rp-interfaces
+  version: 0.1.0
+  import: RPInterfaces
+
+interfaces:
+  sensing.distance_observer:
+    version: 1
+    method: distance
+    returns:
+      type: DistanceSample
+      quantity: distance
+      canonical_unit: m
+
+  motion.position_observer:
+    version: 1
+    method: position
+    returns:
+      type: PositionSample
+      quantities: [linear, angular]
+      canonical_units: {linear: m, angular: rad}
+
+  motion.motion_actuator:
+    version: 1
+    operations: [command, stop]
+
+  motion.position_actuator:
+    version: 1
+    operations: [move_to, stop]

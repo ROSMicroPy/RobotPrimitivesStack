@@ -6,6 +6,8 @@
     ["MotorControl/motor_drivers/pwm_servo.py", "motor_drivers/pwm_servo.py"],
     ["MotorControl/motor_drivers/pwm_bldc.py", "motor_drivers/pwm_bldc.py"]
   ],
-  "deps": [],
-  "version": "0.2.0"
+  "deps": [
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
+  ],
+  "version": "0.3.0"
 }

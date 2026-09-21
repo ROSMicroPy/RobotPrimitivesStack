@@ -1,0 +1,23 @@
+contract_version: "1.0"
+service:
+  name: distance-to-position
+  kind: adapter
+  type: adapter.distance_to_position
+  version: 0.1.0
+  entry_point: DistanceToPosition:DistanceToPositionAdapter
+  implements:
+    - interface: motion.position_observer
+      version: 1
+      quantity: linear
+      dimensions: 1
+      canonical_unit: m
+  requires:
+    distance:
+      interface: sensing.distance_observer
+      version: 1
+  config:
+    zero_offset_m: {type: number, default: 0.0, unit: m}
+    direction: {type: integer, enum: [-1, 1], default: 1}
+    reference_frame: {type: string, required: true}
+    min_position_m: {type: number, required: false, unit: m}
+    max_position_m: {type: number, required: false, unit: m}

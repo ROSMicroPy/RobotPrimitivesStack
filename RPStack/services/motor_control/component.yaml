@@ -1,26 +1,59 @@
-contract_version: "0.2"
+contract_version: "1.0"
 package:
   name: motor-control
-  version: 0.2.0
+  version: 0.3.0
   import: MotorControl
+
+service:
+  name: motor-control
+  kind: individual_driver
+  type: actuator.motor
+  entry_point: MotorControl:Motor
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  provides_signals:
+    - motion.started
+    - motion.stopped
+    - device.health.changed
+
+implementations:
+  step_dir:
+    entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
+    motor_type: stepper
+    implements:
+      - interface: motion.motion_actuator
+        version: 1
+        mode: incremental
+    config:
+      step_pin: {type: pin_ref, required: true}
+      dir_pin: {type: pin_ref, required: true}
+      enable_pin: {type: pin_ref, required: false}
+      enable_active_low: {type: boolean, default: true}
+      step_delay_us: {type: integer, minimum: 1, default: 500, unit: us}
+      direction_settle_us: {type: integer, minimum: 0, default: 10, unit: us}
+      steps_per_revolution: {type: integer, minimum: 1, default: 200}
+      microsteps: {type: integer, minimum: 1, default: 1}
+  pwm_servo:
+    entry_point: MotorControl.motor_drivers.pwm_servo:PWMServoDriver
+    motor_type: servo
+  pwm_bldc:
+    entry_point: MotorControl.motor_drivers.pwm_bldc:PWMBLDCDriver
+    motor_type: bldc
+
+# Legacy WebTester/controller metadata retained as a compatibility surface.
 components:
   MotorController:
     entry_point: MotorControl:MotorController
-    lifecycle:
-      shutdown: shutdown
+    lifecycle: {shutdown: shutdown}
     drivers:
       step_dir:
         entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
         motor_type: stepper
-        config:
-          step_pin: {type: pin_ref, required: true}
-          dir_pin: {type: pin_ref, required: true}
-          enable_pin: {type: pin_ref, required: false}
-          enable_active_low: {type: boolean, default: true}
-          step_delay_us: {type: integer, minimum: 1, default: 500, unit: us}
-          direction_settle_us: {type: integer, minimum: 0, default: 10, unit: us}
-          steps_per_revolution: {type: integer, minimum: 1, default: 200}
-          microsteps: {type: integer, minimum: 1, default: 1}
         operations: [move_steps, set_speed, get_position, stop, shutdown]
         safe_state: stop
       pwm_servo:

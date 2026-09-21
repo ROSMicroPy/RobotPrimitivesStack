@@ -1,30 +1,21 @@
-# Linear Slide Application
+# Linear Slide Composite
 
-`LinearSlide` combines the universal MotorControl stepper driver with the
-DistanceSensor VL53L4CD driver. The sensor is configured with a 200 ms timing
-budget. Motion is closed-loop: the class reads the position, moves one step in
-the required direction, and reads again until it reaches the requested position.
+`LinearSlide` is a composite `motion.position_actuator`. Its primary constructor
+accepts two runtime-bound roles:
+
+- `motor`: a `motion.motion_actuator` in incremental mode
+- `position_observer`: a linear `motion.position_observer` using metres
 
 ```python
-from LinearSlide import LinearSlide
-
-slide = LinearSlide(
-    i2c,
-    step_pin=17,
-    dir_pin=3,
-    enable_pin=21,
-    positive_direction=True,
-    tolerance_mm=1,
-    min_position_mm=20,
-    max_position_mm=300,
-)
-
-print(slide.getPosition())
-slide.gotoPosition(100)
-slide.shutdown()
+slide = LinearSlide(motor=stepper, position_observer=carriage_position)
+final_sample = slide.move_to(0.100)
 ```
 
-Set `positive_direction=False` if a `False` MotorControl direction increases the
-ToF reading on the assembled slide. Configure physical minimum and maximum
-positions whenever possible. `max_steps` is an additional safety guard for a
-blocked mechanism or failed sensor.
+The composite owns mechanism behavior—target tolerance, direction, travel
+limits, cancellation, and maximum increments—but does not own dependencies
+injected by the runtime. `shutdown()` stops them without shutting them down.
+
+The original I2C/pin constructor and millimetre methods remain available for
+existing deployments. That compatibility path assembles the `step_dir`,
+`vl53l4cd`, and distance-to-position services internally and owns their
+lifecycle.

@@ -1,4 +1,4 @@
-"""Generic distance-sensor interface for MicroPython and host simulation."""
+"""Distance-observer service with pluggable MicroPython hardware drivers."""
 
 try:
     import importlib
@@ -9,6 +9,13 @@ try:
     import threading
 except ImportError:
     threading = None
+
+try:
+    from RPInterfaces import DistanceObserver, DistanceSample, PrimitiveService
+except ImportError:  # Monorepo/host execution before mip packaging.
+    from RPStack.services.interfaces import (
+        DistanceObserver, DistanceSample, PrimitiveService,
+    )
 
 
 class DistanceSensorDriver:
@@ -28,26 +35,55 @@ class DistanceSensorDriver:
         return {}
 
 
-class DistanceSensor:
-    def __init__(self, name, driver):
+class DistanceSensor(PrimitiveService, DistanceObserver):
+    """Runtime-managed distance capability wrapping one concrete driver."""
+
+    def __init__(self, name, driver, reference_frame=None):
         self.name = name
         self.driver = driver
+        self.reference_frame = reference_frame
         self.active = False
         self.alerts = []
         self.last_distance_mm = None
         self.last_poll_error = None
         self._polling = False
         self._poll_thread = None
+        self._config = {}
+
+    def configure(self, config=None, **kwargs):
+        values = dict(config or {})
+        values.update(kwargs)
+        if values.get("poll_frequency_hz", 0) < 0:
+            raise ValueError("poll_frequency_hz cannot be negative")
+        self._config = values
+        return True
+
+    def init(self):
+        config = dict(self._config)
+        config.pop("poll_frequency_hz", None)
+        self.active = bool(self.driver.initialize(**config))
+        return self.active
+
+    def start(self):
+        if not self.active:
+            self.active = bool(self.driver.set_active(True))
+        frequency = self._config.get("poll_frequency_hz", 0)
+        if self.active and frequency:
+            self.start_polling(frequency)
+        return self.active
 
     def initialize(self, poll_frequency_hz=0, **config):
-        if poll_frequency_hz < 0:
-            raise ValueError("poll_frequency_hz cannot be negative")
-        self.active = bool(self.driver.initialize(**config))
-        if not self.active:
-            return False
-        if poll_frequency_hz:
-            self.start_polling(poll_frequency_hz)
-        return True
+        """Compatibility entry point combining configure/init/start."""
+        config["poll_frequency_hz"] = poll_frequency_hz
+        return self.configure(config) and self.init() and self.start()
+
+    def distance(self):
+        """Return a canonical SI distance sample."""
+        return DistanceSample(
+            self.read_distance_mm() / 1000.0,
+            "m",
+            reference_frame=self.reference_frame,
+        )
 
     def read_distance(self):
         if not self.active:
@@ -115,11 +151,21 @@ class DistanceSensor:
             self._poll_thread.join(timeout=1)
         self._poll_thread = None
 
+    def stop(self):
+        return self.set_active(False)
+
+    def reset(self):
+        self.stop()
+        return self.init() and self.start()
+
     def shutdown(self):
         self.stop_polling()
         result = bool(self.driver.shutdown())
         self.active = False
         return result
+
+    def status(self):
+        return self.get_status()
 
     def get_status(self):
         status = self.driver.get_status()
@@ -129,6 +175,8 @@ class DistanceSensor:
 
 
 class DistanceSensorController:
+    """Compatibility factory; runtime manifests should create services directly."""
+
     def __init__(self, driver_package="DistanceSensor.distance_drivers"):
         self.driver_package = driver_package
         self.sensors = {}
@@ -150,7 +198,8 @@ class DistanceSensorController:
             if not driver_name:
                 raise ValueError("driver_name or driver_class is required")
             driver_class = self._load_driver(driver_name)
-        sensor = DistanceSensor(name, driver_class())
+        reference_frame = config.pop("reference_frame", None)
+        sensor = DistanceSensor(name, driver_class(), reference_frame)
         if not sensor.initialize(**config):
             raise RuntimeError("Driver failed to initialize sensor {}".format(name))
         self.sensors[name] = sensor

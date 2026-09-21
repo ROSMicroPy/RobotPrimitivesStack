@@ -1,4 +1,4 @@
-"""Source package export for LinearSlide."""
+"""Observed linear-actuator composite service."""
 
 from .LinearSlide import LinearSlide
 

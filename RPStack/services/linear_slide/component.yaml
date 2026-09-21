@@ -1,19 +1,56 @@
-contract_version: "0.2"
+contract_version: "1.0"
 package:
-  name: rube-goldberg-linear-slide
-  version: 0.2.0
+  name: linear-slide
+  version: 0.3.0
   import: LinearSlide
   entry_point: LinearSlide:LinearSlide
-dependencies:
-  motor-control: ">=0.2.0,<1.0.0"
-  distance-sensor: ">=0.2.0,<1.0.0"
+
+service:
+  name: observed-linear-actuator
+  kind: composite_driver
+  type: motion.linear_actuator
+  entry_point: LinearSlide:LinearSlide
+  implements:
+    - interface: motion.position_actuator
+      version: 1
+      quantity: linear
+      dimensions: 1
+      canonical_unit: m
+  requires:
+    motor:
+      interface: motion.motion_actuator
+      version: 1
+      constraints: {mode: incremental}
+    position:
+      interface: motion.position_observer
+      version: 1
+      constraints: {quantity: linear, dimensions: 1, canonical_unit: m}
+  config:
+    positive_direction: {type: boolean, default: true}
+    tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
+    max_steps: {type: integer, minimum: 1, default: 10000}
+    min_position_m: {type: number, required: false, unit: m}
+    max_position_m: {type: number, required: false, unit: m}
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  actions: [motion.move_to, motion.stop]
+  provides_signals:
+    - motion.started
+    - motion.position.updated
+    - motion.target.reached
+    - motion.target.failed
+  safe_state: stop
+
+# Legacy WebTester operation descriptions remain until its manifest renderer is
+# updated to understand service interfaces and runtime role binding.
 components:
   LinearSlide:
-    description: System-specific closed-loop slide composed from reusable components.
-    binds:
-      joint: {urdf_type: prismatic, required: true}
-      motor_driver: {component: MotorController, driver: step_dir}
-      position_observer: {component: DistanceSensorController, driver: vl53l4cd}
+    description: Closed-loop slide composed from runtime-bound capabilities.
     operations:
       get_position:
         implementation: get_position
@@ -24,11 +61,6 @@ components:
         args:
           position_mm: {type: integer, unit: mm}
         cancellable: true
-        errors: [target_out_of_range, maximum_steps_exceeded, sensor_read_failed, move_cancelled]
-      stop:
-        implementation: stop
-        idempotent: true
-      shutdown:
-        implementation: shutdown
-        idempotent: true
-    safe_state: stop
+        errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled]
+      stop: {implementation: stop, idempotent: true}
+      shutdown: {implementation: shutdown, idempotent: true}

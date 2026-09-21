@@ -6,6 +6,8 @@
     ["DistanceSensor/distance_drivers/vl53l4cd.py", "distance_drivers/vl53l4cd.py"],
     ["DistanceSensor/distance_drivers/vl53l4cd_core.py", "distance_drivers/vl53l4cd_core.py"]
   ],
-  "deps": [],
-  "version": "0.2.0"
+  "deps": [
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
+  ],
+  "version": "0.3.0"
 }

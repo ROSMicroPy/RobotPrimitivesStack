@@ -1,9 +1,14 @@
-"""Portable motor abstractions for MicroPython."""
+"""Portable motor services and concrete driver factories for MicroPython."""
 
 try:
     import importlib
 except ImportError:
     import uimportlib as importlib
+
+try:
+    from RPInterfaces import MotionActuator, PrimitiveService
+except ImportError:  # Monorepo/host execution before mip packaging.
+    from RPStack.services.interfaces import MotionActuator, PrimitiveService
 
 
 class MotorType:
@@ -61,17 +66,33 @@ class BLDCDriver(MotorDriver):
         raise NotImplementedError
 
 
-class Motor:
+class Motor(PrimitiveService, MotionActuator):
+    """One runtime-managed motor backed by one concrete driver."""
+
     def __init__(self, name, motor_type, driver):
         self.name = name
         self.motor_type = motor_type
         self.driver = driver
         self.initialized = False
+        self._config = {}
+
+    def configure(self, config=None, **kwargs):
+        values = dict(config or {})
+        values.update(kwargs)
+        self._config = values
+        return True
+
+    def init(self):
+        if not self.initialized:
+            self.initialized = bool(self.driver.initialize(**self._config))
+        return self.initialized
+
+    def start(self):
+        return self.initialized or self.init()
 
     def initialize(self, **config):
-        if not self.initialized:
-            self.initialized = bool(self.driver.initialize(**config))
-        return self.initialized
+        """Compatibility entry point combining configure/init/start."""
+        return self.configure(config) and self.init() and self.start()
 
     def shutdown(self):
         if self.initialized:
@@ -85,10 +106,25 @@ class Motor:
         stop = getattr(self.driver, "stop", None)
         return stop() if stop else self.shutdown()
 
+    def reset(self):
+        self.shutdown()
+        return self.init() and self.start()
+
+    def status(self):
+        return self.get_status()
+
     def get_status(self):
         status = self.driver.get_status()
         status.update(name=self.name, type=self.motor_type, initialized=self.initialized)
         return status
+
+    def command(self, direction, amount=1):
+        """Implement incremental motion capability for stepper motors."""
+        self._require_type(MotorType.STEPPER)
+        amount = int(amount)
+        if amount < 0:
+            raise ValueError("amount must be non-negative")
+        return self.driver.move_steps(amount, bool(direction))
 
     def set_position(self, position):
         self._require_type(MotorType.SERVO)
@@ -129,6 +165,8 @@ class Motor:
 
 
 class MotorController:
+    """Compatibility factory; runtime manifests should create motors directly."""
+
     def __init__(self, driver_package="MotorControl.motor_drivers"):
         self.driver_package = driver_package
         self.motors = {}
