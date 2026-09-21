@@ -95,7 +95,7 @@ RPStack/
 RPStack_WebTester/
 ~~~
 
-The top-level **RPStack_WebTester** entry is a Git submodule containing the existing dynamic web-form prototype. Its replacement can use the operation and test descriptions in each service manifest as its input model.
+The top-level **RPStack_WebTester** entry is a Git submodule containing a dynamic web-form client. It demonstrates form rendering for service interaction. Operation and test descriptions in each service manifest provide the data model for manifest-driven interfaces.
 
 ## Layer 1: Device Platform
 
@@ -130,7 +130,7 @@ The Primitive Runtime is the common service-management layer. Its core implement
 RPStack/runtime/primitive_runtime/
 ~~~
 
-The runtime currently provides:
+The runtime provides:
 
 - service-manifest loading and structural validation
 - capability registration
@@ -345,7 +345,7 @@ A runtime-bound composite does not own the lifecycle of its dependencies. Stoppi
 
 A capability interface describes what a service can do without naming a hardware model or package.
 
-Current interface contracts are defined in:
+Capability contracts are defined in:
 
 ~~~text
 RPStack/services/interfaces/

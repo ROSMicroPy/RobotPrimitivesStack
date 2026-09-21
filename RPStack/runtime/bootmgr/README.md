@@ -1,34 +1,103 @@
-# mp_bootmgr
+# Boot Manager
 
-Boot orchestration for MicroPython does not need to be large to be useful. `mp_bootmgr` provides an `init.d`-style startup layer that lets related services register themselves as ordered boot scripts instead of fighting for space in `boot.py`.
+The Boot Manager provides deterministic startup for MicroPython devices. It loads small startup modules from an **init.d** directory and runs them in filename order.
 
-**Project URL**: https://gitlab.com/robot-primitives/Micropython_Modules/mp_bootmgr
+## Role in RPStack
 
-> **Standout:** turns MicroPython startup into an ordered service pipeline, which is the foundation that lets the rest of the toolchain feel like a system rather than a set of loose files.
+The Boot Manager starts runtime facilities such as environment loading, service assembly, observability, and shell integration. It is intentionally limited to boot sequencing. Capability binding and service lifecycle management belong to **PrimitiveRuntime**.
 
-## What it does
+A typical startup flow is:
 
-- locates an `init.d` directory from several practical candidate paths
-- selects startup files named like `S003_name.py`
-- sorts them by numeric prefix
-- imports and runs their `run()` functions in order
+~~~text
+main.py
+  → bootmgr.run()
+    → S005_env.py
+    → device service registration
+    → PrimitiveRuntime.start()
+    → S999_mp_shell.py
+~~~
 
-That is enough structure to make shell services, environment loading, and other boot-time integrations predictable.
+## Startup script names
 
-## Install with `mip`
+A startup module must:
 
-```python
+- begin with **S**;
+- contain at least two numeric ordering digits;
+- include an underscore after the number;
+- end in **.py**.
+
+Examples:
+
+~~~text
+S005_env.py
+S100_device_services.py
+S999_mp_shell.py
+~~~
+
+Files are sorted lexically, so zero-padded numbers make execution order obvious.
+
+Each module may define a **run()** function:
+
+~~~python
+def run():
+    print("Starting device services")
+~~~
+
+The Boot Manager loads the module and calls **run()** when it is present. Top-level module code also runs during loading.
+
+## init.d discovery
+
+The loader searches practical locations associated with the installed package and device filesystem, including:
+
+~~~text
+/init.d
+/lib/init.d
+init.d
+~~~
+
+The first accessible directory is used.
+
+## Bootstrapping main.py
+
+~~~python
+import bootmgr
+bootmgr.bootstrap()
+~~~
+
+**bootstrap()** ensures that **main.py** imports the Boot Manager and calls **bootmgr.run()**. It also installs the default operational applications configured by the package.
+
+Use **bootmgr.run()** directly when the device image or application already controls package installation.
+
+## Installation
+
+Install through the package manifest:
+
+~~~python
 import mip
-mip.install("https://gitlab.com/robot-primitives/Micropython_Modules/mp_bootmgr/-/raw/main/package.json")
-```
+mip.install(
+    "https://gitlab.com/robot-primitives/Micropython_Modules/"
+    "mp_bootmgr/-/raw/main/package.json"
+)
+~~~
 
-## Why it matters
+## Relationship to PrimitiveRuntime
 
-MicroPython projects often start with one file and end with a fragile boot script full of side effects. `mp_bootmgr` gives that growth path a cleaner destination.
+The Boot Manager answers, “Which startup modules run, and in what order?”
 
-## Typical use
+PrimitiveRuntime answers:
 
-- install `mp_bootmgr`
-- drop startup modules into `init.d/`
-- name them with ordered prefixes
-- let `bootmgr.run()` activate the stack in a deterministic sequence
+- which services are available;
+- how capability dependencies are bound;
+- how services are configured and initialized;
+- which order services start and stop;
+- which operations and tests are exposed.
+
+A boot script commonly constructs a **ServiceSupervisor**, registers the device services, and calls **start()**.
+
+## Operational guidance
+
+- Keep boot scripts small and delegate work to packages.
+- Give infrastructure an early number and interactive tools a late number.
+- Avoid long blocking work at module import time.
+- Catch and report failures where a device should continue in a degraded mode.
+- Let PrimitiveRuntime control service shutdown and dependency order.
