@@ -1,9 +1,11 @@
 """Portable motor services and concrete driver factories for MicroPython."""
 
 try:
-    import importlib
+    from importlib import import_module as _import_module
 except ImportError:
-    import uimportlib as importlib
+    def _import_module(name):
+        """Import and return a nested module without requiring importlib."""
+        return __import__(name, None, None, ("*",))
 
 try:
     from rpstack.interfaces import MotionActuator, PrimitiveService
@@ -175,7 +177,7 @@ class MotorController:
     def _load_driver(self, driver_name):
         if driver_name in self._driver_cache:
             return self._driver_cache[driver_name]
-        module = importlib.import_module("{}.{}".format(self.driver_package, driver_name))
+        module = _import_module("{}.{}".format(self.driver_package, driver_name))
         driver_class = getattr(module, "DRIVER_CLASS", None)
         if driver_class is None:
             raise ImportError("{}.{} does not export DRIVER_CLASS".format(self.driver_package, driver_name))

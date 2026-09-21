@@ -1,9 +1,11 @@
 """Distance-observer service with pluggable MicroPython hardware drivers."""
 
 try:
-    import importlib
+    from importlib import import_module as _import_module
 except ImportError:
-    import uimportlib as importlib
+    def _import_module(name):
+        """Import and return a nested module without requiring importlib."""
+        return __import__(name, None, None, ("*",))
 
 try:
     import threading
@@ -179,7 +181,7 @@ class DistanceSensorController:
 
     def _load_driver(self, driver_name):
         if driver_name not in self._driver_cache:
-            module = importlib.import_module("{}.{}".format(self.driver_package, driver_name))
+            module = _import_module("{}.{}".format(self.driver_package, driver_name))
             driver_class = getattr(module, "DRIVER_CLASS", None)
             if driver_class is None:
                 raise ImportError("{}.{} does not export DRIVER_CLASS".format(self.driver_package, driver_name))
