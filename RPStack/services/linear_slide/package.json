@@ -1,12 +1,32 @@
 {
+  "name": "rp-linear-slide",
+  "version": "0.3.0",
   "urls": [
-    ["LinearSlide.py", "LinearSlide.py"]
+    [
+      "LinearSlide/__init__.py",
+      "src/LinearSlide/__init__.py"
+    ],
+    [
+      "LinearSlide/LinearSlide.py",
+      "src/LinearSlide/LinearSlide.py"
+    ]
   ],
   "deps": [
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"],
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control", "archdef"],
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor", "archdef"],
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position", "archdef"]
-  ],
-  "version": "0.3.0"
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position",
+      "archdef"
+    ]
+  ]
 }

@@ -1,13 +1,32 @@
 {
+  "name": "rp-motor-control",
+  "version": "0.3.0",
   "urls": [
-    ["MotorControl/__init__.py", "__init__.py"],
-    ["MotorControl/motor_drivers/__init__.py", "motor_drivers/__init__.py"],
-    ["MotorControl/motor_drivers/step_dir.py", "motor_drivers/step_dir.py"],
-    ["MotorControl/motor_drivers/pwm_servo.py", "motor_drivers/pwm_servo.py"],
-    ["MotorControl/motor_drivers/pwm_bldc.py", "motor_drivers/pwm_bldc.py"]
+    [
+      "MotorControl/__init__.py",
+      "src/MotorControl/__init__.py"
+    ],
+    [
+      "MotorControl/motor_drivers/__init__.py",
+      "src/MotorControl/motor_drivers/__init__.py"
+    ],
+    [
+      "MotorControl/motor_drivers/step_dir.py",
+      "src/MotorControl/motor_drivers/step_dir.py"
+    ],
+    [
+      "MotorControl/motor_drivers/pwm_servo.py",
+      "src/MotorControl/motor_drivers/pwm_servo.py"
+    ],
+    [
+      "MotorControl/motor_drivers/pwm_bldc.py",
+      "src/MotorControl/motor_drivers/pwm_bldc.py"
+    ]
   ],
   "deps": [
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
-  ],
-  "version": "0.3.0"
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "archdef"
+    ]
+  ]
 }

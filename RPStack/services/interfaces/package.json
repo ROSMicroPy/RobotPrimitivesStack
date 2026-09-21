@@ -1,7 +1,11 @@
 {
+  "name": "rp-interfaces",
+  "version": "0.1.0",
   "urls": [
-    ["RPInterfaces/__init__.py", "__init__.py"]
+    [
+      "RPInterfaces/__init__.py",
+      "src/RPInterfaces/__init__.py"
+    ]
   ],
-  "deps": [],
-  "version": "0.1.0"
+  "deps": []
 }

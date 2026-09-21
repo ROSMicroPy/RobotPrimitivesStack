@@ -86,3 +86,10 @@ mip.install(
 - Use stable uppercase names for deployment-wide settings.
 - Keep typed service values in instance configuration and convert environment strings explicitly.
 - Use persistent values sparingly so device state remains understandable.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- Optional `examples/` and `tools/` directories contain development-only resources.

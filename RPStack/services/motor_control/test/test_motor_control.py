@@ -1,18 +1,13 @@
-import importlib.util
 from pathlib import Path
 import sys
 import unittest
 
-sys.path.insert(0, ".")
+COMPONENT_DIR = Path(__file__).resolve().parents[1]
+SERVICES_DIR = COMPONENT_DIR.parent
+sys.path.insert(0, str(SERVICES_DIR / "interfaces" / "src"))
+sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-spec = importlib.util.spec_from_file_location(
-    "MotorControl", Path("__init__.py"), submodule_search_locations=["."])
-motor_control = importlib.util.module_from_spec(spec)
-sys.modules["MotorControl"] = motor_control
-spec.loader.exec_module(motor_control)
-
-MotorController = motor_control.MotorController
-MotorType = motor_control.MotorType
+from MotorControl import MotorController, MotorType
 from MotorControl.motor_drivers.step_dir import StepDirDriver
 
 

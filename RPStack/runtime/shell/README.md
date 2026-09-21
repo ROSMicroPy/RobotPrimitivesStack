@@ -110,3 +110,10 @@ Commands such as telnet, HTTP serving, file editing, and arbitrary Python evalua
 - Require authentication in a deployment bridge.
 - Do not expose the interactive shell directly to an untrusted network.
 - Mark motion tests as hardware tests and require operator approval.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- Optional `examples/` and `tools/` directories contain development-only resources.

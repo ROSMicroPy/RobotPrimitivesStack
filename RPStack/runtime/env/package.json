@@ -1,30 +1,31 @@
 {
-    "name": "In-memory shell environment",
-    "version": "1.0",
-    "urls": [
-        [
-            "mpenv/__init__.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/mpenv/__init__.py"
-        ],
-        [
-            "mpenv/envstore.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/mpenv/envstore.py"
-        ],
-        [
-            "mpenv/cmds/__init__.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/mpenv/cmds/__init__.py"
-        ],
-        [
-            "mpenv/cmds/exportcmd.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/mpenv/cmds/exportcmd.py"
-        ],
-        [
-            "mpenv/cmds/envcmd.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/mpenv/cmds/envcmd.py"
-        ],
-        [
-            "init.d/S005_env.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/ide/mp_env/-/raw/main/src/S005_env.py"
-        ]
+  "name": "rp-env",
+  "version": "1.0.0",
+  "urls": [
+    [
+      "mpenv/__init__.py",
+      "src/mpenv/__init__.py"
+    ],
+    [
+      "mpenv/envstore.py",
+      "src/mpenv/envstore.py"
+    ],
+    [
+      "mpenv/cmds/__init__.py",
+      "src/mpenv/cmds/__init__.py"
+    ],
+    [
+      "mpenv/cmds/envcmd.py",
+      "src/mpenv/cmds/envcmd.py"
+    ],
+    [
+      "mpenv/cmds/exportcmd.py",
+      "src/mpenv/cmds/exportcmd.py"
+    ],
+    [
+      "init.d/S005_env.py",
+      "src/init.d/S005_env.py"
     ]
+  ],
+  "deps": []
 }

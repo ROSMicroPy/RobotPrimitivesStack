@@ -132,3 +132,11 @@ Native-unit convenience operations can exist, but inter-service binding uses can
 ## Manifest
 
 **component.yaml** documents the interface identifiers and operation names alongside the rp.service/v1 package definition.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
+- Optional `examples/` and `tools/` directories contain development-only resources.

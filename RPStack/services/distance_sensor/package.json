@@ -1,13 +1,32 @@
 {
+  "name": "rp-distance-sensor",
+  "version": "0.3.0",
   "urls": [
-    ["DistanceSensor/__init__.py", "__init__.py"],
-    ["DistanceSensor/distance_drivers/__init__.py", "distance_drivers/__init__.py"],
-    ["DistanceSensor/distance_drivers/hcsr04.py", "distance_drivers/hcsr04.py"],
-    ["DistanceSensor/distance_drivers/vl53l4cd.py", "distance_drivers/vl53l4cd.py"],
-    ["DistanceSensor/distance_drivers/vl53l4cd_core.py", "distance_drivers/vl53l4cd_core.py"]
+    [
+      "DistanceSensor/__init__.py",
+      "src/DistanceSensor/__init__.py"
+    ],
+    [
+      "DistanceSensor/distance_drivers/__init__.py",
+      "src/DistanceSensor/distance_drivers/__init__.py"
+    ],
+    [
+      "DistanceSensor/distance_drivers/hcsr04.py",
+      "src/DistanceSensor/distance_drivers/hcsr04.py"
+    ],
+    [
+      "DistanceSensor/distance_drivers/vl53l4cd.py",
+      "src/DistanceSensor/distance_drivers/vl53l4cd.py"
+    ],
+    [
+      "DistanceSensor/distance_drivers/vl53l4cd_core.py",
+      "src/DistanceSensor/distance_drivers/vl53l4cd_core.py"
+    ]
   ],
   "deps": [
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
-  ],
-  "version": "0.3.0"
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "archdef"
+    ]
+  ]
 }

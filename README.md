@@ -863,6 +863,20 @@ A device assembly normally identifies:
 - explicit capability bindings where needed;
 - behaviors and bridges to start.
 
+## Component directory layout
+
+Every immediate component under `RPStack/runtime` and `RPStack/services` uses this package-oriented structure:
+
+~~~text
+component/
+├── README.md
+├── package.json
+├── src/
+└── test/
+~~~
+
+Importable and startup code lives under `src/`; host tests and hardware-test guidance live under `test/`. Services also contain `component.yaml`, the generic runtime, operation, and testing specification. Optional `examples/` and `tools/` directories contain development resources. Each MIP manifest maps files from `src/` to their installed device paths.
+
 ## Adding a service
 
 Use the following workflow when adding an individual driver, adapter, or composite.
@@ -895,13 +909,13 @@ A service manifest should be complete enough that a reader or tool can answer:
 Run the Primitive Runtime tests from the repository root:
 
 ~~~bash
-python -m unittest discover     -s RPStack/runtime/primitive_runtime/tests     -v
+python -m unittest discover     -s RPStack/runtime/primitive_runtime/test     -v
 ~~~
 
 Run the linear-slide service tests:
 
 ~~~bash
-python -m unittest discover     -s RPStack/services/linear_slide/tests     -v
+python -m unittest discover     -s RPStack/services/linear_slide/test     -v
 ~~~
 
 Compile Python sources:

@@ -163,7 +163,14 @@ Install the package through its **package.json**. It places the runtime modules 
 From the repository root:
 
 ~~~bash
-python -m unittest discover     -s RPStack/runtime/primitive_runtime/tests     -v
+python -m unittest discover     -s RPStack/runtime/primitive_runtime/test     -v
 ~~~
 
 The tests cover manifest loading, capability binding, dependency order, reverse shutdown, operation validation, implementation restrictions, test execution, and hardware-test approval.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- Optional `examples/` and `tools/` directories contain development-only resources.

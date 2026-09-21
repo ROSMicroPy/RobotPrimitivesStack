@@ -133,3 +133,10 @@ mip.install(
 - Record lifecycle failures and test results as logs.
 - Measure operation duration, queue depth, retries, and error counts.
 - Avoid exporting synchronously from timing-critical motor loops.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- Optional `examples/` and `tools/` directories contain development-only resources.

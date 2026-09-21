@@ -1,20 +1,15 @@
 import itertools
-import importlib.util
 from pathlib import Path
 import sys
 import threading
 import unittest
 
-sys.path.insert(0, ".")
+COMPONENT_DIR = Path(__file__).resolve().parents[1]
+SERVICES_DIR = COMPONENT_DIR.parent
+sys.path.insert(0, str(SERVICES_DIR / "interfaces" / "src"))
+sys.path.insert(0, str(COMPONENT_DIR / "src"))
 
-spec = importlib.util.spec_from_file_location(
-    "DistanceSensor", Path("__init__.py"), submodule_search_locations=["."])
-distance_sensor = importlib.util.module_from_spec(spec)
-sys.modules["DistanceSensor"] = distance_sensor
-spec.loader.exec_module(distance_sensor)
-
-DistanceSensor = distance_sensor.DistanceSensor
-DistanceSensorDriver = distance_sensor.DistanceSensorDriver
+from DistanceSensor import DistanceSensor, DistanceSensorDriver
 from DistanceSensor.distance_drivers.hcsr04 import HCSR04Driver
 from DistanceSensor.distance_drivers.vl53l4cd_core import DEFAULT_CONFIGURATION, VL53L4CD
 

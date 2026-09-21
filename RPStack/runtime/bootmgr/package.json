@@ -1,18 +1,19 @@
 {
-    "name": "microemacs-for-micropython",
-    "version": "1.0",
-    "urls": [
-        [
-            "bootmgr/bootmgr.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/mp_bootmgr/-/raw/main/src/bootmgr.py"
-        ],
-        [
-            "bootmgr/__init__.py",
-            "https://gitlab.com/robot-primitives/micropython_modules/mp_bootmgr/-/raw/main/src/__init__.py"
-        ],
-        [
-            "init.d/bootmgr.json",
-            "https://gitlab.com/robot-primitives/micropython_modules/mp_bootmgr/-/raw/main/src/bootmgr.json"
-        ]
-   ]
+  "name": "rp-bootmgr",
+  "version": "1.0.0",
+  "urls": [
+    [
+      "bootmgr/__init__.py",
+      "src/bootmgr/__init__.py"
+    ],
+    [
+      "bootmgr/bootmgr.py",
+      "src/bootmgr/bootmgr.py"
+    ],
+    [
+      "init.d/bootmgr.json",
+      "src/init.d/bootmgr.json"
+    ]
+  ],
+  "deps": []
 }

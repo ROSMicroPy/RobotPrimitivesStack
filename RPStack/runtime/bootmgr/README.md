@@ -101,3 +101,10 @@ A boot script commonly constructs a **ServiceSupervisor**, registers the device 
 - Avoid long blocking work at module import time.
 - Catch and report failures where a device should continue in a degraded mode.
 - Let PrimitiveRuntime control service shutdown and dependency order.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- Optional `examples/` and `tools/` directories contain development-only resources.

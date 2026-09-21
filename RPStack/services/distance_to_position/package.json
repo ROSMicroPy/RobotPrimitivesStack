@@ -1,9 +1,16 @@
 {
+  "name": "rp-distance-to-position",
+  "version": "0.1.0",
   "urls": [
-    ["DistanceToPosition/__init__.py", "__init__.py"]
+    [
+      "DistanceToPosition/__init__.py",
+      "src/DistanceToPosition/__init__.py"
+    ]
   ],
   "deps": [
-    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
-  ],
-  "version": "0.1.0"
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "archdef"
+    ]
+  ]
 }

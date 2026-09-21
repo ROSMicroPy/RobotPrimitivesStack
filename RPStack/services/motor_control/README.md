@@ -112,3 +112,11 @@ PrimitiveRuntime rejects an operation that is not available for the registered i
 ## Packaging
 
 **package.json** installs MotorControl, all three driver modules, and the RPInterfaces dependency.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
+- Optional `examples/` and `tools/` directories contain development-only resources.

@@ -1,8 +1,15 @@
+from pathlib import Path
+import sys
 import unittest
 
-from RPStack.services.distance_to_position import DistanceToPositionAdapter
-from RPStack.services.interfaces import DistanceSample, PositionSample
-from RPStack.services.linear_slide import LinearSlide
+COMPONENT_DIR = Path(__file__).resolve().parents[1]
+SERVICES_DIR = COMPONENT_DIR.parent
+for component in ("interfaces", "distance_to_position", "linear_slide"):
+    sys.path.insert(0, str(SERVICES_DIR / component / "src"))
+
+from DistanceToPosition import DistanceToPositionAdapter
+from LinearSlide import LinearSlide
+from RPInterfaces import DistanceSample, PositionSample
 
 
 class FakePositionObserver:

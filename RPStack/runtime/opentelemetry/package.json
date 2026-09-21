@@ -1,54 +1,55 @@
 {
-    "name": "Micropython Open Telemetry SDK",
-    "version": "2.6",
-    "urls": [
-        [
-            "otel/__init__.py",
-            "./src/__init__.py"
-        ],
-        [
-            "otel/api.py",
-            "./src/api.py"
-        ],
-        [
-            "otel/context.py",
-            "./src/context.py"
-        ],
-        [
-            "otel/exporter.py",
-            "./src/exporter.py"
-        ],
-        [
-            "otel/http.py",
-            "./src/http.py"
-        ],
-        [
-            "otel/processor.py",
-            "./src/processor.py"
-        ],
-        [
-            "otel/propagation.py",
-            "./src/propagation.py"
-        ],
-        [
-            "otel/trace.py",
-            "./src/trace.py"
-        ],
-        [
-            "otel/util.py",
-            "./src/util.py"
-        ],
-        [
-            "otel/logging.py",
-            "./src/logging.py"
-        ],
-        [
-            "otel/metric.py",
-            "./src/metric.py"
-        ],
-        [
-            "examples/otel/otel_example.py",
-            "./examples/otel/otel_example.py"
-        ]
+  "name": "rp-opentelemetry",
+  "version": "2.6.0",
+  "urls": [
+    [
+      "otel/__init__.py",
+      "src/otel/__init__.py"
+    ],
+    [
+      "otel/api.py",
+      "src/otel/api.py"
+    ],
+    [
+      "otel/context.py",
+      "src/otel/context.py"
+    ],
+    [
+      "otel/exporter.py",
+      "src/otel/exporter.py"
+    ],
+    [
+      "otel/http.py",
+      "src/otel/http.py"
+    ],
+    [
+      "otel/logging.py",
+      "src/otel/logging.py"
+    ],
+    [
+      "otel/metric.py",
+      "src/otel/metric.py"
+    ],
+    [
+      "otel/processor.py",
+      "src/otel/processor.py"
+    ],
+    [
+      "otel/propagation.py",
+      "src/otel/propagation.py"
+    ],
+    [
+      "otel/trace.py",
+      "src/otel/trace.py"
+    ],
+    [
+      "otel/util.py",
+      "src/otel/util.py"
+    ],
+    [
+      "examples/otel/otel_example.py",
+      "examples/otel/otel_example.py"
     ]
+  ],
+  "deps": []
 }

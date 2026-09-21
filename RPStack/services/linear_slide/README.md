@@ -126,5 +126,13 @@ The hardware test requires explicit approval and verification of physical cleara
 Host-side tests use fake motor and position capabilities:
 
 ~~~bash
-python -m unittest discover     -s RPStack/services/linear_slide/tests     -v
+python -m unittest discover     -s RPStack/services/linear_slide/test     -v
 ~~~
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
+- Optional `examples/` and `tools/` directories contain development-only resources.

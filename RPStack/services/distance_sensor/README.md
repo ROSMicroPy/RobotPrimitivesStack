@@ -124,3 +124,11 @@ The **observe_once** automatic test acquires a sample and verifies canonical uni
 - RPInterfaces dependency
 
 Install the package manifest with MicroPython mip or mpremote.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
+- Optional `examples/` and `tools/` directories contain development-only resources.

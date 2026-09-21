@@ -80,3 +80,11 @@ The canonical **component.yaml** declares:
 - status
 
 The **transform_once** automatic test reads one sample and verifies that the result is a linear position in metres.
+
+## Repository layout
+
+- `src/` contains importable modules and device startup files.
+- `test/` contains host tests or hardware-test guidance.
+- `package.json` maps source files to their MIP installation paths.
+- `component.yaml` defines the service lifecycle, capabilities, operations, signals, and tests.
+- Optional `examples/` and `tools/` directories contain development-only resources.
