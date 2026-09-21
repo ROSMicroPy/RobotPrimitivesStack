@@ -1,434 +1,245 @@
-# Robot Primitives Software Stack Architecture
+# Robot Primitives Software Stack
 
-## Overview
+Robot Primitives Software Stack, or **RPStack**, is a framework for building modular robotic devices from small, reusable capabilities.
 
-The Robot Primitives software stack can be organized into four primary layers:
+A device is assembled from services such as a motor controller, distance sensor, position observer, camera, gripper, or linear actuator. Each service describes itself through a manifest. The Primitive Runtime reads those manifests, connects compatible services, starts them in dependency order, exposes their supported operations, and manages their lifecycle.
 
-1. **Device Platform**
-2. **Primitive Runtime**
-3. **Primitive Services**
-4. **Behavior Graph**
+RPStack is designed for constrained embedded systems, especially MicroPython targets, while keeping the same architectural model usable in host simulations, test tools, ROS 2 bridges, and web interfaces.
 
-A fifth supporting concept, **Bridges**, connects the Robot Primitives messaging model to external transports such as ROS 2, Lighthouse Mesh, and REST.
+## The basic idea
 
-The architecture can be summarized as:
+A robotic device is divided into four layers:
 
-> **Platform:** What can this hardware run?
-> **Runtime:** How does Robot Primitives operate?
-> **Services:** What can this device do?
-> **Behavior:** What should this device do?
+1. **Device Platform** supplies the firmware and low-level hardware environment.
+2. **Primitive Runtime** discovers, connects, starts, monitors, and stops services.
+3. **Primitive Services** expose reusable hardware-independent capabilities.
+4. **Behavior Graph** coordinates those capabilities into useful robot behavior.
 
-```mermaid
+Bridges connect the internal RPStack model to external systems such as ROS 2, Lighthouse Mesh, REST, WebSocket, or MQTT.
+
+~~~mermaid
 flowchart TB
-    B["Layer 4<br/>Behavior Graph"]
-    S["Layer 3<br/>Primitive Services"]
-    R["Layer 2<br/>Primitive Runtime"]
-    P["Layer 1<br/>Device Platform"]
-
-    B --> S
-    S --> R
-    R --> P
-```
-
----
-
-# Layer 1 — Device Platform
-
-The **Device Platform** provides the compiled firmware environment required to support Robot Primitives on a particular hardware platform.
-
-This layer consists primarily of native or firmware-level functionality.
-
-Typical components include:
-
-* MicroPython
-* ROSMicroPy
-* Robot Primitives Observability
-* Lighthouse Mesh
-* Native C/C++ drivers
-* Board Support Package
-* RTOS or low-level hardware abstractions
-
-```mermaid
-flowchart TB
+    BG["Behavior Graph"]
+    PS["Primitive Services"]
+    PR["Primitive Runtime"]
     DP["Device Platform"]
 
-    DP --> MP["MicroPython"]
-    DP --> ROS["ROSMicroPy"]
-    DP --> OBS["Observability"]
-    DP --> LM["Lighthouse Mesh"]
-    DP --> DRV["Native Drivers"]
-    DP --> BSP["Board Support"]
-```
+    BG --> PS
+    PS --> PR
+    PR --> DP
+~~~
 
-## Deployment Artifact
+A helpful way to think about these layers is:
 
-The output of this layer is a compiled firmware image.
+| Layer | Question it answers |
+|---|---|
+| Device Platform | What can this hardware run? |
+| Primitive Runtime | How are services assembled and managed? |
+| Primitive Services | What can this device do? |
+| Behavior Graph | What should the device do next? |
+| Bridges | How does the device communicate with other systems? |
 
-Example:
+## A first example
 
-```text
+Consider a stepper-driven linear slide with a time-of-flight distance sensor.
+
+The system contains four services:
+
+| Service | Responsibility | Capability |
+|---|---|---|
+| Stepper motor | Produces incremental motion | motion.motion_actuator |
+| ToF sensor | Measures distance along its sensing ray | sensing.distance_observer |
+| Distance-to-position adapter | Converts distance into installed carriage position | motion.position_observer |
+| Linear-slide composite | Coordinates motion and feedback | motion.position_actuator |
+
+~~~mermaid
+flowchart TB
+    APP["Behavior or application"]
+    SLIDE["Linear slide composite"]
+    MOTOR["Stepper motor"]
+    POSITION["Distance-to-position adapter"]
+    TOF["ToF distance sensor"]
+
+    APP -->|"move_to(target)"| SLIDE
+    SLIDE --> MOTOR
+    SLIDE --> POSITION
+    POSITION --> TOF
+~~~
+
+The linear-slide service knows how to reach a target, enforce travel limits, stop on failure, and determine when motion is complete. It does not need to know which stepper controller or position sensor was selected. It depends on capability interfaces and receives matching service instances from the runtime.
+
+This separation makes it possible to replace the ToF sensor with a linear encoder, use a simulated motor in a test, or expose a remote motion capability through a bridge without rewriting the composite service.
+
+## Repository layout
+
+All stack components live under the **RPStack** directory.
+
+~~~text
+RPStack/
+├── runtime/
+│   ├── primitive_runtime/
+│   ├── bootmgr/
+│   ├── env/
+│   ├── opentelemetry/
+│   └── shell/
+├── services/
+│   ├── interfaces/
+│   ├── distance_sensor/
+│   ├── distance_to_position/
+│   ├── motor_control/
+│   └── linear_slide/
+└── spec/
+    ├── SERVICE_MANIFEST.md
+    └── service-manifest.schema.json
+
+RPStack_WebTester/
+~~~
+
+The top-level **RPStack_WebTester** entry is a Git submodule containing the existing dynamic web-form prototype. Its replacement can use the operation and test descriptions in each service manifest as its input model.
+
+## Layer 1: Device Platform
+
+The Device Platform is the compiled firmware environment installed on a board. It provides the facilities required by the runtime and services.
+
+Typical platform contents include:
+
+- MicroPython
+- board support and pin definitions
+- native C or C++ drivers
+- an RTOS or hardware abstraction layer
+- ROSMicroPy
+- Lighthouse Mesh
+- observability support
+- networking, storage, and device-specific extensions
+
+A platform image is normally associated with a hardware family:
+
+~~~text
 rp-platform-esp32s3-v1.4.0.bin
 rp-platform-esp32p4-v1.4.0.bin
 rp-platform-nrf9151-v1.4.0.bin
-```
+~~~
 
-The firmware image should ideally describe the **hardware/runtime environment**, rather than the application deployed on the device.
+The platform provides the execution environment. Installed services and device configuration determine the capabilities of a particular node.
 
-For example, prefer:
+## Layer 2: Primitive Runtime
 
-```text
-rp-platform-esp32s3.bin
-```
+The Primitive Runtime is the common service-management layer. Its core implementation is under:
 
-rather than:
+~~~text
+RPStack/runtime/primitive_runtime/
+~~~
 
-```text
-object-camera-firmware.bin
-servo-controller-firmware.bin
-```
+The runtime currently provides:
 
-unless a particular device genuinely requires specialized native firmware.
+- service-manifest loading and structural validation
+- capability registration
+- interface-version matching
+- semantic constraint matching
+- automatic and explicit dependency binding
+- dependency-cycle detection
+- deterministic startup ordering
+- reverse-order shutdown
+- lifecycle failure handling
+- allowlisted operation invocation
+- implementation-specific operation checks
+- declarative service-test execution
 
-This leads to an important architectural principle:
+Additional runtime packages provide boot orchestration, environment storage, shell access, and OpenTelemetry support.
 
-> **Firmware defines what the hardware can support; services define what the device is.**
+### Runtime flow
 
----
+A device application registers the service instances it wants to run. Each registration supplies a manifest and a factory that can construct the service.
 
-# Layer 2 — Primitive Runtime
+The runtime then performs these steps:
 
-The **Robot Primitives Runtime** provides the common execution environment used by every Robot Primitives device.
-
-This layer should remain largely identical across deployments.
-
-Typical functionality includes:
-
-```text
-rp_runtime/
-├── supervisor/
-├── registry/
-├── signals/
-├── config/
-├── cli/
-├── debug/
-├── package/
-└── boot/
-```
-
-## Runtime Responsibilities
-
-The runtime is responsible for:
-
-* Startup and shutdown
-* Service lifecycle management
-* Service discovery
-* Configuration management
-* Package management
-* Signal registration
-* Local message routing
-* CLI support
-* Remote REPL
-* Remote debugging
-* Remote filesystem access
-* Health monitoring
-* Logging and tracing
-* Watchdog functionality
-* Service restart and recovery
-
----
-
-## Service Supervisor
-
-Rather than making `init.d` the architectural concept, the runtime can expose a **Service Supervisor**.
-
-The supervisor manages the lifecycle of Primitive Services.
-
-Conceptually:
-
-```python
-supervisor.register(service)
-
-supervisor.start(service)
-supervisor.stop(service)
-supervisor.restart(service)
-```
-
-The filesystem or configuration mechanism may still resemble Linux `init.d`, but internally the architectural abstraction is a **Supervisor**.
-
-```mermaid
-flowchart LR
-    BOOT["Runtime Boot"] --> DISC["Discover Services"]
-    DISC --> REG["Register Services"]
-    REG --> INIT["Initialize"]
-    INIT --> START["Start"]
-    START --> MON["Monitor"]
-    MON -->|Failure| RESTART["Restart"]
-    RESTART --> START
-```
-
----
-
-# Layer 3 — Primitive Services
-
-The **Primitive Services** layer contains small, reusable component drivers and the abstractions used to compose them into higher-level device capabilities.
-
-Every driver is managed as a Primitive Service and therefore participates in the common lifecycle, configuration, discovery, health, and signaling model. Hardware-specific code remains behind stable capability interfaces.
-
-## Service-layer decomposition
-
-| Concept | Responsibility | Example |
-|---|---|---|
-| **Capability Interface** | Defines a stable, hardware-independent contract | Position observer, motion actuator |
-| **Individual Driver** | Controls or observes one physical or software component | TMC5160 stepper driver, VL53 ToF driver |
-| **Adapter** | Translates one capability or representation into another | Distance-to-linear-position adapter |
-| **Composite Driver** | Combines multiple capabilities into a higher-level capability | Observed linear actuator |
-| **Service Manifest** | Declares identity, lifecycle, capabilities, dependencies, actions, and signals | YAML or Python manifest |
-
-A **Primitive Service** is the runtime-managed unit. Individual drivers, adapters, and composite drivers are all kinds of Primitive Service.
-
-```mermaid
+~~~mermaid
 flowchart TB
-    CI["Capability Interfaces"]
-    ID["Individual Drivers"]
-    AD["Adapters"]
-    CD["Composite Drivers"]
-    RT["Primitive Runtime"]
-
-    ID -. implements .-> CI
-    AD -. implements .-> CI
-    CD -. implements .-> CI
-
-    RT --> ID
-    RT --> AD
-    RT --> CD
-```
-
-## Design rules
-
-1. Drivers expose capabilities through interfaces rather than concrete device APIs.
-2. Composite drivers depend on capability interfaces and constraints, not vendor or model names.
-3. Raw measurements retain their physical meaning; adapters add installation-specific interpretation.
-4. Units, reference frames, validity, timestamps, and quality are explicit at interface boundaries.
-5. The runtime binds dependencies from manifests and the Device Manifest.
-6. Hardware-specific configuration remains with the individual driver.
-7. Device-specific calibration belongs to an adapter or deployed-device configuration.
-8. A composite driver may know the roles of its subsystems, but it should not construct or import their concrete implementations.
-
----
-
-## Capability Interfaces
-
-A **Capability Interface** defines what a component can do without defining how a particular device implements it.
-
-Interfaces are narrower than services:
-
-* The **Primitive Service contract** defines lifecycle and runtime management.
-* A **Capability Interface** defines a functional API such as observing position or commanding motion.
-* One service may implement several capability interfaces.
-* Multiple unrelated drivers may implement the same capability interface.
-
-Examples include:
-
-```text
-PositionObserver
-DistanceObserver
-MotionActuator
-PositionActuator
-VelocityActuator
-DigitalInput
-DigitalOutput
-ImageSource
-ObjectDetector
-```
-
-An interface should have an independently versioned identifier:
-
-```yaml
-interface: motion.position_observer
-version: 1
-```
-
-The major version is part of compatibility resolution. Implementations can evolve without forcing composites to depend on their package or class names.
-
-### Interface capability descriptors
-
-Manifests should describe semantic constraints in addition to the interface name.
-
-```yaml
-capability:
-  interface: motion.position_observer
-  version: 1
-  dimensions: 1
-  quantity: linear
-  canonical_unit: m
-  reference_frame: carriage
-```
-
-This prevents a composite requiring linear position from accidentally binding to an angular observer merely because both implement `PositionObserver`.
-
----
-
-## Physical quantities and position
-
-`PositionObserver` can represent both linear and angular position, but every sample must identify the quantity being measured.
-
-Conceptually:
-
-```python
-class PositionSample:
-    kind: str            # "linear" or "angular"
-    value: float
-    unit: str            # canonical: "m" or "rad"
-    reference_frame: str
-    timestamp_ns: int
-    valid: bool
-    quality: float       # normalized 0.0 through 1.0
-```
-
-The interface can be kept small:
-
-```python
-class PositionObserver:
-
-    def position(self) -> PositionSample:
-        ...
-
-    def start_observing(self, rate_hz=None):
-        ...
-
-    def stop_observing(self):
-        ...
-```
-
-Typical implementations include:
-
-| Implementation | Position kind | Source |
-|---|---|---|
-| Servo feedback | Angular | Encoder or internal servo feedback |
-| Rotary encoder | Angular | Shaft angle |
-| Linear encoder | Linear | Carriage displacement |
-| ToF position adapter | Linear | Distance transformed through installation calibration |
-| Step-count estimator | Linear or angular | Motor steps transformed through mechanism geometry |
-
-The canonical interface units should normally be SI units:
-
-* Linear position: metres (`m`)
-* Angular position: radians (`rad`)
-* Linear velocity: metres per second (`m/s`)
-* Angular velocity: radians per second (`rad/s`)
-
-A driver may use native units internally. Conversion occurs at the interface boundary. Constrained devices may use documented scaled integers on the wire while preserving the same physical-unit semantics.
-
-### Raw observation versus installed meaning
-
-A ToF sensor natively observes **distance along a sensing ray**. It does not inherently know that the reading represents a carriage position.
-
-For that reason, the preferred decomposition is:
-
-```mermaid
-flowchart LR
-    TOF["ToF Driver"]
-    DIST["DistanceObserver"]
-    ADAPT["Distance-to-Position Adapter"]
-    POS["PositionObserver<br/>linear"]
-
-    TOF -. implements .-> DIST
-    DIST --> ADAPT
-    ADAPT -. implements .-> POS
-```
-
-The adapter owns installation-specific information such as:
-
-* zero offset,
-* direction or inversion,
-* usable range,
-* reference frame,
-* filtering,
-* calibration curve,
-* out-of-range handling.
-
-A tightly integrated product may implement `PositionObserver` directly in its ToF driver, but keeping the adapter separate makes the raw sensor driver reusable.
-
----
-
-## Individual Drivers
-
-An **Individual Driver** represents one independently addressable component or software endpoint.
-
-Examples include:
-
-```text
-drivers/
-├── tmc5160_stepper/
-├── servo42c/
-├── vl53l1x_tof/
-├── vl53l7cx_array/
-├── mt6816_encoder/
-├── bno085_imu/
-└── camera/
-```
-
-An individual driver should:
-
-* own the hardware protocol and device-specific configuration,
-* implement the Primitive Service lifecycle,
-* expose one or more capability interfaces,
-* publish normalized signals,
-* report health and diagnostics,
-* avoid embedding knowledge of the larger mechanism.
-
-A ToF driver, for example, should know how to initialize the sensor, obtain valid ranges, and report sensor faults. It should not need to know that it is mounted on a linear actuator.
-
----
-
-## Adapters
-
-An **Adapter** is a small Primitive Service that changes representation or semantics without coordinating a multi-component operation.
-
-Examples include:
-
-* distance to linear position,
-* encoder counts to angular position,
-* PWM duty cycle to normalized effort,
-* local signal to ROS message schema,
-* raw switch state to a debounced limit observation.
-
-Adapters make installation knowledge explicit and keep both individual and composite drivers reusable.
-
-```python
-class DistanceToPositionAdapter(PositionObserver):
-
-    def __init__(self, distance_observer, calibration):
-        self.distance_observer = distance_observer
-        self.calibration = calibration
-
-    def position(self):
-        distance = self.distance_observer.distance()
-        return self.calibration.to_linear_position(distance)
-```
-
----
-
-## Composite Drivers
-
-A **Composite Driver** combines two or more component capabilities and exposes a higher-level, consistent interface.
-
-A composite driver:
-
-* implements the same lifecycle contract as an individual driver,
-* declares required and optional capability dependencies,
-* receives bound service instances from the runtime,
-* coordinates actions and observations,
-* owns mechanism-level safety and completion logic,
-* exposes a capability that hides the internal composition.
-
-A composite driver should depend on roles, interfaces, and constraints:
-
-```yaml
+    REGISTER["Register service definitions"]
+    RESOLVE["Resolve capability requirements"]
+    ORDER["Build dependency order"]
+    CREATE["Construct service instances"]
+    CONFIGURE["Configure and initialize"]
+    START["Start providers before consumers"]
+    OPERATE["Invoke declared operations"]
+    STOP["Stop consumers before providers"]
+
+    REGISTER --> RESOLVE
+    RESOLVE --> ORDER
+    ORDER --> CREATE
+    CREATE --> CONFIGURE
+    CONFIGURE --> START
+    START --> OPERATE
+    OPERATE --> STOP
+~~~
+
+If startup fails after some services are running, the supervisor stops the services that were already started. Normal shutdown uses reverse dependency order so a composite is stopped before the motor and sensor services it uses.
+
+### Runtime registration
+
+The following example shows the shape of a device assembly:
+
+~~~python
+from PrimitiveRuntime import ServiceManifest, ServiceSupervisor
+
+runtime = ServiceSupervisor()
+
+motor_manifest = ServiceManifest.load(
+    "services/motor_control/component.yaml"
+)
+position_manifest = ServiceManifest.load(
+    "services/distance_to_position/component.yaml"
+)
+slide_manifest = ServiceManifest.load(
+    "services/linear_slide/component.yaml"
+)
+
+runtime.register(
+    "lift_motor",
+    motor_manifest,
+    factory=make_lift_motor,
+    implementation="step_dir",
+)
+
+runtime.register(
+    "lift_position",
+    position_manifest,
+    factory=make_lift_position,
+    bindings={"distance_observer": "lift_tof"},
+)
+
+runtime.register(
+    "lift",
+    slide_manifest,
+    factory=LinearSlide,
+    bindings={
+        "motor": "lift_motor",
+        "position": "lift_position",
+    },
+    config={
+        "tolerance_m": 0.001,
+        "max_steps": 10000,
+    },
+)
+
+runtime.start()
+runtime.invoke("lift", "move_to", {"target": 0.100})
+runtime.stop()
+~~~
+
+Factories are responsible for supplying platform resources such as I2C buses, GPIO pins, timers, and concrete driver instances. The runtime is responsible for capability binding and lifecycle management.
+
+### Automatic and explicit binding
+
+A required capability is identified by a role name, interface, version, and optional constraints.
+
+~~~yaml
 requires:
   motor:
     interface: motion.motion_actuator
     version: 1
+    constraints:
+      mode: incremental
 
   position:
     interface: motion.position_observer
@@ -436,849 +247,734 @@ requires:
     constraints:
       quantity: linear
       dimensions: 1
-```
+      canonical_unit: m
+~~~
 
-It should not depend directly on concrete package names such as `TMC5160` or `VL53L1X`.
+The runtime can bind a role automatically when exactly one registered provider matches.
 
-This allows the same composite implementation to use:
+An explicit binding is used when:
 
-* a different stepper controller,
-* an encoder instead of a ToF sensor,
-* simulated components during testing,
-* a remote capability exposed through Lighthouse,
-* a ROS-backed capability supplied through a bridge.
+- more than one compatible provider exists;
+- a specific physical device must fill the role;
+- two identical composites use different motors or sensors;
+- predictable wiring is more important than automatic selection.
 
----
+~~~python
+bindings={
+    "motor": "lift_motor",
+    "position": "lift_position",
+}
+~~~
 
-## Example: observed linear actuator
+The runtime reports an error if no provider matches, a binding is incompatible, multiple providers are ambiguous, or the dependency graph contains a cycle.
 
-Consider a linear actuator driven by a stepper motor, with a ToF sensor measuring carriage position.
+## Layer 3: Primitive Services
 
-The components are decomposed as follows:
+A Primitive Service is the unit managed by the runtime. Every service has:
 
-| Role | Implementation | Interface exposed |
-|---|---|---|
-| Motor | Stepper motor driver | `MotionActuator` |
-| Raw sensor | ToF distance driver | `DistanceObserver` |
-| Position conversion | Distance-to-position adapter | `PositionObserver` with `quantity: linear` |
-| Mechanism | Observed linear actuator composite | `PositionActuator` |
+- an identity and version;
+- a service kind and type;
+- a lifecycle;
+- zero or more provided capabilities;
+- zero or more required capabilities;
+- configuration fields;
+- declared operations;
+- signals;
+- implementation choices;
+- declarative tests.
 
-```mermaid
-flowchart TB
-    BEHAVIOR["Behavior Graph"]
-    LINEAR["Observed Linear Actuator<br/>Composite Driver"]
-    MOTOR["Stepper Driver<br/>MotionActuator"]
-    POSITION["Distance-to-Position Adapter<br/>PositionObserver"]
-    TOF["ToF Driver<br/>DistanceObserver"]
+RPStack uses three main service kinds.
 
-    BEHAVIOR -->|"move_to(target)"| LINEAR
-    LINEAR --> MOTOR
-    LINEAR --> POSITION
-    POSITION --> TOF
-```
+### Individual drivers
 
-The composite driver can have detailed knowledge of how a linear actuator behaves—target tolerance, approach direction, homing, limits, timeout, stall detection, and completion—but it communicates with its components only through the declared interfaces.
-
-Conceptually:
-
-```python
-class ObservedLinearActuator(PositionActuator):
-
-    def __init__(self, motor: MotionActuator,
-                 position: PositionObserver,
-                 config):
-        self.motor = motor
-        self.position_observer = position
-        self.config = config
-
-    def move_to(self, target):
-        current = self.position_observer.position()
-        self._validate_target(target, current)
-        self.motor.command(self._motion_for(target, current))
-
-    def update(self):
-        current = self.position_observer.position()
-
-        if self._target_reached(current):
-            self.motor.stop()
-            self.publish("motion.target.reached", current)
-
-        elif self._unsafe_or_timed_out(current):
-            self.motor.stop()
-            self.publish("motion.target.failed", current)
-```
-
-The composite may implement closed-loop control itself or delegate it to the motor controller. That choice is an implementation detail; the external `PositionActuator` contract remains consistent.
-
----
-
-## Service Lifecycle
-
-Every individual driver, adapter, and composite driver implements the common Primitive Service lifecycle.
-
-```python
-class PrimitiveService:
-
-    def configure(self, config):
-        ...
-
-    def init(self):
-        ...
-
-    def start(self):
-        ...
-
-    def stop(self):
-        ...
-
-    def reset(self):
-        ...
-
-    def status(self):
-        ...
-```
-
-The lifecycle contract should remain independent of the functional interfaces. For example, a stepper service can implement both `PrimitiveService` and `MotionActuator`.
-
----
-
-# Service Manifest
-
-> **Implementation status:** `component.yaml` is the canonical `rp.service/v1` manifest. It combines lifecycle, capability binding, configuration, operations, signals, concrete implementations, and declarative tests in one generic contract. See `RPStack/spec/SERVICE_MANIFEST.md` and its JSON Schema. The Primitive Runtime loads this contract to bind and supervise services; future UI tooling can derive operation and test forms from the same data.
-
-Rather than requiring every service to register itself procedurally, each service exposes a declarative **Service Manifest**.
-
-An individual ToF driver might declare:
-
-```yaml
-service:
-  name: vl53l1x
-  kind: individual_driver
-  type: sensor.tof
-
-  implements:
-    - interface: sensing.distance_observer
-      version: 1
-
-  provides_signals:
-    - range.distance.updated
-    - device.health.changed
-```
-
-The distance-to-position adapter might declare:
-
-```yaml
-service:
-  name: carriage_position
-  kind: adapter
-  type: adapter.distance_to_position
-
-  implements:
-    - interface: motion.position_observer
-      version: 1
-      quantity: linear
-
-  requires:
-    distance:
-      interface: sensing.distance_observer
-      version: 1
-```
-
-The composite linear actuator might declare:
-
-```yaml
-service:
-  name: observed_linear_actuator
-  kind: composite_driver
-  type: motion.linear_actuator
-
-  implements:
-    - interface: motion.position_actuator
-      version: 1
-      quantity: linear
-
-  requires:
-    motor:
-      interface: motion.motion_actuator
-      version: 1
-
-    position:
-      interface: motion.position_observer
-      version: 1
-      constraints:
-        quantity: linear
-
-  actions:
-    - motion.move_to
-    - motion.home
-    - motion.stop
-
-  provides_signals:
-    - motion.started
-    - motion.position.updated
-    - motion.target.reached
-    - motion.target.failed
-```
-
-The runtime uses these manifests to discover capabilities, validate compatibility, resolve dependencies, and start services in dependency order.
-
-```mermaid
-flowchart TB
-    DISC["Discover Services"]
-    READ["Read Manifests"]
-    MATCH["Match Interfaces<br/>and Constraints"]
-    BIND["Bind Roles"]
-    START["Start in Dependency Order"]
-
-    DISC --> READ
-    READ --> MATCH
-    MATCH --> BIND
-    BIND --> START
-```
-
-### Explicit device binding
-
-Automatic matching is useful, but a Device Manifest should be able to bind a role explicitly when multiple compatible providers exist.
-
-```yaml
-device:
-  id: axis.lift
-
-  services:
-    stepper:
-      package: drivers.tmc5160_stepper
-
-    tof:
-      package: drivers.vl53l1x_tof
-
-    carriage_position:
-      package: adapters.distance_to_position
-      bind:
-        distance: tof
-      config:
-        zero_offset_m: 0.018
-        direction: -1
-        reference_frame: lift.base
-
-    lift:
-      package: composites.observed_linear_actuator
-      bind:
-        motor: stepper
-        position: carriage_position
-```
-
-The composite knows that it has a `motor` and a `position` role. It does not need to know which hardware models fulfill those roles.
-
----
-
-# Robot Primitive Definition
-
-A **Robot Primitive** can be formally defined as:
-
-> A discoverable capability with a defined lifecycle, configuration schema, interfaces, traits, actions, signals, and health state.
-
-Conceptually:
-
-```mermaid
-mindmap
-  root((Robot Primitive))
-    Identity
-    Configuration
-    Lifecycle
-    Interfaces
-    Traits
-    Actions
-    Signals
-      Inputs
-      Outputs
-    Health
-```
-
-A single Primitive Service may expose one or more Robot Primitives or capability interfaces.
-
-For example, an object-detection camera might expose:
-
-```text
-Primitive Node: front_camera
-
-Provides:
-    ImageSource
-    ObjectDetector
-    DistanceObserver
-```
-
-This keeps the physical device, service implementation, and logical capabilities distinct.
-
----
-
-
-# Signals
-
-Robot Primitives should define its own messaging abstraction rather than using ROS-specific terminology at the architectural level.
-
-The core concept should be a **Signal**.
-
-Signals can be routed through multiple transports without the service needing to know which transport is being used.
-
-```mermaid
-flowchart LR
-    SERVICE["Primitive Service"]
-    BUS["Signal Bus"]
-
-    SERVICE --> BUS
-
-    BUS --> LOCAL["Local"]
-    BUS --> LIGHT["Lighthouse Mesh"]
-    BUS --> ROS["ROS 2"]
-    BUS --> REST["REST / WebSocket"]
-```
-
-Possible terminology:
-
-* Signal
-* Signal Bus
-* Signal Provider
-* Signal Consumer
-* Signal Bridge
-
-A service might declare:
-
-```yaml
-provides:
-  - vision.object.detected
-  - vision.object.lost
-
-consumes:
-  - camera.frame
-```
-
-The service itself does not need to know whether the signal remains local or crosses a network.
-
----
-
-# Actions vs Signals
-
-It is useful to distinguish between **Actions** and **Signals**.
-
-## Signals
-
-Signals represent events or changes in state.
-
-Examples:
-
-```text
-vision.object.detected
-vision.object.lost
-
-range.distance.updated
-
-motion.servo.started
-motion.servo.complete
-
-device.health.changed
-```
-
-## Actions
-
-Actions represent requests for something to happen.
-
-Examples:
-
-```text
-camera.capture
-
-servo.move
-servo.home
-
-gripper.open
-gripper.close
-
-slide.move
-```
-
-The typical interaction becomes:
-
-```mermaid
-sequenceDiagram
-    participant B as Behavior Graph
-    participant S as Servo Service
-
-    B->>S: Action: servo.move
-    S-->>B: Signal: servo.started
-    S-->>B: Signal: servo.position.updated
-    S-->>B: Signal: servo.complete
-```
-
-This distinction becomes particularly important when supporting:
-
-* Timeouts
-* Cancellation
-* Retries
-* Completion acknowledgement
-* Error handling
-* Long-running operations
-
----
-
-# Signal Naming Convention
-
-A hierarchical naming convention should be used.
-
-Recommended format:
-
-```text
-domain.component.event
-```
-
-Examples:
-
-```text
-vision.object.detected
-vision.object.lost
-
-range.distance.updated
-
-motion.servo.started
-motion.servo.complete
-
-system.service.started
-system.service.failed
-
-device.health.changed
-```
-
-Actions may follow a similar convention:
-
-```text
-vision.camera.capture
-
-motion.servo.move
-motion.servo.home
-
-motion.gripper.open
-motion.gripper.close
-```
-
----
-
-# Resource Identity
-
-Signal type and signal source should remain separate.
-
-Avoid identifiers such as:
-
-```text
-front_left_object_camera_object_detected
-```
-
-Instead use:
-
-```yaml
-source: vision.front.camera
-signal: vision.object.detected
-```
-
-This allows the same signal definition to be reused by multiple instances.
-
-For example:
-
-```text
-source: robot.arm.left.shoulder
-signal: motion.servo.complete
-```
-
-and:
-
-```text
-source: robot.arm.right.shoulder
-signal: motion.servo.complete
-```
-
-use the same signal schema.
-
----
-
-# Bridges
-
-External communication technologies should be modeled as **Bridges** rather than being built directly into Primitive Services.
+An individual driver controls or observes one independently addressable component.
 
 Examples include:
 
-* ROS 2 Bridge
-* Lighthouse Mesh Bridge
-* REST Bridge
-* WebSocket Bridge
-* MQTT Bridge
+- a STEP/DIR motor driver;
+- a PWM servo;
+- a VL53L4CD ToF sensor;
+- a rotary encoder;
+- an IMU;
+- a camera.
 
-```mermaid
-flowchart TB
-    BUS["Robot Primitives Signal Bus"]
+An individual driver owns the hardware protocol and device-specific configuration. It should not contain assumptions about the larger mechanism where the component is installed.
 
-    BUS --> ROS["ROS 2 Bridge"]
-    BUS --> LIGHT["Lighthouse Bridge"]
-    BUS --> REST["REST Bridge"]
-    BUS --> WS["WebSocket Bridge"]
+Concrete drivers live inside their service package. For example, **motor_control** contains its STEP/DIR, PWM servo, and PWM BLDC implementations. The package exposes a consistent service API while allowing the manifest to identify the selected implementation and its configuration.
 
-    ROS --> DDS["DDS / Zenoh"]
-    LIGHT --> MESH["Lighthouse Mesh"]
-    REST --> HTTP["HTTP"]
-    WS --> NET["Network Clients"]
-```
+### Adapters
 
-The purpose of this separation is to prevent transport-specific concepts from leaking into Primitive Services.
+An adapter converts one capability or representation into another.
 
----
+The included **distance_to_position** adapter consumes a raw distance observation and provides a linear position observation. It owns installation-specific information such as:
 
-# Layer 4 — Behavior Graph
+- zero offset;
+- measurement direction;
+- reference frame;
+- usable range;
+- inversion;
+- calibration.
 
-The **Behavior Graph** describes how Primitive Services interact.
+A ToF sensor measures distance along a ray. It does not inherently know that the result represents the position of a carriage. Keeping that interpretation in an adapter makes the sensor driver reusable.
 
-Rather than implementing operational logic directly in Python, much of the coordination can be expressed declaratively as data.
+### Composite drivers
+
+A composite driver coordinates two or more capabilities and exposes a higher-level capability.
+
+The included **linear_slide** composite requires:
+
+- an incremental motion actuator in the **motor** role;
+- a one-dimensional linear position observer in the **position** role.
+
+It provides a position-actuator capability with operations such as **move_to** and **stop**.
+
+Composite services own mechanism-level behavior, including:
+
+- target validation;
+- completion tolerance;
+- homing policy;
+- approach direction;
+- motion timeout;
+- stall detection;
+- limit handling;
+- coordinated safe state.
+
+A runtime-bound composite does not own the lifecycle of its dependencies. Stopping the composite can stop motion, while the supervisor remains responsible for shutting down the shared motor and sensor services.
+
+## Capability interfaces
+
+A capability interface describes what a service can do without naming a hardware model or package.
+
+Current interface contracts are defined in:
+
+~~~text
+RPStack/services/interfaces/
+~~~
+
+The initial interface set includes:
+
+| Interface | Purpose |
+|---|---|
+| sensing.distance_observer | Returns distance along a sensing ray |
+| motion.position_observer | Returns linear or angular position |
+| motion.motion_actuator | Commands relative motion and stop |
+| motion.position_actuator | Commands an absolute target position and stop |
+
+An interface identifier has an independent major version:
+
+~~~yaml
+interface: motion.position_observer
+version: 1
+~~~
+
+The major version is part of dependency matching. Additional fields describe the meaning of the capability:
+
+~~~yaml
+- interface: motion.position_observer
+  version: 1
+  quantity: linear
+  dimensions: 1
+  canonical_unit: m
+~~~
+
+These fields prevent a one-dimensional linear actuator from binding to an angular observer merely because both expose position data.
+
+## Measurements and units
+
+Measurements carry enough information to be interpreted outside the driver that produced them.
+
+A position sample includes:
+
+~~~python
+PositionSample(
+    kind="linear",
+    value=0.100,
+    unit="m",
+    reference_frame="lift.base",
+    timestamp_ns=None,
+    valid=True,
+    quality=1.0,
+)
+~~~
+
+Standard fields include:
+
+| Field | Meaning |
+|---|---|
+| value | Numeric measurement in canonical units |
+| unit | Unit associated with the value |
+| timestamp_ns | Acquisition time when available |
+| valid | Whether the measurement can be used |
+| quality | Normalized confidence from 0.0 to 1.0 |
+| reference_frame | Coordinate or installation frame |
+| kind | Linear or angular for position samples |
+
+Capability boundaries use SI units:
+
+- linear position: metres
+- angular position: radians
+- linear velocity: metres per second
+- angular velocity: radians per second
+
+Drivers may use native units internally. Conversion occurs before data crosses the capability interface. Convenience operations such as **read_distance_mm** and **goto_position_mm** can be exposed when they are useful, but other services bind to the canonical interface.
+
+## Service lifecycle
+
+Every runtime-managed service can map the following lifecycle stages to its implementation methods:
+
+~~~text
+configure → init → start → stop
+                    ↘ reset
+                    ↘ status
+~~~
+
+| Stage | Responsibility |
+|---|---|
+| configure | Accept instance configuration |
+| init | Allocate or initialize resources |
+| start | Enter the operational state |
+| stop | Enter a safe non-operating state |
+| reset | Recover or reinitialize the service |
+| status | Return health and operating information |
+
+Lifecycle names in the manifest are mappings. A service can use different internal method names if its manifest maps them correctly.
+
+Functional interfaces and lifecycle interfaces are separate. For example, a motor service implements lifecycle methods for the supervisor and motion methods for consumers.
+
+## The service manifest
+
+Every service package contains a **component.yaml** file. This file is the canonical **rp.service/v1** manifest.
+
+The manifest is a generic specification used by:
+
+- the Primitive Runtime;
+- host-side validation;
+- device assembly tools;
+- CLI and debugging tools;
+- REST or WebSocket bridges;
+- generated operation forms;
+- generated test forms;
+- documentation tools.
+
+The complete schema is available at:
+
+~~~text
+RPStack/spec/service-manifest.schema.json
+~~~
+
+A detailed format description is available at:
+
+~~~text
+RPStack/spec/SERVICE_MANIFEST.md
+~~~
+
+### Manifest structure
+
+A manifest begins with its schema identifier, package information, and service definition:
+
+~~~yaml
+manifest: rp.service/v1
+
+package:
+  name: distance-to-position
+  version: 0.1.0
+  import: DistanceToPosition
+
+service:
+  name: distance-to-position
+  version: 0.1.0
+  kind: adapter
+  type: adapter.distance_to_position
+  description: Convert a ray distance into installed linear position.
+  entry_point: DistanceToPosition:DistanceToPositionAdapter
+~~~
+
+The remaining service sections describe capabilities, configuration, lifecycle, operations, signals, implementations, and tests.
+
+### Capabilities
+
+**provides** lists the interfaces a service makes available. **requires** maps constructor roles to the capabilities the service consumes.
+
+~~~yaml
+capabilities:
+  provides:
+    - interface: motion.position_observer
+      version: 1
+      quantity: linear
+      dimensions: 1
+      canonical_unit: m
+
+  requires:
+    distance_observer:
+      interface: sensing.distance_observer
+      version: 1
+~~~
+
+The role name is significant. A bound provider for **distance_observer** is passed to a factory or constructor using that keyword.
+
+### Configuration
+
+Configuration descriptions are data schemas that can be validated or rendered as forms.
+
+~~~yaml
+configuration:
+  zero_offset_m:
+    type: number
+    default: 0.0
+    unit: m
+
+  direction:
+    type: integer
+    enum: [-1, 1]
+    default: 1
+
+  reference_frame:
+    type: string
+    required: true
+~~~
+
+Hardware implementations can add their own configuration. The motor-control manifest, for example, places **step_pin**, **dir_pin**, and timing parameters under the **step_dir** implementation.
+
+### Lifecycle
+
+The lifecycle section maps runtime stages to service methods:
+
+~~~yaml
+lifecycle:
+  configure: configure
+  init: init
+  start: start
+  stop: stop
+  reset: reset
+  status: status
+~~~
+
+An omitted stage requires no runtime call.
+
+### Operations
+
+Operations are the public, remotely invokable surface of a service.
+
+~~~yaml
+operations:
+  move_to:
+    method: move_to
+    description: Move the carriage to an absolute linear position.
+    arguments:
+      target:
+        type: number
+        required: true
+        unit: m
+    returns:
+      type: PositionSample
+      quantity: linear
+      unit: m
+    concurrency: exclusive
+    cancellable: true
+    safe_state: stop
+~~~
+
+Only declared operations can be invoked through **ServiceSupervisor.invoke**. Arguments not declared by the operation are rejected, and required arguments must be present.
+
+Operation metadata can describe:
+
+- argument types, units, defaults, and ranges;
+- return data;
+- read-only or exclusive concurrency;
+- cancellation support;
+- idempotency;
+- errors;
+- the safe-state operation;
+- which concrete implementations support the operation.
+
+This section supplies the information needed to generate a CLI command or web form without embedding service-specific UI logic.
+
+### Concrete implementations
+
+A service package can contain multiple hardware implementations:
+
+~~~yaml
+implementations:
+  step_dir:
+    entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
+    description: Incremental STEP/DIR motor controller.
+    capabilities:
+      provides:
+        - interface: motion.motion_actuator
+          version: 1
+          mode: incremental
+      requires: {}
+    configuration:
+      step_pin: {type: pin_ref, required: true}
+      dir_pin: {type: pin_ref, required: true}
+      enable_pin: {type: pin_ref, required: false}
+    safe_state: stop
+~~~
+
+Implementation-level capabilities let the runtime distinguish between variants in the same package. Selecting **step_dir** adds its incremental motion capability to the registered motor service.
+
+### Signals
+
+Signals describe events or state updates emitted and consumed by a service.
+
+~~~yaml
+signals:
+  provides:
+    motion.position.updated:
+      payload: PositionSample
+    motion.target.reached:
+      payload: PositionSample
+
+  consumes: {}
+~~~
+
+Signals are transport-independent. A signal can remain local, cross Lighthouse Mesh, become a ROS 2 message, or be presented over a network bridge without changing the service that emitted it.
+
+### Declarative tests
+
+Tests describe how to exercise a service through its declared operations.
+
+~~~yaml
+tests:
+  observe_position:
+    description: Read the current carriage position without moving it.
+    mode: automatic
+    steps:
+      - operation: observe_position
+        arguments: {}
+        expect:
+          fields:
+            kind: linear
+            unit: m
+            valid: true
+~~~
+
+Three modes are available:
+
+| Mode | Intended use |
+|---|---|
+| automatic | Safe to run without operator approval |
+| manual | Requires an explicit request |
+| hardware | May move or energize hardware and requires explicit approval |
+
+A hardware test can declare preconditions and operator-provided parameters:
+
+~~~yaml
+move_to_target:
+  description: Move to an operator-selected target.
+  mode: hardware
+  preconditions:
+    - Verify physical clearance.
+    - Ensure emergency power removal is available.
+  parameters:
+    target:
+      type: number
+      required: true
+      unit: m
+  steps:
+    - operation: move_to
+      arguments:
+        target:
+          $parameter: target
+~~~
+
+The test runner refuses to execute manual or hardware tests unless approval is supplied. Test steps can assert an exact return value or selected fields in a returned object or measurement sample.
+
+~~~python
+from PrimitiveRuntime import ManifestTestRunner
+
+runner = ManifestTestRunner(runtime)
+
+result = runner.run(
+    "lift",
+    "move_to_target",
+    parameters={"target": 0.100},
+    allow_manual=True,
+)
+~~~
+
+## Operating a service
+
+Applications invoke services through operation names from the manifest:
+
+~~~python
+sample = runtime.invoke("lift", "observe_position")
+
+final_position = runtime.invoke(
+    "lift",
+    "move_to",
+    {"target": 0.100},
+)
+
+runtime.invoke("lift", "stop")
+~~~
+
+This operation layer provides a stable boundary for local code, CLI commands, WebTester forms, REST endpoints, and bridge implementations.
+
+Code running inside a composite service can call its injected capability objects directly. External tools should use declared operations so that validation, safety metadata, and implementation restrictions remain available.
+
+## Manifest formats on host and device
+
+YAML is the human-authored format. It is readable, supports comments, and is convenient for review.
+
+Stock MicroPython includes JSON support but generally does not include a YAML parser. The runtime therefore accepts both formats:
+
+- **component.yaml** for development and host tooling;
+- generated compact JSON for deployment to constrained devices.
+
+Generate a device JSON manifest with:
+
+~~~bash
+python RPStack/runtime/primitive_runtime/tools/compile_manifest.py     RPStack/services/linear_slide/component.yaml     linear_slide.component.json
+~~~
+
+The compiler loads and validates the YAML through the same manifest model used by the runtime before writing compact JSON.
+
+## Signals, actions, and operations
+
+RPStack distinguishes three related concepts.
+
+### Operations
+
+An operation is a direct request to one service and normally returns a result.
+
+Examples:
+
+~~~text
+observe_distance
+move_to
+stop
+status
+~~~
+
+### Signals
+
+A signal reports an event or state change.
+
+Examples:
+
+~~~text
+range.distance.updated
+motion.position.updated
+motion.target.reached
+device.health.changed
+~~~
+
+### Actions
+
+At the behavior level, an action represents an intended operation, including any timeout, cancellation, retry, or completion policy. A behavior engine can translate an action into a service operation and wait for the corresponding signals.
+
+Hierarchical names use this pattern:
+
+~~~text
+domain.component.event
+~~~
+
+The signal name and source identity remain separate:
+
+~~~yaml
+source: robot.arm.left.shoulder
+signal: motion.target.reached
+~~~
+
+## Bridges
+
+A bridge adapts RPStack capabilities, operations, and signals to an external transport.
+
+Possible bridges include:
+
+- ROS 2
+- Lighthouse Mesh
+- REST
+- WebSocket
+- MQTT
+
+~~~mermaid
+flowchart LR
+    SERVICE["Primitive Service"]
+    RUNTIME["Primitive Runtime"]
+    BRIDGE["Bridge"]
+    EXTERNAL["External system"]
+
+    SERVICE <--> RUNTIME
+    RUNTIME <--> BRIDGE
+    BRIDGE <--> EXTERNAL
+~~~
+
+A bridge owns transport-specific concepts such as ROS messages, HTTP routes, or mesh packets. Primitive Services remain focused on their capabilities and do not require transport-specific code.
+
+## Layer 4: Behavior Graph
+
+A Behavior Graph coordinates service operations and signals into a robot task.
 
 A behavior can describe:
 
-* Events
-* Conditions
-* Actions
-* Dependencies
-* Sequencing
-* State transitions
-* Timeouts
-* Error handling
-* Retry behavior
+- triggers and conditions;
+- operation requests;
+- sequencing;
+- parallel work;
+- state transitions;
+- completion signals;
+- timeouts;
+- cancellation;
+- retries;
+- error handling.
 
----
+For example, a behavior might react to an object detector, close a gripper, and move a linear slide after the grip completes.
 
-## Behavior Example
-
-Consider an object-detection system controlling a robotic gripper.
-
-```mermaid
+~~~mermaid
 flowchart LR
-    OD["Object Detector"]
+    DETECT["Object detected"]
+    MATCH{"Target class?"}
+    GRIP["Close gripper"]
+    MOVE["Move slide"]
+    DONE["Complete"]
 
-    OD -->|"vision.object.detected"| MATCH{"Object = Marble?"}
+    DETECT --> MATCH
+    MATCH -->|"match"| GRIP
+    GRIP -->|"grip complete"| MOVE
+    MOVE -->|"target reached"| DONE
+~~~
 
-    MATCH -->|Yes| GRIP["Gripper<br/>Action: Pick"]
+Behavior definitions operate on service identities, operation names, and signal names. They do not need to know the concrete motor or sensor models fulfilling each capability.
 
-    GRIP -->|"gripper.pick.complete"| SLIDE["Linear Slide<br/>Action: Move"]
+## Building a device
 
-    SLIDE -->|"slide.move.complete"| DONE["Operation Complete"]
-```
+A deployed node consists of:
 
-The behavior could be represented as:
-
-```yaml
-behavior:
-  name: ball_transfer
-
-  flows:
-
-    - when:
-        signal: vision.object.detected
-
-        match:
-          class: marble
-          confidence: ">0.85"
-
-      do:
-        service: gripper
-        action: pick
-
-    - when:
-        signal: gripper.pick.complete
-
-      do:
-        service: slide
-        action: move
-
-        parameters:
-          position: far
-```
-
-The stored configuration can be called a **Behavior Definition**.
-
-Example:
-
-```text
-ball_sorter.behavior.yaml
-maze_solver.behavior.yaml
-fire_monitor.behavior.yaml
-```
-
-When instantiated and executed, the definition becomes a **Behavior Graph**.
-
----
-
-# Device Manifest
-
-In addition to the four software layers, each deployed node should have a **Device Manifest**.
-
-The Device Manifest describes what a particular physical node contains.
-
-For example:
-
-```yaml
-device:
-
-  id: vision.front.left
-
-  model: rp.object_camera.v1
-
-  services:
-    - camera
-    - object_detector
-    - tof.left
-    - tof.right
-
-  traits:
-    - vision
-    - object_detection
-    - ranging
-
-  interfaces:
-    - lighthouse
-    - ros2
-```
-
-The Device Manifest is configuration rather than a separate architectural layer.
-
-It effectively assembles the device from available Primitive Services.
-
----
-
-# Deployment Model
-
-A complete Robot Primitives device consists of:
-
-```text
-Platform Image
-    +
-Primitive Runtime
-    +
-Primitive Service Packages
-    +
-Device Manifest
-    +
-Behavior Definitions
-```
-
-```mermaid
-flowchart TB
-    PLATFORM["Platform Image<br/>Compiled Firmware"]
-    RUNTIME["Primitive Runtime"]
-    SERVICES["Primitive Service Packages"]
-    MANIFEST["Device Manifest"]
-    BEHAVIOR["Behavior Definitions"]
-
-    PLATFORM --> DEVICE["Robot Primitive Device"]
-    RUNTIME --> DEVICE
-    SERVICES --> DEVICE
-    MANIFEST --> DEVICE
-    BEHAVIOR --> DEVICE
-```
-
-This allows the same firmware and runtime to produce radically different devices based primarily on configuration and installed services.
-
----
-
-# Complete Architecture
-
-```mermaid
-flowchart TB
-
-    subgraph Behavior["Layer 4 — Behavior"]
-        BG["Behavior Graph"]
-        BD["Behavior Definitions"]
-        BD --> BG
-    end
-
-    subgraph Services["Layer 3 — Primitive Services"]
-        CAMERA["Camera"]
-        OBJ["Object Detection"]
-        TOF["ToF"]
-        SERVO["Servo"]
-        GRIP["Gripper"]
-    end
-
-    subgraph Runtime["Layer 2 — Primitive Runtime"]
-        SUP["Supervisor"]
-        REG["Registry"]
-        SB["Signal Bus"]
-        CFG["Configuration"]
-        CLI["CLI / Debug"]
-        PKG["Package Manager"]
-    end
-
-    subgraph Platform["Layer 1 — Device Platform"]
-        MP["MicroPython"]
-        RMP["ROSMicroPy"]
-        OBS["Observability"]
-        LH["Lighthouse"]
-        DRIVER["Native Drivers"]
-    end
-
-    BG --> Services
-
-    CAMERA --> SB
-    OBJ --> SB
-    TOF --> SB
-    SERVO --> SB
-    GRIP --> SB
-
-    SUP --> Services
-    REG --> Services
-
-    CFG --> SUP
-    PKG --> SUP
-
-    Runtime --> Platform
-```
-
----
-
-# Communications Architecture
-
-The internal Robot Primitives interface remains transport-independent.
-
-```mermaid
-flowchart LR
-
-    subgraph DeviceA["Robot Primitive Node A"]
-        SA["Primitive Service"]
-        SBA["Signal Bus"]
-        SA <--> SBA
-    end
-
-    subgraph Bridges["Signal Bridges"]
-        LB["Lighthouse"]
-        RB["ROS 2"]
-        HB["REST / WebSocket"]
-    end
-
-    subgraph DeviceB["Robot Primitive Node B"]
-        SBB["Signal Bus"]
-        SB["Primitive Service"]
-        SBB <--> SB
-    end
-
-    SBA <--> LB
-    SBA <--> RB
-    SBA <--> HB
-
-    LB <--> SBB
-```
-
-The Primitive Service does not need to know whether its signal:
-
-* stays within the local process,
-* travels to another Robot Primitive device,
-* becomes a ROS 2 topic,
-* is exposed through REST,
-* or is transported over Lighthouse Mesh.
-
----
-
-# Repository Naming Convention
-
-A repository structure could mirror the architecture directly.
-
-```text
-robot-primitives/
-│
-├── rp-platform/
-│   ├── esp32s3/
-│   ├── esp32p4/
-│   └── nrf91/
-│
-├── rp-runtime/
-│   ├── supervisor/
-│   ├── registry/
-│   ├── signals/
-│   ├── config/
-│   └── cli/
-│
-├── rp-services/
-│   ├── interfaces/
-│   │   ├── motion/
-│   │   ├── sensing/
-│   │   └── vision/
-│   ├── drivers/
-│   │   ├── individual/
-│   │   └── composite/
-│   ├── adapters/
-│   └── schemas/
-│
-├── rp-behaviors/
-│   ├── schemas/
-│   ├── engine/
-│   └── definitions/
-│
-└── rp-bridges/
-    ├── ros2/
-    ├── lighthouse/
-    └── rest/
-```
-
----
-
-# Architectural Summary
-
-The Robot Primitives architecture can therefore be expressed as:
-
-```text
+~~~text
 Device Platform
-      ↓
-Primitive Runtime
-      ↓
-Primitive Services
-      ↓
-Behavior Graph
-```
++ Primitive Runtime
++ Primitive Service packages
++ device-specific service registration and configuration
++ optional Behavior Definitions
++ optional Bridges
+~~~
 
-With supporting components:
+The same firmware image can support different devices by installing different services and changing their configuration and bindings.
 
-```text
-              Bridges
-                 │
-                 ▼
-Device Platform → Runtime → Services → Behavior
-                       ↑
-                 Device Manifest
-```
+A device assembly normally identifies:
 
-More precisely:
+- each service instance;
+- the selected service package;
+- the selected concrete implementation;
+- hardware resources;
+- service configuration;
+- explicit capability bindings where needed;
+- behaviors and bridges to start.
 
-```mermaid
-flowchart LR
+## Adding a service
 
-    PLATFORM["Device Platform"]
-    RUNTIME["Primitive Runtime"]
-    SERVICES["Primitive Services"]
-    BEHAVIOR["Behavior Graph"]
+Use the following workflow when adding an individual driver, adapter, or composite.
 
-    MANIFEST["Device Manifest"]
-    BRIDGES["Bridges"]
+1. Create a directory under **RPStack/services**.
+2. Implement the service lifecycle.
+3. Implement or consume capability interfaces from **services/interfaces**.
+4. Keep hardware-model code under the service package implementation directory.
+5. Add a canonical **component.yaml** manifest.
+6. Declare configuration, capabilities, operations, signals, and tests.
+7. Add a MicroPython **package.json** when the service is deployable through mip.
+8. Add host tests with fake capabilities or fake hardware.
+9. Validate that composites can be constructed through runtime role binding.
+10. Mark any test that moves or energizes hardware as **hardware**.
 
-    PLATFORM --> RUNTIME
-    RUNTIME --> SERVICES
-    SERVICES --> BEHAVIOR
+A service manifest should be complete enough that a reader or tool can answer:
 
-    MANIFEST -. configures .-> RUNTIME
-    MANIFEST -. selects .-> SERVICES
+- What does this service provide?
+- What does it require?
+- How is it configured?
+- How is it started and stopped?
+- Which operations are safe to expose?
+- What does each operation accept and return?
+- What signals can appear?
+- Which concrete implementations are available?
+- How can the service be tested safely?
 
-    BRIDGES <--> RUNTIME
-```
+## Testing the stack
 
-The core architectural principles are:
+Run the Primitive Runtime tests from the repository root:
 
-1. **Firmware defines what the hardware can support.**
-2. **Services define what the device can do.**
-3. **The Device Manifest defines what this particular node is.**
-4. **Behavior Definitions define how capabilities are coordinated.**
-5. **Signals provide transport-independent communication.**
-6. **Actions represent requests; Signals represent events and state changes.**
-7. **Bridges isolate ROS, Lighthouse, REST, and other communication mechanisms from application logic.**
-8. **Primitive Services expose standardized lifecycle, capability, health, and messaging contracts.**
+~~~bash
+python -m unittest discover     -s RPStack/runtime/primitive_runtime/tests     -v
+~~~
 
-The result is a system where robotic devices can increasingly be assembled from reusable capabilities rather than written as monolithic applications.
+Run the linear-slide service tests:
+
+~~~bash
+python -m unittest discover     -s RPStack/services/linear_slide/tests     -v
+~~~
+
+Compile Python sources:
+
+~~~bash
+python -m compileall -q     RPStack/runtime/primitive_runtime/src     RPStack/services
+~~~
+
+Validate and compile an individual manifest:
+
+~~~bash
+python RPStack/runtime/primitive_runtime/tools/compile_manifest.py     RPStack/services/distance_sensor/component.yaml     distance_sensor.component.json
+~~~
+
+Host tests use fake hardware and capability implementations. Tests that require physical motion remain declared in the manifest and must be run with explicit operator approval.
+
+## Included services
+
+### RPInterfaces
+
+Defines the common lifecycle, measurement, observer, and actuator contracts. The implementation avoids CPython-only abstractions so it can run on MicroPython.
+
+### DistanceSensor
+
+Provides a scalar distance-observer capability. Included hardware implementations support HCSR04 ultrasonic sensors and VL53L4CD time-of-flight sensors.
+
+### DistanceToPosition
+
+Consumes a distance observer and provides a one-dimensional linear position observer using installation calibration and a reference frame.
+
+### MotorControl
+
+Provides reusable motor services with STEP/DIR, PWM servo, and PWM BLDC implementations. The selected implementation determines the capabilities and operations available to the instance.
+
+### LinearSlide
+
+Combines an incremental motion actuator and a linear position observer into a closed-loop position actuator. It exposes SI-based capability operations and millimetre convenience operations.
+
+## Package installation
+
+Service and runtime packages include MicroPython **package.json** files where applicable. A package manifest specifies installed files and dependent RPStack packages.
+
+For example, the linear-slide package depends on:
+
+- RPInterfaces
+- MotorControl
+- DistanceSensor
+- DistanceToPosition
+
+During development on **archdef**, package dependencies reference that branch. Release packaging should use an immutable release tag so every installed dependency resolves to a consistent stack version.
+
+## Design principles
+
+RPStack follows these principles:
+
+1. Firmware supplies a reusable hardware execution environment.
+2. Services describe device capabilities.
+3. Capability interfaces are independent of hardware models.
+4. Runtime bindings target interfaces and semantic constraints.
+5. Raw sensor meaning is preserved until an adapter adds installation meaning.
+6. Composite services own mechanism behavior and safety policy.
+7. Capability boundaries use explicit units and reference frames.
+8. Manifests are the single source for runtime, operation, and test metadata.
+9. Only declared operations are exposed through generic tooling.
+10. Hardware tests require explicit operator approval.
+11. Signals remain independent of their transport.
+12. Bridges contain protocol-specific integration.
+13. Behaviors coordinate services without depending on concrete drivers.
+
+## Further reference
+
+- **Manifest guide:** RPStack/spec/SERVICE_MANIFEST.md
+- **Manifest JSON Schema:** RPStack/spec/service-manifest.schema.json
+- **Primitive Runtime:** RPStack/runtime/primitive_runtime/
+- **Capability interfaces:** RPStack/services/interfaces/
+- **Linear-slide example:** RPStack/services/linear_slide/
