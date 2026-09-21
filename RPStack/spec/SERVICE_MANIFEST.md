@@ -40,3 +40,21 @@ MicroPython builds can deploy an equivalent JSON document because JSON loading
 is available without adding a YAML parser to device firmware.
 
 The machine-readable schema is `service-manifest.schema.json`.
+
+
+## REST transport
+
+A device exposes its active service manifest at `GET /manifest`. Operations can
+optionally declare an explicit browser-callable route:
+
+```yaml
+rest:
+  method: GET
+  path: /api/distance/observe
+```
+
+When an operation omits `rest`, the standard route is
+`POST /api/operations/<operation-name>`. REST adapters must expose only
+manifest-declared operations, accept/return JSON, and provide CORS/OPTIONS
+responses for browser clients. Transport metadata does not change the Python
+`method` mapping used by the runtime.

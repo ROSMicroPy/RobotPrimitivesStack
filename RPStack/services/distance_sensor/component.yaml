@@ -37,12 +37,14 @@ service:
       arguments: {}
       returns: {type: DistanceSample, unit: m}
       concurrency: read_only
+      rest: {method: GET, path: /api/distance/observe}
     read_distance_mm:
       method: read_distance_mm
       description: Compatibility operation returning integer millimetres.
       arguments: {}
       returns: {type: integer, unit: mm}
       concurrency: read_only
+      rest: {method: GET, path: /api/distance/mm}
     set_active:
       method: set_active
       description: Enable or disable sensor acquisition.
@@ -51,12 +53,14 @@ service:
       returns: {type: boolean}
       idempotent: true
       safe_state: inactive
+      rest: {method: POST, path: /api/distance/active}
     status:
       method: status
       description: Return current health and most recent observation.
       arguments: {}
       returns: {type: object}
       concurrency: read_only
+      rest: {method: GET, path: /api/distance/status}
   signals:
     provides:
       range.distance.updated: {payload: DistanceSample}
