@@ -121,6 +121,12 @@ This constructor assembles the step_dir motor, VL53L4CD sensor, and DistanceToPo
 
 The hardware test requires explicit approval and verification of physical clearance and emergency power removal.
 
+## Hardware test application
+
+The combined stepper and VL53L4CD device application is stored at
+`TestApps/linear_slide/main.py`. It uses step GPIO 17, direction GPIO 3,
+enable GPIO 21, I2C SCL GPIO 4, and I2C SDA GPIO 5.
+
 ## Tests
 
 Host-side tests use fake motor and position capabilities:
