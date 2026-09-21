@@ -1,0 +1,3 @@
+[submodule "RPStack_WebTester"]
+	path = RPStack_WebTester
+	url = https://github.com/ROSMicroPy/RPStack_WebTester.git
