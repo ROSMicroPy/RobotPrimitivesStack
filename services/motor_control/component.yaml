@@ -1,0 +1,35 @@
+contract_version: "0.2"
+package:
+  name: motor-control
+  version: 0.2.0
+  import: MotorControl
+components:
+  MotorController:
+    entry_point: MotorControl:MotorController
+    lifecycle:
+      shutdown: shutdown
+    drivers:
+      step_dir:
+        entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
+        motor_type: stepper
+        config:
+          step_pin: {type: pin_ref, required: true}
+          dir_pin: {type: pin_ref, required: true}
+          enable_pin: {type: pin_ref, required: false}
+          enable_active_low: {type: boolean, default: true}
+          step_delay_us: {type: integer, minimum: 1, default: 500, unit: us}
+          direction_settle_us: {type: integer, minimum: 0, default: 10, unit: us}
+          steps_per_revolution: {type: integer, minimum: 1, default: 200}
+          microsteps: {type: integer, minimum: 1, default: 1}
+        operations: [move_steps, set_speed, get_position, stop, shutdown]
+        safe_state: stop
+      pwm_servo:
+        entry_point: MotorControl.motor_drivers.pwm_servo:PWMServoDriver
+        motor_type: servo
+        operations: [set_position, get_position, shutdown]
+        safe_state: shutdown
+      pwm_bldc:
+        entry_point: MotorControl.motor_drivers.pwm_bldc:PWMBLDCDriver
+        motor_type: bldc
+        operations: [set_speed, set_direction, get_speed, stop, shutdown]
+        safe_state: stop

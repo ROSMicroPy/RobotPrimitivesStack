@@ -1,0 +1,8 @@
+In python, 
+
+Create an interface that is capiable of providing a universal motor control interface.
+
+Motor control styles should include Servos, Stepper and BLDC motors
+
+The interface should work using the driver model where the interface can 
+dynamically load a named model to be the behaviour of that device

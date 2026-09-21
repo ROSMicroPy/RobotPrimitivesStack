@@ -1,0 +1,10 @@
+{
+  "urls": [
+    ["LinearSlide.py", "LinearSlide.py"]
+  ],
+  "deps": [
+    ["github:ROSMicroPy/mpylib_MotorControl", "main"],
+    ["github:ROSMicroPy/mpylib_DistanceSensor", "main"]
+  ],
+  "version": "0.2.0"
+}
