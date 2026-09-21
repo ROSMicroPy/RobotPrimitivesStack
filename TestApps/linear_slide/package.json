@@ -9,24 +9,24 @@
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
-      "archdef"
+      "../../RPStack/services/interfaces/package.local.json",
+      "latest"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control",
-      "archdef"
+      "../../RPStack/services/motor_control/package.local.json",
+      "latest"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor",
-      "archdef"
+      "../../RPStack/services/distance_sensor/package.local.json",
+      "latest"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position",
-      "archdef"
+      "../../RPStack/services/distance_to_position/package.local.json",
+      "latest"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/linear_slide",
-      "archdef"
+      "../../RPStack/services/linear_slide/package.local.json",
+      "latest"
     ]
   ]
 }

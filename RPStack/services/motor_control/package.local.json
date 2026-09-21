@@ -1,0 +1,31 @@
+{
+  "name": "rp-motor-control",
+  "version": "0.3.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/motor_control/__init__.py",
+      "src/rpstack/motor_control/__init__.py"
+    ],
+    [
+      "rpstack/motor_control/motor_drivers/__init__.py",
+      "src/rpstack/motor_control/motor_drivers/__init__.py"
+    ],
+    [
+      "rpstack/motor_control/motor_drivers/pwm_bldc.py",
+      "src/rpstack/motor_control/motor_drivers/pwm_bldc.py"
+    ],
+    [
+      "rpstack/motor_control/motor_drivers/pwm_servo.py",
+      "src/rpstack/motor_control/motor_drivers/pwm_servo.py"
+    ],
+    [
+      "rpstack/motor_control/motor_drivers/step_dir.py",
+      "src/rpstack/motor_control/motor_drivers/step_dir.py"
+    ]
+  ],
+  "deps": []
+}

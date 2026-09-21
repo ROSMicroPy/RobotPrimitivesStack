@@ -1,0 +1,15 @@
+{
+  "name": "rp-distance-to-position",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/distance_to_position/__init__.py",
+      "src/rpstack/distance_to_position/__init__.py"
+    ]
+  ],
+  "deps": []
+}

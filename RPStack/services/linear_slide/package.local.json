@@ -1,0 +1,19 @@
+{
+  "name": "rp-linear-slide",
+  "version": "0.3.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/linear_slide/LinearSlide.py",
+      "src/rpstack/linear_slide/LinearSlide.py"
+    ],
+    [
+      "rpstack/linear_slide/__init__.py",
+      "src/rpstack/linear_slide/__init__.py"
+    ]
+  ],
+  "deps": []
+}
