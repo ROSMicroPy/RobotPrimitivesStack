@@ -97,8 +97,8 @@ Generic tooling should call **ServiceSupervisor.invoke()** instead of accessing 
 ~~~python
 import mip
 mip.install(
-    "https://gitlab.com/robot-primitives/Micropython_Modules/"
-    "ide/mp_shell/-/raw/main/package.json"
+    "https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/"
+    "archdef/RPStack/runtime/shell/package.json"
 )
 ~~~
 

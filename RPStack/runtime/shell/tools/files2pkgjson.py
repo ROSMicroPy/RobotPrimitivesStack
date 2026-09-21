@@ -71,10 +71,8 @@ class mipJSON():
 #    ["dnet/__init__.py", "gitlab:robot-primitives/LighthouseMesh/-/blob/main/dnet/code/__init__.py?"],
 
         
-#https://gitlab.com/robot-primitives/micropython_modules/ide/mp_shell/-/blob/main/package.json?
-mj = mipJSON("https://gitlab.com/robot-primitives/micropython_modules/ide/mp_shell/-/raw/main")
-mj.setVersion("1.0")
+mj = mipJSON(".")
+mj.setVersion("2.0.0")
 mj.setName("Micropython Extensible Shell")
-mj.setPkgName("mpshell")
 mj.addFiles("./code")
 mj.writeOutput("package.json")

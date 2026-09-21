@@ -75,8 +75,8 @@ Install through the package manifest:
 ~~~python
 import mip
 mip.install(
-    "https://gitlab.com/robot-primitives/Micropython_Modules/"
-    "mp_bootmgr/-/raw/main/package.json"
+    "https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/"
+    "archdef/RPStack/runtime/bootmgr/package.json"
 )
 ~~~
 

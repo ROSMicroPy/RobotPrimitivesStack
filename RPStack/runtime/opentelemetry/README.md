@@ -120,8 +120,8 @@ These controls allow a device to reduce overhead without removing instrumentatio
 ~~~python
 import mip
 mip.install(
-    "https://gitlab.com/robot-primitives/Micropython_Modules/"
-    "mp_opentelemetry/-/raw/main/package.json"
+    "https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/"
+    "archdef/RPStack/runtime/opentelemetry/package.json"
 )
 ~~~
 

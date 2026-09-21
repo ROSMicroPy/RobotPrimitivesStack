@@ -75,8 +75,8 @@ The package creates parent directories as needed. Importing the environment pack
 ~~~python
 import mip
 mip.install(
-    "https://gitlab.com/robot-primitives/Micropython_Modules/"
-    "ide/mp_env/-/raw/main/package.json"
+    "https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitivesStack/"
+    "archdef/RPStack/runtime/env/package.json"
 )
 ~~~
 
