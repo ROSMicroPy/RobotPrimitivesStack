@@ -1,0 +1,32 @@
+{
+  "name": "rp-test-linear-slide",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "main.py",
+      "main.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/linear_slide",
+      "archdef"
+    ]
+  ]
+}
