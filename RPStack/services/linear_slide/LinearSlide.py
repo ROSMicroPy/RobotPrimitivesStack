@@ -19,7 +19,8 @@ class LinearSlide(PrimitiveService, PositionActuator):
                  max_steps=10000, min_position_mm=None, max_position_mm=None,
                  step_delay_us=500, direction_settle_us=10,
                  enable_active_low=True, motor_controller=None,
-                 sensor_controller=None, motor=None, position_observer=None):
+                 sensor_controller=None, motor=None, position_observer=None,
+                 position=None):
         if tolerance_mm < 0:
             raise ValueError("tolerance_mm must be non-negative")
         if max_steps <= 0:
@@ -27,6 +28,10 @@ class LinearSlide(PrimitiveService, PositionActuator):
         if (min_position_mm is not None and max_position_mm is not None
                 and min_position_mm > max_position_mm):
             raise ValueError("min_position_mm cannot exceed max_position_mm")
+        if position is not None:
+            if position_observer is not None:
+                raise ValueError("use position or position_observer, not both")
+            position_observer = position
         if (motor is None) != (position_observer is None):
             raise ValueError("motor and position_observer must be supplied together")
 

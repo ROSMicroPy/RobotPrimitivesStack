@@ -1,9 +1,14 @@
 contract_version: "1.0"
 package:
-  name: linear-slide
+  name: rube-goldberg-linear-slide
   version: 0.3.0
   import: LinearSlide
   entry_point: LinearSlide:LinearSlide
+
+dependencies:
+  motor-control: ">=0.3.0,<1.0.0"
+  distance-sensor: ">=0.3.0,<1.0.0"
+  distance-to-position: ">=0.1.0,<1.0.0"
 
 service:
   name: observed-linear-actuator
@@ -51,6 +56,10 @@ service:
 components:
   LinearSlide:
     description: Closed-loop slide composed from runtime-bound capabilities.
+    binds:
+      joint: {urdf_type: prismatic, required: true}
+      motor_driver: {component: MotorController, driver: step_dir}
+      position_observer: {component: DistanceSensorController, driver: vl53l4cd}
     operations:
       get_position:
         implementation: get_position
@@ -64,3 +73,4 @@ components:
         errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled]
       stop: {implementation: stop, idempotent: true}
       shutdown: {implementation: shutdown, idempotent: true}
+    safe_state: stop

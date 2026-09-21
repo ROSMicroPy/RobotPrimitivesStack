@@ -54,6 +54,15 @@ components:
       step_dir:
         entry_point: MotorControl.motor_drivers.step_dir:StepDirDriver
         motor_type: stepper
+        config:
+          step_pin: {type: pin_ref, required: true}
+          dir_pin: {type: pin_ref, required: true}
+          enable_pin: {type: pin_ref, required: false}
+          enable_active_low: {type: boolean, default: true}
+          step_delay_us: {type: integer, minimum: 1, default: 500, unit: us}
+          direction_settle_us: {type: integer, minimum: 0, default: 10, unit: us}
+          steps_per_revolution: {type: integer, minimum: 1, default: 200}
+          microsteps: {type: integer, minimum: 1, default: 1}
         operations: [move_steps, set_speed, get_position, stop, shutdown]
         safe_state: stop
       pwm_servo:

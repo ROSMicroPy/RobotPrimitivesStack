@@ -53,6 +53,11 @@ class LinearSlideTests(unittest.TestCase):
         self.assertAlmostEqual(final.value, 0.003)
         self.assertEqual(final.unit, "m")
 
+    def test_manifest_position_role_name_binds_to_constructor(self):
+        observer = FakePositionObserver()
+        slide = LinearSlide(motor=FakeMotor(observer), position=observer)
+        self.assertIs(slide.position_observer, observer)
+
     def test_legacy_mm_api_is_preserved(self):
         slide, _ = self.make_slide(tolerance_mm=0, max_steps=10)
         self.assertEqual(slide.gotoPosition(2), 2)

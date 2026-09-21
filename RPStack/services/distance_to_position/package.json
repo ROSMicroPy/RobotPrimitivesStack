@@ -2,6 +2,8 @@
   "urls": [
     ["DistanceToPosition/__init__.py", "__init__.py"]
   ],
-  "deps": [],
+  "deps": [
+    ["github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces", "archdef"]
+  ],
   "version": "0.1.0"
 }
