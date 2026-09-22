@@ -17,6 +17,7 @@ STEP_PIN = 17
 DIR_PIN = 3
 I2C_SDA_PIN = 5
 I2C_SCL_PIN = 4
+POSITIVE_DIRECTION = True
 MANIFEST_PATH = "/lib/linear_slide_manifest.json"
 SERVER_PORT = 80
 
@@ -33,6 +34,7 @@ def create_slide():
         step_pin=STEP_PIN,
         dir_pin=DIR_PIN,
         enable_pin=ENABLE_PIN,
+        positive_direction=POSITIVE_DIRECTION,
         tolerance_mm=1,
         max_steps=10000,
     )

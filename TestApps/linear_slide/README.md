@@ -40,3 +40,14 @@ GET http://<device-ip>/manifest
 The manifest declares position, status, stop, metre-based movement, and
 millimetre-based compatibility endpoints. I²C uses SCL GPIO 4 and SDA GPIO 5;
 the VL53L4CD address is `0x29`.
+
+## Motion direction and timing
+
+`POSITIVE_DIRECTION` in `main.py` means a high DIR signal must increase the
+VL53L4CD-observed position. If a move makes the measured error larger, change
+it to `False`.
+
+The current closed-loop controller takes a ToF sample after every motor step.
+With the 200 ms VL53L4CD timing budget this deliberately produces slow,
+step-and-sample motion. A traceback or an error response from the move endpoint
+indicates a real stop; capture that message before resetting the device.
