@@ -13,7 +13,8 @@ class LinearSlide(PrimitiveService, PositionActuator):
 
     def __init__(self, i2c=None, step_pin=None, dir_pin=None, enable_pin=None,
                  sensor_address=0x29, positive_direction=True, tolerance_mm=1,
-                 max_steps=10000, min_position_mm=None, max_position_mm=None,
+                 max_steps=10000, steps_per_sample=1,
+                 min_position_mm=None, max_position_mm=None,
                  step_delay_us=500, direction_settle_us=10,
                  enable_active_low=True, motor_controller=None,
                  sensor_controller=None, motor=None, position_observer=None,
@@ -22,6 +23,8 @@ class LinearSlide(PrimitiveService, PositionActuator):
             raise ValueError("tolerance_mm must be non-negative")
         if max_steps <= 0:
             raise ValueError("max_steps must be greater than zero")
+        if steps_per_sample <= 0:
+            raise ValueError("steps_per_sample must be greater than zero")
         if (min_position_mm is not None and max_position_mm is not None
                 and min_position_mm > max_position_mm):
             raise ValueError("min_position_mm cannot exceed max_position_mm")
@@ -35,6 +38,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
         self.positive_direction = bool(positive_direction)
         self.tolerance_m = float(tolerance_mm) / 1000.0
         self.max_steps = int(max_steps)
+        self.steps_per_sample = int(steps_per_sample)
         self.min_position_m = _mm_to_m(min_position_mm)
         self.max_position_m = _mm_to_m(max_position_mm)
         self.motor_controller = None
@@ -71,7 +75,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
         try:
             distance_sensor = self.sensor_controller.create_sensor(
                 "linear_slide_distance", "vl53l4cd", i2c=i2c,
-                address=sensor_address, timing_budget=200, inter_measurement=0,
+                address=sensor_address, timing_budget=50, inter_measurement=0,
             )
             self.position_observer = DistanceToPositionAdapter(
                 distance_sensor,
@@ -98,6 +102,11 @@ class LinearSlide(PrimitiveService, PositionActuator):
             if max_steps <= 0:
                 raise ValueError("max_steps must be greater than zero")
             self.max_steps = max_steps
+        if "steps_per_sample" in config:
+            steps_per_sample = int(config["steps_per_sample"])
+            if steps_per_sample <= 0:
+                raise ValueError("steps_per_sample must be greater than zero")
+            self.steps_per_sample = steps_per_sample
         return True
 
     def init(self):
@@ -134,25 +143,62 @@ class LinearSlide(PrimitiveService, PositionActuator):
         self._cancel_requested = False
         self._target_m = target_m
         current = self.position()
+        steps_commanded = 0
+        metres_per_step = None
+        moving_away_count = 0
 
-        for _ in range(self.max_steps):
-            if self._cancel_requested:
-                raise RuntimeError("Linear slide move was cancelled")
-            if not current.valid:
-                raise RuntimeError("Position observer returned an invalid sample")
-            error_m = target_m - current.value
-            if abs(error_m) <= self.tolerance_m:
-                self._target_m = None
-                return current
-            direction = self.positive_direction if error_m > 0 else not self.positive_direction
-            if not self.motor.command(direction, 1):
-                raise RuntimeError("Motion actuator failed while moving the linear slide")
-            current = self.position()
+        try:
+            while steps_commanded < self.max_steps:
+                if self._cancel_requested:
+                    raise RuntimeError("Linear slide move was cancelled")
+                if not current.valid:
+                    raise RuntimeError("Position observer returned an invalid sample")
+                error_m = target_m - current.value
+                if abs(error_m) <= self.tolerance_m:
+                    return current
 
-        self._target_m = None
-        raise RuntimeError(
-            "Target {} m was not reached after {} increments; last position was {} m".format(
-                target_m, self.max_steps, current.value))
+                batch_size = min(self.steps_per_sample,
+                                 self.max_steps - steps_commanded)
+                if metres_per_step:
+                    remaining_m = max(0.0, abs(error_m) - self.tolerance_m)
+                    estimated_steps = max(1, int(remaining_m / metres_per_step))
+                    batch_size = min(batch_size, estimated_steps)
+
+                direction = (self.positive_direction if error_m > 0
+                             else not self.positive_direction)
+                previous_value = current.value
+                if not self.motor.command(direction, batch_size):
+                    raise RuntimeError(
+                        "Motion actuator failed while moving the linear slide")
+                steps_commanded += batch_size
+                current = self.position()
+
+                observed_m = abs(current.value - previous_value)
+                if observed_m > 0:
+                    observation = observed_m / batch_size
+                    metres_per_step = (
+                        observation if metres_per_step is None
+                        else (metres_per_step + observation) / 2.0)
+
+                next_error_m = abs(target_m - current.value)
+                if next_error_m > abs(error_m) + self.tolerance_m:
+                    moving_away_count += 1
+                else:
+                    moving_away_count = 0
+                if moving_away_count >= 3:
+                    raise RuntimeError(
+                        "Measured position is moving away from the target; "
+                        "invert positive_direction")
+
+            raise RuntimeError(
+                "Target {} m was not reached after {} steps; "
+                "last position was {} m".format(
+                    target_m, steps_commanded, current.value))
+        except Exception:
+            self.motor.stop()
+            raise
+        finally:
+            self._target_m = None
 
     def get_position(self):
         """Compatibility API returning integer millimetres."""

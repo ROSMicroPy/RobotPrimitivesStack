@@ -35,6 +35,7 @@ def create_slide():
         dir_pin=DIR_PIN,
         enable_pin=ENABLE_PIN,
         positive_direction=POSITIVE_DIRECTION,
+        steps_per_sample=10,
         tolerance_mm=1,
         max_steps=10000,
     )

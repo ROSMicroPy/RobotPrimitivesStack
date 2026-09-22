@@ -1,12 +1,12 @@
 manifest: rp.service/v1
 package:
   name: distance-sensor
-  version: 0.3.0
+  version: 0.3.1
   import: rpstack.distance_sensor
 
 service:
   name: distance-sensor
-  version: 0.3.0
+  version: 0.3.1
   kind: individual_driver
   type: sensor.distance
   description: A runtime-managed scalar distance sensor with selectable hardware driver.

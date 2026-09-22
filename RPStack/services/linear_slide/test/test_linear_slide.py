@@ -25,8 +25,10 @@ class FakeMotor:
         self.observer = observer
         self.stopped = False
         self.shutdown_called = False
+        self.commands = []
 
     def command(self, direction, amount=1):
+        self.commands.append((direction, amount))
         delta = 0.001 * amount
         self.observer.value += delta if direction else -delta
         return True
@@ -59,6 +61,29 @@ class LinearSlideTests(unittest.TestCase):
         final = slide.move_to(0.003)
         self.assertAlmostEqual(final.value, 0.003)
         self.assertEqual(final.unit, "m")
+
+    def test_move_batches_steps_and_tapers_near_target(self):
+        slide, motor = self.make_slide(
+            tolerance_mm=0, max_steps=30, steps_per_sample=10)
+        final = slide.move_to(0.025)
+        self.assertAlmostEqual(final.value, 0.025)
+        self.assertEqual([amount for _, amount in motor.commands], [10, 10, 5])
+
+    def test_move_stops_when_position_repeatedly_moves_away(self):
+        observer = FakePositionObserver()
+        motor = FakeMotor(observer)
+        original_command = motor.command
+
+        def reverse_command(direction, amount=1):
+            return original_command(not direction, amount)
+
+        motor.command = reverse_command
+        slide = LinearSlide(
+            motor=motor, position_observer=observer,
+            tolerance_mm=0, max_steps=100, steps_per_sample=10)
+        with self.assertRaisesRegex(RuntimeError, "invert positive_direction"):
+            slide.move_to(0.1)
+        self.assertTrue(motor.stopped)
 
     def test_manifest_position_role_name_binds_to_constructor(self):
         observer = FakePositionObserver()

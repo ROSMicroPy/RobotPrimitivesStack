@@ -28,6 +28,7 @@ class StepDirDriver(StepperDriver):
         self.steps_per_revolution = 200
         self.microsteps = 1
         self.enable_active_low = True
+        self.enabled = False
         self.step_pin = self.dir_pin = self.enable_pin = None
 
     def initialize(self, step_pin, dir_pin, enable_pin=None, pin_factory=None,
@@ -58,11 +59,13 @@ class StepDirDriver(StepperDriver):
     def _set_enabled(self, enabled):
         if self.enable_pin is not None:
             _write(self.enable_pin, int(not enabled) if self.enable_active_low else int(enabled))
+        self.enabled = bool(enabled)
 
     def move_steps(self, steps, direction=True):
         if not self.initialized:
             raise RuntimeError("step/dir driver is not initialized")
         steps = int(steps)
+        self._set_enabled(True)
         if steps < 0:
             steps, direction = -steps, not direction
         _write(self.dir_pin, int(bool(direction)))
@@ -102,7 +105,7 @@ class StepDirDriver(StepperDriver):
     def get_status(self):
         return {"initialized": self.initialized, "position_steps": self.position_steps,
                 "speed_rpm": self.speed_rpm, "step_delay_us": self.step_delay_us,
-                "enabled": self.initialized}
+                "enabled": self.enabled}
 
 
 DRIVER_CLASS = StepDirDriver

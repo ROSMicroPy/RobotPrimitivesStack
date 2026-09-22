@@ -2,12 +2,12 @@
   "manifest": "rp.service/v1",
   "package": {
     "name": "rp-test-linear-slide",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "import": "main"
   },
   "service": {
     "name": "linear-slide",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "kind": "composite_driver",
     "type": "motion.linear_actuator",
     "description": "Closed-loop stepper linear slide observed by a VL53L4CD distance sensor.",
@@ -16,7 +16,8 @@
         "driver": "step_dir",
         "enable_pin": 21,
         "step_pin": 17,
-        "direction_pin": 3
+        "direction_pin": 3,
+        "package_version": "0.3.1"
       },
       "position_sensor": {
         "driver": "vl53l4cd",
@@ -25,7 +26,12 @@
           "scl": 4,
           "sda": 5
         },
-        "address": 41
+        "address": 41,
+        "package_version": "0.3.1"
+      },
+      "rest_runtime": {
+        "package": "rpstack.micropyserver",
+        "package_version": "0.3.2"
       }
     },
     "capabilities": {
@@ -55,6 +61,11 @@
         "type": "integer",
         "minimum": 1,
         "default": 10000
+      },
+      "steps_per_sample": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 10
       }
     },
     "operations": {

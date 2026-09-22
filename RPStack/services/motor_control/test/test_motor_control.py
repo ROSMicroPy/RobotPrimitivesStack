@@ -29,6 +29,16 @@ class MotorControlTests(unittest.TestCase):
         self.assertEqual(step.values, [0, 1, 0, 1, 0, 1, 0])
         self.assertEqual(direction.values[-1], 0)
 
+    def test_move_reenables_driver_after_stop(self):
+        step, direction, enable = FakePin(), FakePin(), FakePin()
+        driver = StepDirDriver()
+        driver.initialize(step, direction, enable, step_delay_us=1)
+        driver.stop()
+        self.assertFalse(driver.get_status()["enabled"])
+        driver.move_steps(1)
+        self.assertTrue(driver.get_status()["enabled"])
+        self.assertEqual(enable.values[-2:], [1, 0])
+
     def test_controller_accepts_explicit_driver_class(self):
         pins = [FakePin(), FakePin()]
         controller = MotorController()

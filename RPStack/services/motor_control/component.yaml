@@ -1,12 +1,12 @@
 manifest: rp.service/v1
 package:
   name: motor-control
-  version: 0.3.0
+  version: 0.3.1
   import: rpstack.motor_control
 
 service:
   name: motor-control
-  version: 0.3.0
+  version: 0.3.1
   kind: individual_driver
   type: actuator.motor
   description: A runtime-managed motor with a selectable concrete driver.
