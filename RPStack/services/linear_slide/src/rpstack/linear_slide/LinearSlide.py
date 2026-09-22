@@ -14,6 +14,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
     def __init__(self, i2c=None, step_pin=None, dir_pin=None, enable_pin=None,
                  sensor_address=0x29, positive_direction=True, tolerance_mm=1,
                  max_steps=10000, steps_per_sample=1,
+                 no_motion_sample_limit=10,
                  min_position_mm=None, max_position_mm=None,
                  step_delay_us=500, direction_settle_us=10,
                  enable_active_low=True, motor_controller=None,
@@ -25,6 +26,8 @@ class LinearSlide(PrimitiveService, PositionActuator):
             raise ValueError("max_steps must be greater than zero")
         if steps_per_sample <= 0:
             raise ValueError("steps_per_sample must be greater than zero")
+        if no_motion_sample_limit <= 0:
+            raise ValueError("no_motion_sample_limit must be greater than zero")
         if (min_position_mm is not None and max_position_mm is not None
                 and min_position_mm > max_position_mm):
             raise ValueError("min_position_mm cannot exceed max_position_mm")
@@ -39,6 +42,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
         self.tolerance_m = float(tolerance_mm) / 1000.0
         self.max_steps = int(max_steps)
         self.steps_per_sample = int(steps_per_sample)
+        self.no_motion_sample_limit = int(no_motion_sample_limit)
         self.min_position_m = _mm_to_m(min_position_mm)
         self.max_position_m = _mm_to_m(max_position_mm)
         self.motor_controller = None
@@ -146,6 +150,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
         steps_commanded = 0
         metres_per_step = None
         moving_away_count = 0
+        no_motion_count = 0
 
         try:
             while steps_commanded < self.max_steps:
@@ -175,10 +180,18 @@ class LinearSlide(PrimitiveService, PositionActuator):
 
                 observed_m = abs(current.value - previous_value)
                 if observed_m > 0:
+                    no_motion_count = 0
                     observation = observed_m / batch_size
                     metres_per_step = (
                         observation if metres_per_step is None
                         else (metres_per_step + observation) / 2.0)
+                else:
+                    no_motion_count += 1
+                    if no_motion_count >= self.no_motion_sample_limit:
+                        raise RuntimeError(
+                            "No position change detected after {} commanded "
+                            "steps; check STEP wiring, driver current, and "
+                            "step rate".format(steps_commanded))
 
                 next_error_m = abs(target_m - current.value)
                 if next_error_m > abs(error_m) + self.tolerance_m:
@@ -199,6 +212,24 @@ class LinearSlide(PrimitiveService, PositionActuator):
             raise
         finally:
             self._target_m = None
+
+    def jog_steps(self, steps, direction=True):
+        """Move a fixed number of steps without closed-loop positioning."""
+        self._require_open()
+        steps = int(steps)
+        if steps <= 0:
+            raise ValueError("steps must be greater than zero")
+        before = self.position()
+        if not self.motor.command(bool(direction), steps):
+            raise RuntimeError("Motion actuator failed while jogging")
+        after = self.position()
+        return {
+            "steps": steps,
+            "direction": bool(direction),
+            "position_before": before.as_dict(),
+            "position_after": after.as_dict(),
+            "motor": self.motor.get_status(),
+        }
 
     def get_position(self):
         """Compatibility API returning integer millimetres."""

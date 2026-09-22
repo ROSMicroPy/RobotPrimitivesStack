@@ -2,12 +2,12 @@
   "manifest": "rp.service/v1",
   "package": {
     "name": "rp-test-linear-slide",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "import": "main"
   },
   "service": {
     "name": "linear-slide",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "kind": "composite_driver",
     "type": "motion.linear_actuator",
     "description": "Closed-loop stepper linear slide observed by a VL53L4CD distance sensor.",
@@ -17,7 +17,9 @@
         "enable_pin": 21,
         "step_pin": 17,
         "direction_pin": 3,
-        "package_version": "0.3.1"
+        "package_version": "0.3.1",
+        "step_delay_us": 5000,
+        "linear_slide_package_version": "0.3.2"
       },
       "position_sensor": {
         "driver": "vl53l4cd",
@@ -63,6 +65,11 @@
         "default": 10000
       },
       "steps_per_sample": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 10
+      },
+      "no_motion_sample_limit": {
         "type": "integer",
         "minimum": 1,
         "default": 10
@@ -161,6 +168,31 @@
         "rest": {
           "method": "POST",
           "path": "/api/linear-slide/goto-position-mm"
+        }
+      },
+      "jog_steps": {
+        "method": "jog_steps",
+        "description": "Jog a fixed number of motor steps without closed-loop targeting.",
+        "arguments": {
+          "steps": {
+            "type": "integer",
+            "required": true,
+            "minimum": 1,
+            "default": 200
+          },
+          "direction": {
+            "type": "boolean",
+            "required": false,
+            "default": true
+          }
+        },
+        "returns": {
+          "type": "object"
+        },
+        "concurrency": "exclusive",
+        "rest": {
+          "method": "POST",
+          "path": "/api/linear-slide/jog"
         }
       }
     }

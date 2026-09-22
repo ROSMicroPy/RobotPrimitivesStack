@@ -85,6 +85,33 @@ class LinearSlideTests(unittest.TestCase):
             slide.move_to(0.1)
         self.assertTrue(motor.stopped)
 
+    def test_move_stops_when_no_position_change_is_observed(self):
+        observer = FakePositionObserver()
+        motor = FakeMotor(observer)
+
+        def stalled_command(direction, amount=1):
+            motor.commands.append((direction, amount))
+            return True
+
+        motor.command = stalled_command
+        slide = LinearSlide(
+            motor=motor, position_observer=observer,
+            tolerance_mm=0, max_steps=100, steps_per_sample=10,
+            no_motion_sample_limit=3)
+        with self.assertRaisesRegex(RuntimeError, "No position change"):
+            slide.move_to(0.1)
+        self.assertTrue(motor.stopped)
+        self.assertEqual(sum(amount for _, amount in motor.commands), 30)
+
+    def test_jog_steps_bypasses_closed_loop_targeting(self):
+        slide, motor = self.make_slide()
+        result = slide.jog_steps(5, False)
+        self.assertEqual(result["steps"], 5)
+        self.assertFalse(result["direction"])
+        self.assertAlmostEqual(result["position_before"]["value"], 0.0)
+        self.assertAlmostEqual(result["position_after"]["value"], -0.005)
+        self.assertEqual(motor.commands, [(False, 5)])
+
     def test_manifest_position_role_name_binds_to_constructor(self):
         observer = FakePositionObserver()
         slide = LinearSlide(motor=FakeMotor(observer), position=observer)

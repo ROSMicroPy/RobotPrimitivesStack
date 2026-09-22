@@ -1,12 +1,12 @@
 manifest: rp.service/v1
 package:
   name: rube-goldberg-linear-slide
-  version: 0.3.1
+  version: 0.3.2
   import: rpstack.linear_slide
 
 service:
   name: observed-linear-actuator
-  version: 0.3.1
+  version: 0.3.2
   kind: composite_driver
   type: motion.linear_actuator
   description: Closed-loop linear slide composed from motion and position capabilities.
@@ -32,6 +32,7 @@ service:
     tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
     max_steps: {type: integer, minimum: 1, default: 10000}
     steps_per_sample: {type: integer, minimum: 1, default: 1}
+    no_motion_sample_limit: {type: integer, minimum: 1, default: 10}
     min_position_m: {type: number, required: false, unit: m}
     max_position_m: {type: number, required: false, unit: m}
   lifecycle:
@@ -58,7 +59,7 @@ service:
       concurrency: exclusive
       cancellable: true
       safe_state: stop
-      errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled, wrong_direction]
+      errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled, wrong_direction, no_motion]
       rest: {method: POST, path: /api/linear-slide/move-to}
     stop:
       method: stop
@@ -74,6 +75,15 @@ service:
       returns: {type: object}
       concurrency: read_only
       rest: {method: GET, path: /api/linear-slide/status}
+    jog_steps:
+      method: jog_steps
+      description: Jog a fixed number of steps without closed-loop targeting.
+      arguments:
+        steps: {type: integer, required: true, minimum: 1, default: 200}
+        direction: {type: boolean, required: false, default: true}
+      returns: {type: object}
+      concurrency: exclusive
+      rest: {method: POST, path: /api/linear-slide/jog}
     get_position_mm:
       method: get_position
       description: Compatibility operation returning integer millimetres.
