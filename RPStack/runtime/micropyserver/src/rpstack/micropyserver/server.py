@@ -1,7 +1,6 @@
 """A deliberately small synchronous HTTP server compatible with MicroPython."""
 
 import io
-import re
 import socket
 import sys
 
@@ -69,7 +68,7 @@ class MicroPyServer:
         for route in self._routes:
             if method != route["method"]:
                 continue
-            if path == route["path"] or re.match("^" + route["path"] + "$", path):
+            if path == route["path"]:
                 return route
         return None
 
@@ -89,8 +88,7 @@ class MicroPyServer:
                 header_end = data.find(b"\r\n\r\n")
                 if header_end >= 0:
                     headers = data[:header_end].decode("utf-8")
-                    match = re.search(r"(?i)\r\nContent-Length:\s*(\d+)", headers)
-                    content_length = int(match.group(1)) if match else 0
+                    content_length = _content_length(headers)
             if header_end >= 0 and len(data) >= header_end + 4 + content_length:
                 break
         return b"".join(chunks).decode("utf-8")
@@ -125,8 +123,24 @@ class MicroPyServer:
             self.send("HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/plain\r\n\r\nError: " + message)
 
 
+
+def _content_length(headers):
+    for line in headers.split("\r\n")[1:]:
+        name, separator, value = line.partition(":")
+        if separator and name.strip().lower() == "content-length":
+            try:
+                length = int(value.strip())
+            except ValueError:
+                raise ValueError("invalid Content-Length header")
+            if length < 0:
+                raise ValueError("Content-Length cannot be negative")
+            return length
+    return 0
+
+
 def request_line(request):
-    match = re.match(r"^([A-Z]+)\s+([^\s]+)", request)
-    if not match:
+    line = request.split("\r\n", 1)[0]
+    parts = line.split()
+    if len(parts) < 2:
         raise ValueError("invalid HTTP request line")
-    return match.group(1), match.group(2).split("?", 1)[0]
+    return parts[0].upper(), parts[1].split("?", 1)[0]
