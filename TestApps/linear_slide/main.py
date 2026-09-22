@@ -41,7 +41,7 @@ def create_slide():
 
 
 def main():
-    wifi.connectt_wifi()
+    wifi.connect_wifi()
     slide = create_slide()
     server = MicroPyServer(port=SERVER_PORT)
     ManifestRestApi(server, load_manifest(), slide)
