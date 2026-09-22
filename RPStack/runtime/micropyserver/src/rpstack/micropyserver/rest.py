@@ -55,12 +55,23 @@ class ManifestRestApi:
             arguments = query_arguments(request) if request_method(request) == "GET" else json_body(request)
             arguments = _coerce_arguments(arguments, operation.get("arguments", {}))
             result = getattr(self.service, operation["method"])(**arguments)
-            send_json(self.server, {"ok": True, "operation": operation_name, "result": result})
+            send_json(self.server, {"ok": True, "operation": operation_name, "result": _json_value(result)})
         except (ValueError, TypeError, KeyError) as error:
             send_json(self.server, {"ok": False, "operation": operation_name, "error": str(error)}, 422)
         except Exception as error:
             send_json(self.server, {"ok": False, "operation": operation_name, "error": str(error)}, 500)
 
+
+
+def _json_value(value):
+    as_dict = getattr(value, "as_dict", None)
+    if as_dict is not None:
+        return _json_value(as_dict())
+    if isinstance(value, dict):
+        return {key: _json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
+    return value
 
 def _coerce_arguments(values, schema):
     if not isinstance(values, dict):

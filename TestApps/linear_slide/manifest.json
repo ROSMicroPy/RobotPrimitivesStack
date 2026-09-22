@@ -1,0 +1,156 @@
+{
+  "manifest": "rp.service/v1",
+  "package": {
+    "name": "rp-test-linear-slide",
+    "version": "0.2.0",
+    "import": "main"
+  },
+  "service": {
+    "name": "linear-slide",
+    "version": "0.2.0",
+    "kind": "composite_driver",
+    "type": "motion.linear_actuator",
+    "description": "Closed-loop stepper linear slide observed by a VL53L4CD distance sensor.",
+    "deployment": {
+      "motor": {
+        "driver": "step_dir",
+        "enable_pin": 21,
+        "step_pin": 17,
+        "direction_pin": 3
+      },
+      "position_sensor": {
+        "driver": "vl53l4cd",
+        "i2c": {
+          "bus": 0,
+          "scl": 4,
+          "sda": 5
+        },
+        "address": 41
+      }
+    },
+    "capabilities": {
+      "provides": [
+        {
+          "interface": "motion.position_actuator",
+          "version": 1,
+          "quantity": "linear",
+          "dimensions": 1,
+          "canonical_unit": "m"
+        }
+      ],
+      "requires": {}
+    },
+    "configuration": {
+      "positive_direction": {
+        "type": "boolean",
+        "default": true
+      },
+      "tolerance_m": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0.001,
+        "unit": "m"
+      },
+      "max_steps": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 10000
+      }
+    },
+    "operations": {
+      "observe_position": {
+        "method": "position",
+        "description": "Read the current linear position.",
+        "arguments": {},
+        "returns": {
+          "type": "PositionSample",
+          "unit": "m"
+        },
+        "concurrency": "read_only",
+        "rest": {
+          "method": "GET",
+          "path": "/api/linear-slide/position"
+        }
+      },
+      "move_to": {
+        "method": "move_to",
+        "description": "Move to an absolute position in metres.",
+        "arguments": {
+          "target": {
+            "type": "number",
+            "required": true,
+            "unit": "m"
+          }
+        },
+        "returns": {
+          "type": "PositionSample",
+          "unit": "m"
+        },
+        "concurrency": "exclusive",
+        "rest": {
+          "method": "POST",
+          "path": "/api/linear-slide/move-to"
+        }
+      },
+      "stop": {
+        "method": "stop",
+        "description": "Cancel motion and stop the motor.",
+        "arguments": {},
+        "returns": {
+          "type": "boolean"
+        },
+        "rest": {
+          "method": "POST",
+          "path": "/api/linear-slide/stop"
+        }
+      },
+      "status": {
+        "method": "status",
+        "description": "Return slide state and current position.",
+        "arguments": {},
+        "returns": {
+          "type": "object"
+        },
+        "concurrency": "read_only",
+        "rest": {
+          "method": "GET",
+          "path": "/api/linear-slide/status"
+        }
+      },
+      "get_position_mm": {
+        "method": "get_position",
+        "description": "Read the current position in millimetres.",
+        "arguments": {},
+        "returns": {
+          "type": "integer",
+          "unit": "mm"
+        },
+        "concurrency": "read_only",
+        "rest": {
+          "method": "GET",
+          "path": "/api/linear-slide/position-mm"
+        }
+      },
+      "goto_position_mm": {
+        "method": "goto_position",
+        "description": "Move to an absolute position in millimetres.",
+        "arguments": {
+          "position_mm": {
+            "type": "integer",
+            "required": true,
+            "unit": "mm"
+          }
+        },
+        "returns": {
+          "type": "integer",
+          "unit": "mm"
+        },
+        "concurrency": "exclusive",
+        "rest": {
+          "method": "POST",
+          "path": "/api/linear-slide/goto-position-mm"
+        }
+      }
+    }
+  }
+}

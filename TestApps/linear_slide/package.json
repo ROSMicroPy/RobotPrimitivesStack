@@ -1,10 +1,14 @@
 {
   "name": "rp-test-linear-slide",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "urls": [
     [
       "main.py",
       "main.py"
+    ],
+    [
+      "linear_slide_manifest.json",
+      "manifest.json"
     ]
   ],
   "deps": [
@@ -26,6 +30,10 @@
     ],
     [
       "../../RPStack/services/linear_slide/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/micropyserver/package.json",
       "latest"
     ]
   ]

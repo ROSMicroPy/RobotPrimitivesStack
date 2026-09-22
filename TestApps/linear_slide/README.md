@@ -23,3 +23,20 @@ RPStack component packages beneath `/lib/rpstack/`.
 repository is public or the packages are published to an accessible host.
 Stock `mpremote` cannot authenticate its `github:` downloads against a
 private repository.
+
+## REST service
+
+On boot the application connects to Wi-Fi, constructs the linear slide, loads
+`/lib/linear_slide_manifest.json`, registers the manifest and operation
+routes, and starts `MicroPyServer` on port 80. It does not move the slide
+automatically.
+
+The Web Tester discovers the device at:
+
+```text
+GET http://<device-ip>/manifest
+```
+
+The manifest declares position, status, stop, metre-based movement, and
+millimetre-based compatibility endpoints. I²C uses SCL GPIO 4 and SDA GPIO 5;
+the VL53L4CD address is `0x29`.
