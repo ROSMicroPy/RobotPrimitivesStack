@@ -1,5 +1,6 @@
 """Example LinearSlide application. Update GPIO pins for the target board."""
 
+import wifi
 from machine import I2C, Pin
 
 from rpstack.linear_slide import LinearSlide
@@ -14,6 +15,7 @@ TARGET_POSITION_MM = 100
 
 
 def main():
+    wifi.connectt_wifi()
     i2c = I2C(0, sda=Pin(I2C_SDA_PIN), scl=Pin(I2C_SCL_PIN))
     with LinearSlide(
         i2c,
