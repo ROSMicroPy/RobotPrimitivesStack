@@ -138,7 +138,8 @@
           "position_mm": {
             "type": "integer",
             "required": true,
-            "unit": "mm"
+            "unit": "mm",
+            "default": 100
           }
         },
         "returns": {

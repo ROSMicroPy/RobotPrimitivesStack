@@ -84,7 +84,7 @@ service:
       method: goto_position
       description: Compatibility operation accepting integer millimetres.
       arguments:
-        position_mm: {type: integer, required: true, unit: mm}
+        position_mm: {type: integer, required: true, default: 100, unit: mm}
       returns: {type: integer, unit: mm}
       concurrency: exclusive
       cancellable: true
