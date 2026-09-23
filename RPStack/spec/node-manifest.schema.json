@@ -316,6 +316,14 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "mode": {
+            "enum": [
+              "resident",
+              "oneshot"
+            ],
+            "default": "resident",
+            "description": "A successful oneshot exit is expected. Nodes containing only oneshot apps exit after all apps finish."
           }
         }
       }

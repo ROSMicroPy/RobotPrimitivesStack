@@ -1050,5 +1050,5 @@ are integrated as [catalog](RPStack/runtime/catalog/README.md) and
 The linear-slide deployment includes the gateway; a standalone
 [gateway node](TestApps/mesh_gateway/README.md) is also provided. Enable catalog
 and network signal routes on every participating node. The LighthouseMesh
-submodule is replaced by first-party packages; its original tracked sources are
-retained as [migration reference](RPStack/legacy/README.md).
+submodule is replaced by first-party packages. The original sources are available
+in Git history; no legacy checkout or source archive is required.

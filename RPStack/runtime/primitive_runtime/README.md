@@ -41,3 +41,17 @@ and before autostart flows. A service with `inject_signals: true` receives the
 entity bus as its `signals` constructor argument. See the
 [signal runtime](../signals/README.md) for mesh/ROS combinations and robot-wide
 workflow execution.
+
+## Multiple logical nodes and one-off tasks
+
+`NodeHost` / `run_manifests([path, ...])` host multiple independent manifests on
+one event loop. Each node keeps its own services, tasks, resources, and identity;
+the host rejects duplicate entity/node pairs. Use the signal runtime's
+`rpstack.signals.inprocess:InProcessTransport` for communication within a process,
+or existing network transports across devices. List providers before clients.
+
+An app may declare `"mode": "oneshot"` (default: `"resident"`). Successful
+completion is expected for these apps. `await node.wait()` waits for every app
+on a task-only node and propagates errors; resident/mixed nodes wait for shutdown.
+The manifest runners automatically shut down completed task-only nodes while
+other nodes continue running. See the [two-node slide example](../../../TestApps/slide_nodes/README.md).

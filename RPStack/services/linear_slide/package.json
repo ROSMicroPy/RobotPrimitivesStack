@@ -13,6 +13,10 @@
     [
       "rpstack/linear_slide/__init__.py",
       "src/rpstack/linear_slide/__init__.py"
+    ],
+    [
+      "rpstack/linear_slide/apps.py",
+      "src/rpstack/linear_slide/apps.py"
     ]
   ],
   "deps": [

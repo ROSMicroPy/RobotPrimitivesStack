@@ -9,6 +9,10 @@
     [
       "rpstack/meshnet/__init__.py",
       "src/rpstack/meshnet/__init__.py"
+    ],
+    [
+      "rpstack/meshnet/shared.py",
+      "src/rpstack/meshnet/shared.py"
     ]
   ],
   "deps": []

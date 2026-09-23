@@ -37,6 +37,10 @@
     [
       "rpstack/primitive_runtime/validation.py",
       "src/rpstack/primitive_runtime/validation.py"
+    ],
+    [
+      "rpstack/primitive_runtime/host.py",
+      "src/rpstack/primitive_runtime/host.py"
     ]
   ],
   "deps": [

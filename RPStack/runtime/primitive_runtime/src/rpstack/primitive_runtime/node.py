@@ -36,6 +36,7 @@ class NodeRuntime(ServiceSupervisor):
         self.apps = {}
         self._app_instances = []
         self._runtime_tasks = []
+        self._oneshot_tasks = set()
         self._closed = asyncio.Event()
         self._validate_and_register()
 
@@ -106,6 +107,8 @@ class NodeRuntime(ServiceSupervisor):
             name = spec.get("id")
             if not isinstance(name, str) or not name or name in app_names:
                 raise ManifestError("app ids must be unique nonempty strings")
+            if spec.get("mode", "resident") not in ("resident", "oneshot"):
+                raise ManifestError("app mode must be resident or oneshot")
             dependencies = spec.get("requires", [])
             if not isinstance(dependencies, list) or any(dep not in runtime_names and dep not in app_names for dep in dependencies):
                 raise ManifestError("app dependencies must name runtime services or earlier apps")
@@ -193,8 +196,11 @@ class NodeRuntime(ServiceSupervisor):
                 self.apps[spec["id"]] = instance
                 self._app_instances.append(instance)
                 await call(instance.start)
-                self._runtime_tasks.append(self.tasks.spawn("app:" + spec["id"], instance.run,
-                    kind="app", owner=spec["id"]))
+                task_id = self.tasks.spawn("app:" + spec["id"], instance.run,
+                    kind="app", owner=spec["id"])
+                self._runtime_tasks.append(task_id)
+                if spec.get("mode") == "oneshot":
+                    self._oneshot_tasks.add(task_id)
             if self.remote:
                 self.remote.start()
                 self._runtime_tasks.append(self.tasks.spawn('execution:remote', self.remote.run, kind='runtime'))
@@ -213,7 +219,9 @@ class NodeRuntime(ServiceSupervisor):
             watched = list(self._service_tasks.values()) + self._runtime_tasks
             failed = [task_id for task_id in watched if task_id not in handled
                       and task_id in self.tasks.records
-                      and self.tasks.records[task_id]["state"] in ("failed", "succeeded", "cancelled")]
+                      and self.tasks.records[task_id]["state"] in ("failed", "succeeded", "cancelled")
+                      and not (task_id in self._oneshot_tasks
+                               and self.tasks.records[task_id]["state"] == "succeeded")]
             if failed:
                 handled.update(failed)
                 try:
@@ -230,7 +238,8 @@ class NodeRuntime(ServiceSupervisor):
     async def reset(self):
         for task_id in self._runtime_tasks:
             record = self.tasks.records.get(task_id)
-            if record is not None and record['done'].is_set():
+            if record is not None and record['done'].is_set() and not (
+                    task_id in self._oneshot_tasks and record['state'] == 'succeeded'):
                 raise LifecycleError('runtime listener stopped; restart the node before resetting services')
         return await super().reset()
 
@@ -248,6 +257,14 @@ class NodeRuntime(ServiceSupervisor):
                 'runs': self.engine.snapshot(), 'signals': dict(self.signals.stats),
                 'observed_runs': list(self.remote.states.values()) if self.remote else [],
                 'remote_actions': self.remote.snapshot() if self.remote else []}
+
+    async def wait(self):
+        """Wait for a task-only node to finish, or a resident node to close."""
+        specs = self.document.get("apps", [])
+        if specs and all(spec.get("mode") == "oneshot" for spec in specs):
+            await asyncio.gather(*(self.tasks.wait(task_id) for task_id in self._oneshot_tasks))
+        else:
+            await self._closed.wait()
 
     async def shutdown(self):
         self._closing = True
@@ -320,7 +337,7 @@ async def serve_manifest(path):
     node = NodeRuntime.load(path)
     try:
         await node.boot()
-        await node._closed.wait()
+        await node.wait()
     finally:
         await node.shutdown()
 

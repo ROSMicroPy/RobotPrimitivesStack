@@ -128,6 +128,11 @@ class Motor(PrimitiveService, MotionActuator):
             raise ValueError("amount must be non-negative")
         return await self.driver.move_steps(amount, bool(direction))
 
+    def command_blocking(self, direction, amount=1, cancelled=None):
+        """Synchronous pulse path for a slide's dedicated worker thread."""
+        self._require_type(MotorType.STEPPER)
+        return self.driver.move_steps_blocking(int(amount), bool(direction), cancelled)
+
     def set_position(self, position):
         self._require_type(MotorType.SERVO)
         return self.driver.set_position(position)

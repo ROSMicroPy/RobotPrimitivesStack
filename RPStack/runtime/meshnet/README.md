@@ -26,3 +26,15 @@ broadcast alone reaches only radio neighbors. See the
 
 Host tests cover framing and the radio interface; real radio range, congestion,
 channel coexistence and board memory usage still require device testing.
+
+## Multiple logical nodes per device
+
+Use `rpstack.meshnet.shared:SharedEspNowTransport` in each node's signal transport
+entry for deployment-independent local and radio delivery. It shares one ESP-NOW
+radio on a single asyncio loop, delivers outgoing messages to local peers as well
+as the radio, and keeps the radio alive until its last node stops. All local
+nodes must agree on radio options (channel defaults to 6). Receive queues remain
+bounded per node; source, target, entity, correlation, and duplicate filtering
+remain the responsibility of each SignalBus. Do not mix this transport with
+separate direct ESP-NOW radio owners. See
+[the REPL slide example](../../../TestApps/slide_nodes/README.md).

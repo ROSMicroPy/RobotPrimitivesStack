@@ -61,7 +61,7 @@ class TaskRegistry:
         return task_id
 
     def _prune(self):
-        completed = [i for i, r in self.records.items() if r["done"].is_set() and r["kind"] not in ("service", "runtime")]
+        completed = [i for i, r in self.records.items() if r["done"].is_set() and r["kind"] not in ("service", "runtime", "app")]
         for task_id in completed[:-self.history_limit] if self.history_limit else completed:
             del self.records[task_id]
 

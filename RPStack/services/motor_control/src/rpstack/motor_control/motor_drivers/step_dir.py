@@ -1,5 +1,7 @@
 """STEP/DIR driver for A4988, DRV8825, TMC and compatible controllers."""
 
+import time
+
 from rpstack.execution_engine import asyncio
 
 from rpstack.motor_control import StepperDriver
@@ -73,6 +75,39 @@ class StepDirDriver(StepperDriver):
                 await asyncio.sleep(self.step_delay_us / 1000000.0)
                 _write(self.step_pin, 0)
                 await asyncio.sleep(self.step_delay_us / 1000000.0)
+            return True
+        finally:
+            _write(self.step_pin, 0)
+            self._set_enabled(False)
+
+    def move_steps_blocking(self, steps, direction=True, cancelled=None):
+        """Generate timed pulses without involving the async scheduler."""
+        if not self.initialized:
+            raise RuntimeError("step/dir driver is not initialized")
+        steps = int(steps)
+        if steps < 0:
+            steps, direction = -steps, not direction
+
+        def delay(microseconds):
+            if hasattr(time, "sleep_us"):
+                time.sleep_us(microseconds)
+            else:
+                time.sleep(microseconds / 1000000.0)
+
+        try:
+            if cancelled and cancelled():
+                raise RuntimeError("motor stopped")
+            self._set_enabled(True)
+            _write(self.dir_pin, int(bool(direction)))
+            delay(self.direction_settle_us)
+            for _ in range(steps):
+                if not self.enabled or (cancelled and cancelled()):
+                    raise RuntimeError("motor stopped")
+                _write(self.step_pin, 1)
+                self.position_steps += 1 if direction else -1
+                delay(self.step_delay_us)
+                _write(self.step_pin, 0)
+                delay(self.step_delay_us)
             return True
         finally:
             _write(self.step_pin, 0)

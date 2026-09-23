@@ -132,7 +132,7 @@ flows, but is not a broadcast stop of unrelated workflows on every robot node.
 The source analysis covered `LighthouseMesh/dnet/src/signalling`, `messaging`,
 and `execution`. The new runtime implementation is in RPStack's `signals`,
 `meshnet`, `ros_bridge`, and `execution_engine` packages; it does not import or
-run the prototype submodule. Historical sources are retained under `RPStack/legacy/LighthouseMesh`.
+run the prototype submodule. The original sources are available in Git history.
 
 Retained concepts: transient signals separate from persistent composition,
 source/boot/sequence identities, and ESP-NOW fragmentation. Replaced the
@@ -142,4 +142,5 @@ explicit bridges, replay windows, bounded reassembly, leased remote execution
 and reset fencing. The old `dnet` APIs and v2 event envelope are not supported.
 Persistent node/capability discovery is provided by `runtime/catalog`, with
 REST access through `apps/meshnet_gtwy`. Legacy composition models are retained
-in the catalog package. OTA and prototype topology tooling remain reference code.
+in the catalog package. OTA and prototype topology tooling are not part of the
+active runtime; their original sources are available in Git history.
