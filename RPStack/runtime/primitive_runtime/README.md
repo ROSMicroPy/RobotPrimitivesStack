@@ -33,3 +33,11 @@ instances. `shutdown` additionally closes runtime services and platform resource
 
 `ManifestTestRunner.run` is async and invokes the supervisor's managed operations.
 Service test declarations retain their existing explicit hardware-test opt-in.
+
+
+Node manifests also declare `identity`, `signals`, and optional `execution`
+settings. Signal transports start after runtime services (including Wi-Fi),
+and before autostart flows. A service with `inject_signals: true` receives the
+entity bus as its `signals` constructor argument. See the
+[signal runtime](../signals/README.md) for mesh/ROS combinations and robot-wide
+workflow execution.

@@ -1,0 +1,2 @@
+Robot units are comprised of 1 or more Controls and 0 or more Sensors
+For this context a Control is a unit that can affect motion on a Robot. 

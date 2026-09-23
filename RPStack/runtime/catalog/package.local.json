@@ -1,0 +1,32 @@
+{
+  "name": "rp-catalog",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/catalog/__init__.py",
+      "src/rpstack/catalog/__init__.py"
+    ],
+    [
+      "rpstack/catalog/capabilities.py",
+      "src/rpstack/catalog/capabilities.py"
+    ],
+    [
+      "rpstack/catalog/registry.py",
+      "src/rpstack/catalog/registry.py"
+    ],
+    [
+      "rpstack/catalog/schema.py",
+      "src/rpstack/catalog/schema.py"
+    ]
+  ],
+  "deps": [
+    [
+      "../signals/package.local.json",
+      "latest"
+    ]
+  ]
+}

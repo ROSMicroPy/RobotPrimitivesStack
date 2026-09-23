@@ -113,9 +113,13 @@ class ServiceSupervisor:
         self._started = []
         return errors
 
+    def _invalidate_execution(self):
+        pass
+
     async def stop(self):
         async with self._control_lock:
             self.accepting = False
+            self._invalidate_execution()
             self.state = "stopping"
             await self.tasks.cancel_kinds(("flow", "operation"))
             errors = await self._release()
@@ -129,6 +133,7 @@ class ServiceSupervisor:
             if self._closing:
                 raise LifecycleError("node is shutting down")
             self.accepting = False
+            self._invalidate_execution()
             self.state = "resetting"
             await self.tasks.cancel_kinds(("flow", "operation"))
             errors = await self._release()

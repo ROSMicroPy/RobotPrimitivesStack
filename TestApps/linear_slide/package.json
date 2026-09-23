@@ -13,6 +13,10 @@
   ],
   "deps": [
     [
+      "../../RPStack/runtime/signals/package.local.json",
+      "latest"
+    ],
+    [
       "../../RPStack/services/interfaces/package.local.json",
       "latest"
     ],
@@ -37,7 +41,7 @@
       "latest"
     ],
     [
-      "../../RPStack/runtime/execution_engine/package.json",
+      "../../RPStack/runtime/execution_engine/package.local.json",
       "latest"
     ],
     [
@@ -50,6 +54,10 @@
     ],
     [
       "../../RPStack/runtime/env/package.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/apps/meshnet_gtwy/package.local.json",
       "latest"
     ]
   ]

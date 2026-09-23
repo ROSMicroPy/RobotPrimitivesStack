@@ -19,6 +19,14 @@ signal waits. See the [node schema](RPStack/spec/node-manifest.schema.json) and
 [execution engine](RPStack/runtime/execution_engine/README.md). Runtime API examples
 below use `await` inside an async application entry point.
 
+## Robot-wide signals
+
+[Entity-scoped signals](RPStack/runtime/signals/README.md) connect local tasks,
+[ESP-NOW mesh](RPStack/runtime/meshnet/README.md), and
+[ROS messaging](RPStack/runtime/ros_bridge/README.md). Manifest workflows can
+coordinate actions across nodes of one robot. Run the three-node
+[Robie1 simulation](TestApps/robie1/README.md) without hardware to explore it.
+
 ## The basic idea
 
 A robotic device is divided into four layers:
@@ -1029,3 +1037,18 @@ RPStack follows these principles:
 - **Primitive Runtime:** RPStack/runtime/primitive_runtime/
 - **Capability interfaces:** RPStack/services/interfaces/
 - **Linear-slide example:** RPStack/services/linear_slide/
+
+## Node applications and robot discovery
+
+Reusable node apps now live in [RPStack/apps](RPStack/apps/README.md), above
+primitive services and shared runtime infrastructure. Multiple apps can run
+concurrently on one node. LighthouseMesh's distributed catalog and REST gateway
+are integrated as [catalog](RPStack/runtime/catalog/README.md) and
+[meshnet_gtwy](RPStack/apps/meshnet_gtwy/README.md). RobotArchitect has a new
+**System** view for live nodes, apps, capabilities, status and recent signals.
+
+The linear-slide deployment includes the gateway; a standalone
+[gateway node](TestApps/mesh_gateway/README.md) is also provided. Enable catalog
+and network signal routes on every participating node. The LighthouseMesh
+submodule is replaced by first-party packages; its original tracked sources are
+retained as [migration reference](RPStack/legacy/README.md).

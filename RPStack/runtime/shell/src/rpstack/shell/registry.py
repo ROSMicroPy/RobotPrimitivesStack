@@ -50,9 +50,7 @@ def mkdir_p(path):
 
 
 def ensure_ext_registry():
-    mkdir_p("/lib")
-    mkdir_p("/lib/etc")
-    mkdir_p("/lib/etc/mpshell")
+    mkdir_p(EXT_COMMANDS_FILE.rsplit("/", 1)[0])
     try:
         os.stat(EXT_COMMANDS_FILE)
     except OSError:
@@ -62,7 +60,6 @@ def ensure_ext_registry():
 
 def read_ext_registry():
     try:
-        ensure_ext_registry()
         with open(EXT_COMMANDS_FILE) as f:
             data = json.load(f)
         if isinstance(data, list):
@@ -95,7 +92,7 @@ def import_module_from_path(path):
     module_name = module_name_from_path(path)
     added_path = False
     if module_dir and module_dir not in sys.path:
-        sys.path.append(module_dir)
+        sys.path.insert(0, module_dir)
         added_path = True
     try:
         if module_name in sys.modules:

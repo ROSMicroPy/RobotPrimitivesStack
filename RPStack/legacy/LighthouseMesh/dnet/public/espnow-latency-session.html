@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex Session Conversations</title>
+  <style>
+    :root {
+      --bg: #f4efe8;
+      --panel: #fffaf4;
+      --ink: #1f1a17;
+      --muted: #786e67;
+      --left: #ffffff;
+      --right: #d9f0ff;
+      --border: #d8cfc5;
+      --shadow: 0 10px 30px rgba(56, 43, 30, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, #f9d7b0 0, transparent 28%),
+        radial-gradient(circle at top right, #d2ebff 0, transparent 24%),
+        var(--bg);
+      color: var(--ink);
+      font: 16px/1.5 Georgia, "Times New Roman", serif;
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 20px 56px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2.3rem;
+    }
+
+    .intro {
+      max-width: 720px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .session {
+      background: color-mix(in srgb, var(--panel) 92%, white 8%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px 18px;
+      margin: 0 0 28px;
+    }
+
+    .session-header {
+      padding: 2px 8px 18px;
+    }
+
+    .session-header h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    .conversation {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .row {
+      display: flex;
+      width: 100%;
+    }
+
+    .row.left { justify-content: flex-start; }
+    .row.right { justify-content: flex-end; }
+
+    .bubble {
+      position: relative;
+      max-width: min(78ch, 88%);
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+      box-shadow: 0 6px 18px rgba(60, 42, 24, 0.06);
+    }
+
+    .row.left .bubble {
+      background: var(--left);
+      border-bottom-left-radius: 6px;
+    }
+
+    .row.right .bubble {
+      background: var(--right);
+      border-bottom-right-radius: 6px;
+    }
+
+    .row.left .bubble::after {
+      content: "";
+      position: absolute;
+      left: -8px;
+      bottom: 8px;
+      width: 14px;
+      height: 14px;
+      background: var(--left);
+      border-left: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transform: rotate(45deg);
+    }
+
+    .row.right .bubble::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      bottom: 8px;
+      width: 14px;
+      height: 14px;
+      background: var(--right);
+      border-right: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      transform: rotate(45deg);
+    }
+
+    @media (max-width: 640px) {
+      main { padding: 20px 12px 40px; }
+      .session { padding: 16px 12px; border-radius: 18px; }
+      .bubble { max-width: 94%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Codex Session Conversations</h1>
+    <p class="intro">
+      Extracted from the local `.jsonl` rollout files. This view keeps the user prompts and Codex final answers,
+      while dropping tool calls, patch payloads, and IDE/session boilerplate.
+    </p>
+    
+            <section class="session">
+              <div class="session-header">
+                <h2>OpenTelemetry/GrafanaStack</h2>
+                <div class="meta">rollout-2026-05-22T17-07-25-019e5228-7d8d-7402-971c-143fc03a6bd2.jsonl</div>
+              </div>
+              <div class="conversation">
+                <div class="row right"><div class="bubble">enable and configure the mcp server for loki, mimir, tempo</div></div><div class="row left"><div class="bubble">Enabled MCP access in the stack and started the services.
+
+The main changes are in docker-compose.yml and tempo/assets/config.yml. Grafana now has explicit `admin/admin` credentials for MCP use, stable datasource UIDs for Loki and Tempo, and a new `grafana-mcp` service on port `8000` configured with read-only `datasource`, `prometheus`, `loki`, and `proxied` tools. Tempo now has its built-in MCP server enabled and its HTTP port published on `3200`.
+
+What this gives you:
+- Loki MCP access via Grafana MCP at `http://localhost:8000/sse`
+- Mimir MCP access via Grafana MCP’s Prometheus tools at `http://localhost:8000/sse`
+- Tempo MCP access both directly at `http://localhost:3200/api/mcp` and through Grafana MCP proxying
+One important detail: there is no separate native Mimir MCP server in this stack; Mimir is exposed through Grafana MCP using the Prometheus/Mimir datasource. If you want, I can also add a small README snippet showing how to register both MCP endpoints in your client.</div></div><div class="row right"><div class="bubble">can you configugure the codex plugin to be aware of those mcp servers</div></div><div class="row left"><div class="bubble">Configured Codex to use the observability MCP endpoints and adjusted the Grafana MCP service to a transport Codex can consume.
+
+Changes:
+- docker-compose.yml now runs `grafana-mcp` with `--transport=streamable-http` and `--endpoint-path=/mcp`
+- ~/.codex/config.toml now includes:
+  - `grafana-observability = http://127.0.0.1:8000/mcp`
+  - `tempo-observability = http://127.0.0.1:3200/api/mcp`
+One constraint remains: Loki and Mimir are not separate MCP endpoints in this stack. Codex reaches both through the single `grafana-observability` server, while Tempo also has its own direct MCP endpoint.
+
+If your IDE plugin already had a Codex session open, restart the plugin or start a new session so it reloads `~/.codex/config.toml`.</div></div>
+              </div>
+            </section>
+            
+            <section class="session">
+              <div class="session-header">
+                <h2>RobotPrimitives/LighthouseMesh</h2>
+                <div class="meta">rollout-2026-05-22T17-51-27-019e5250-cbbc-7ef1-bdb5-a83120c4bb9d.jsonl</div>
+              </div>
+              <div class="conversation">
+                <div class="row right"><div class="bubble">using the tempo mcp server can you diagnose why the sendraw from Node1 has a large latency before Node2 receive raw ?</div></div><div class="row left"><div class="bubble">The Tempo data does not support “Node2 is slow to process after receive” as the primary cause. The strongest signal is that latency is already building on Node1 before the packet leaves.
+
+In Tempo’s recent data, `lighthousemesh-node1` is active and `node1.send_distance_event` shows:
+- `count_over_time()`: `214`
+- `avg_over_time(span:duration)`: about `26.4 ms`
+- `p50`: about `24.0 ms`
+- `max`: about `639 ms`
+
+That means the send path itself is sometimes blocking for hundreds of milliseconds. The send span wraps the actual `endpoint.send_event(...)` call in node1/demo.py, so this delay is on the sender side, not just between devices.
+
+The code also adds a fixed receive-side delay on Node2 because the mesh loop is polled, not interrupt-driven:
+- Node1 runs `mesh.run(..., poll_ms=25)` in node1/demo.py
+- Node2 runs the same in node2/demo.py
+
+So even in a healthy case, Node2 can sit on an incoming frame for up to ~25 ms before `on_message` runs. If the loop is busy with telemetry/export work, that stretches further:
+- Node1 telemetry collection/export runs every 10s in node1/demo.py
+- Node2 does the same in node2/demo.py
+
+One more important caveat: if you are reading the gap between `sendraw` on Node1 and `receive raw` on Node2 directly from cross-device traces, clock skew can inflate that gap. Both devices only do a one-time `ntptime.settime()` at startup in node1/demo.py and node2/demo.py. On small devices, drift after startup is enough to make inter-device spans look slower than the radio path really is.
+
+So the likely diagnosis is:
+- Primary: sender-side blocking in Node1’s send path
+- Secondary: Node2’s `poll_ms=25` receive loop adds queueing delay
+- Possible measurement artifact: clock skew between the two devices
+
+If you want, I can make the next pass concrete by instrumenting the repo to split the transport timing into:
+1. `serialize/build`
+2. `actual sendraw`
+3. `radio receive raw`
+4. `on_message dispatch`
+
+That will tell you whether the 639 ms outliers are serialization, radio contention, polling delay, or timestamp skew.</div></div><div class="row right"><div class="bubble">yes</div></div><div class="row left"><div class="bubble">I added stage-level tracing in the transport stack so the next run can separate sender time, RX queue time, and callback handoff time.
+
+The changes are in LighthouseMesh.py, LighthouseTransport.py, and protocol.py. New behavior:
+- `dnet.signalling.mesh.recv_raw` now records `rx.queue_ms`, `rx.ingest_source`, and `message.bytes`.
+- `dnet.signalling.transport.recv`, `dnet.messaging.poll`, and `dnet.messaging.receive` carry the same RX timing attributes.
+- `dnet.signalling.mesh.dispatch_decoded` wraps decoded delivery to `on_message`.
+- `dnet.signalling.mesh.dispatch_raw` wraps raw delivery when no endpoint is used.
+
+For the next Tempo pass, compare these spans in one trace:
+- `dnet.messaging.send.event`
+- `dnet.signalling.transport.send`
+- `dnet.signalling.mesh.send_raw`
+- `dnet.signalling.mesh.recv_raw`
+- `dnet.signalling.transport.recv`
+- `dnet.messaging.poll`
+- `dnet.messaging.receive`
+- `dnet.signalling.mesh.dispatch_decoded`
+- `node2.on_message`
+
+Interpretation:
+- High `dnet.signalling.mesh.send_raw` duration means sender-side blocking.
+- High `rx.queue_ms` on `recv_raw`/`transport.recv`/`messaging.poll` means Node2 is not draining RX promptly.
+- High `dispatch_decoded` duration with low `rx.queue_ms` means the lag is after decode, inside callback/app handling.
+
+When you have a fresh trace, I can query Tempo again and pinpoint which stage is actually responsible.</div></div><div class="row right"><div class="bubble">can you analyze the timing between node1 and node2 again ?</div></div><div class="row left"><div class="bubble">I re-ran the analysis on the fresh Tempo traces, and the picture is clearer now.
+
+The latest traces do show a real Node1 -&gt; Node2 handoff delay before `recv_raw`, but it is not dominated by `recv_raw` itself. In two current traces:
+
+- Trace `660b718f0aa3c8c80d50b4b1f9841110`:
+  - `node1` `dnet.signalling.mesh.send_raw`: `1.283 ms`
+  - `node2` `dnet.signalling.mesh.recv_raw`: starts about `129 ms` later, duration `1.967 ms`
+  - `node2` `rx.queue_ms`: `30 ms`
+  - `node2` `dispatch_decoded`: `772.911 ms`
+  - `node2` `on_message`: `769.297 ms`
+
+- Trace `1ccdfb3fee6d82f088562b80489ef654`:
+  - `node1` `dnet.signalling.mesh.send_raw`: `1.296 ms`
+  - `node2` `dnet.signalling.mesh.recv_raw`: starts about `126 ms` later, duration `1.986 ms`
+  - `node2` `rx.queue_ms`: `2 ms`
+  - `node2` `dispatch_decoded`: `388.338 ms`
+  - `node2` `on_message`: `385.036 ms`
+
+What that means:
+
+- `send_raw` is not the problem. It is consistently about `1.2-1.3 ms`.
+- `recv_raw` is also not the problem. It is consistently about `2 ms`.
+- There is still about `125-130 ms` between Node1 `send_raw` finishing and Node2 `recv_raw` starting in the current traces.
+- After the frame is available on Node2, additional delay sometimes comes from RX queueing:
+  - common samples I found: `2 ms`, `20 ms`, `30 ms`, `40 ms`, `100 ms`, `107 ms`, `129 ms`, `248 ms`, `262 ms`, `343 ms`, `355 ms`, `433 ms`
+  - one clear outlier: `1663 ms`
+- The biggest consistent delay is now inside Node2 after decode:
+  - `dnet.signalling.mesh.dispatch_decoded` on Node2 is often `~388 ms` to `~1.13 s`
+  - `node2.on_message` tracks that closely
+  - `node2.send_event_ack` is also often long, e.g. `199 ms`, `490 ms`
+
+Diagnosis:
+
+- The large latency is no longer explained by Node1 send or Node2 raw receive.
+- The main bottleneck is Node2’s decoded message handling path, especially `dispatch_decoded` / `node2.on_message`.
+- A secondary contributor is Node2 RX queue residence, which is sometimes modest and sometimes very large.
+- There is still a roughly `125 ms` sender-to-receiver gap before `recv_raw`; that could be transport scheduling / polling behavior, but it is much smaller than the worst Node2 post-receive delay.
+
+So the answer is: the worst latency is now mostly on Node2 after the packet has already been received, not before `recv_raw`.
+
+If you want, I can make one more pass and identify why `node2.on_message` is taking hundreds of milliseconds, especially whether the cost is in `_send_event_ack`, OTLP logging/export, or the mesh send path for the ack.</div></div><div class="row right"><div class="bubble">yes</div></div><div class="row left"><div class="bubble">Yes. The current bottleneck on Node2 is most likely synchronous OTLP log export inside the message handler, not ESP-NOW.
+
+Evidence from the new traces:
+- In recent traces, `node2.send_event_ack` is often `300 ms` to `1.8 s`.
+- But the nested `dnet.signalling.transport.send` is usually only about `6 ms`, and `dnet.signalling.mesh.send_raw` is about `1.3 ms`.
+- Example trace `6f31944903ab4fd0374974d1a985d994`:
+  - `node2.send_event_ack`: `1807.606 ms`
+  - `dnet.messaging.send.report`: `639.076 ms`
+  - `dnet.signalling.transport.send`: `632.775 ms`
+  - `dnet.signalling.mesh.send_raw`: `1.319 ms`
+- Example trace `54bc52dda3e46097b13a4c1f2932ae85`:
+  - `node2.send_event_ack`: `379.604 ms`
+  - `dnet.signalling.transport.send`: `6.191 ms`
+
+The code path supports that diagnosis:
+- `node2.on_message` logs immediately on entry in node2/demo.py
+- `_send_event_ack` sends the ack, then logs again in node2/demo.py
+- That logging is synchronous:
+  - `LOGGER.info(...)` calls `Logger.emit(...)` in logging.py
+  - `LoggerProvider._emit(...)` immediately runs processors in logging.py
+  - `SimpleLogProcessor.emit(...)` exports each record right away in processor.py
+  - `HTTPLogExporter.export(...)` does an HTTP POST synchronously in exporter.py
+
+So each inbound event on Node2 does at least two synchronous OTLP log POSTs while still inside `node2.on_message` and `node2.send_event_ack`. That will directly inflate those spans.
+
+Secondary factor:
+- `rx.queue_ms` is also real and sometimes large: I saw `30 ms`, `107 ms`, `355 ms`, `433 ms`, and `1619 ms`.
+- So Node2 is sometimes slow to drain received packets before it even starts processing them.
+
+One more caution:
+- Span timing uses wall-clock time via `time()`/`time_ns()` in util.py, not a monotonic clock.
+- That can exaggerate durations if device time jumps, but it does not explain the repeated pattern where the slow spans line up exactly with Node2 logging and ack handling.
+
+Diagnosis:
+- Primary: synchronous OTLP logging inside `node2.on_message` and `_send_event_ack`
+- Secondary: intermittent RX queue buildup on Node2
+- Not primary: `mesh.send_raw` or the raw radio receive path
+
+If you want, I can patch Node2 so the hot path stops doing synchronous OTLP logs, then we can verify the latency drop in Tempo.</div></div><div class="row right"><div class="bubble">yes please</div></div><div class="row left"><div class="bubble">I patched Node2 so the hot receive/ack path no longer performs synchronous OTLP log export.
+
+The change is in node2/demo.py. `node2.on_message`, `_send_event_ack`, and `_send_claim_ack` now use `_log_hot_path(...)`, which writes to the local device log only, instead of `_log_info(...)`, which triggers synchronous OTLP log export. The trace spans are unchanged, so Tempo will still show the timing breakdown.
+
+I also bumped node2/package.json from `0.154` to `0.155`.
+
+Next step is to deploy Node2 `0.155`, generate fresh traffic, and then I can re-check Tempo to confirm whether `node2.on_message` and `node2.send_event_ack` collapse from hundreds of milliseconds down to something close to the actual send cost.</div></div><div class="row right"><div class="bubble">can the mp_opentelemetry be made async where the latency sensitive code will write to a queue and a seperate thread will service that queue and send messages to the otelcollector. Need to make sure timing information is stored for eech record on the input vs setting the time of the packet on reading the queue.</div></div><div class="row left"><div class="bubble">Yes. I implemented that in `mp_opentelemetry`.
+
+What changed:
+- Added queue-backed processors in processor.py:
+  - `QueuedSpanProcessor`
+  - `QueuedLogProcessor`
+- They enqueue completed `Span` and `LogRecord` objects immediately and export them from a background `_thread` worker.
+- Timestamps are preserved correctly because the queued objects already carry their original times:
+  - spans keep `start_time_unix_nano` / `end_time_unix_nano`
+  - log records keep `timestamp_unix_nano`
+- Export time does not overwrite those fields.
+
+I also added `setup_otlp(..., async_export=True, async_batch_size=16, async_queue_size=128, async_flush_interval_ms=200)` in api.py, and enabled it in:
+- node1/demo.py
+- node2/demo.py
+
+Important caveats:
+- This is for spans and logs. Metrics are still timestamped when collected, which is already their correct semantic point.
+- If `_thread` is unavailable on a target, `setup_otlp(async_export=True)` falls back to the existing synchronous processors.
+
+Version bumps:
+- MicropythonModules/mp_opentelemetry/package.json: `2.0` -&gt; `2.1`
+- node1/package.json: `0.144` -&gt; `0.145`
+- node2/package.json: `0.155` -&gt; `0.156`
+I also added a regression test in test_mp_otel_async_processors.py that proves queued spans and logs keep their original timestamps after waiting before export.
+
+Next useful step is to deploy the new `mp_opentelemetry` and Node packages, then I can re-check Tempo to confirm the Node2 hot-path latency dropped.</div></div><div class="row right"><div class="bubble">can you evaluate the current timing</div></div><div class="row left"><div class="bubble">The current timing is worse, and the dominant problem has shifted.
+
+What Tempo shows now:
+- `node2` raw receive itself is still fast:
+  - `dnet.signalling.mesh.recv_raw`: about `2 ms`
+  - `dnet.signalling.transport.recv`: about `1.6-1.7 ms`
+- `node2` ack send is also mostly fast at the transport layer:
+  - `dnet.signalling.transport.send`: about `6.1 ms`
+  - `dnet.signalling.mesh.send_raw`: about `1.3 ms`
+  - `dnet.messaging.send.report`: about `12.5 ms`
+
+But the receive queue delay is now enormous:
+- In trace `6588fc93f3e5b955a803a827ada5ed6c`, `rx.queue_ms = 30061`
+- In trace `4aa8bb997186f0438624feae73b2b1bf`, `rx.queue_ms = 30301`
+- I also found many recent traces clustered around `24s` to `30s` queue delay
+
+That means the packet is reaching Node2, but it is sitting in Node2’s RX queue for about 25-30 seconds before the app starts handling it.
+
+After it finally starts processing, Node2 is still somewhat slow:
+- `node2.on_message`: `639 ms` to `1186 ms` in the two traces I opened
+- `node2.send_event_ack`: `299 ms` to `880 ms`
+- `dnet.signalling.mesh.dispatch_decoded`: `643 ms` to `1189 ms`
+
+But those are secondary now. The primary issue is RX queue starvation, not send or raw receive.
+
+Concrete examples:
+- Trace `6588fc93f3e5b955a803a827ada5ed6c`
+  - `rx.queue_ms`: `30061 ms`
+  - `node2.on_message`: `639.079 ms`
+  - `node2.send_event_ack`: `299.081 ms`
+  - `transport.send`: `6.133 ms`
+- Trace `4aa8bb997186f0438624feae73b2b1bf`
+  - `rx.queue_ms`: `30301 ms`
+  - `node2.on_message`: `1185.923 ms`
+  - `node2.send_event_ack`: `880.414 ms`
+  - `transport.send`: `6.155 ms`
+
+Interpretation:
+- The async OTEL change likely removed transport/log export from being the main hot-path blocker.
+- But Node2 is now not draining its incoming queue promptly at all.
+- The most likely causes are:
+  - the main async loop is not being scheduled often enough
+  - another task is blocking the interpreter for long stretches
+  - the background OTEL worker thread is contending heavily with the main thread on this device/runtime
+  - or the new build is only partially deployed and traces are mixed
+
+One clue supporting “mixed / partial deployment”:
+- many recent traces show `rootServiceName: &lt;root span not yet received&gt;`, which suggests trace export ordering is now decoupled, as expected with async export
+
+So the current diagnosis is:
+- Primary bottleneck: Node2 RX queue delay of about `25-30 seconds`
+- Secondary bottleneck: Node2 decoded dispatch / ack path still taking `0.3-1.2 seconds`
+- Not the bottleneck: ESP-NOW raw receive or raw send
+
+If you want, the next step should be to instrument or patch Node2’s scheduler behavior around `mesh.run(...)` and the OTEL worker, because that’s now the most likely source of the 25-30 second queue buildup.</div></div><div class="row right"><div class="bubble">do both instrument and patch. I would like to be able to set a flag that will seperate traces as essential and non-essential. Essential will emit traaces for thebigger macro style events and the non-essential will produce the traceing data for fine grain diagnostics.  implement this flag in both node1 and node2</div></div><div class="row left"><div class="bubble">Implemented both parts.
+
+I added an essential-vs-diagnostic trace mode in `mp_opentelemetry` and wired it into both nodes. In essential mode, only macro spans like `node1.*` and `node2.*` are emitted; the fine-grained `dnet.*` spans are suppressed. The flag is resolved from `OTEL_TRACE_DETAIL_MODE`, `trace_detail_mode`, or `trace_detail`, and defaults to `essential` in both node1/demo.py and node2/demo.py. The SDK-side filter is in api.py and trace.py.
+
+I also instrumented and patched the queue/scheduler path. `LighthouseMesh` now exposes runtime queue stats in LighthouseMesh.py, queued OTEL processors expose queue snapshots in processor.py, and both nodes log those snapshots from their telemetry loop. On Node2, hot-path logging no longer writes to flash unless you switch to diagnostic mode, which removes a major source of receive-path blocking in node2/demo.py.
+
+Version updates:
+- MicropythonModules/mp_opentelemetry/package.json: `2.1` -&gt; `2.2`
+- dnet/package.json: `0.084` -&gt; `0.085`
+- node1/package.json: `0.145` -&gt; `0.146`
+- node2/package.json: `0.156` -&gt; `0.157`
+
+Next useful step is to deploy these builds and re-check Tempo with `trace_detail=essential` first. That should tell us whether the RX queue starvation is fixed without the diagnostic trace overhead.</div></div><div class="row right"><div class="bubble">is detailed trracing enabkled now, if not enable it</div></div><div class="row left"><div class="bubble">Detailed tracing was not enabled. Both nodes were still defaulting to `essential`, and neither profile overrode it.
+
+I enabled it explicitly by adding `&quot;trace_detail_mode&quot;: &quot;diagnostic&quot;` to:
+- node1/profile.json
+- node2/profile.json
+
+After the nodes restart with those profiles, they should emit the fine-grained `dnet.*` tracing again.</div></div><div class="row right"><div class="bubble">analyse the new timing  also the startt time on the traces look off, vetify if they are correct.</div></div><div class="row left"><div class="bubble">**Findings**
+
+- Cross-device start times are not reliable for causality right now. The absolute timestamps are plausible, but Node1 and Node2 clocks are offset enough to create impossible ordering.
+  - Example from trace `0e0b6e042e075cfde965d13cd0fdc4eb` on May 23, 2026:
+    - Node2 `send_raw` ends at `2026-05-23T03:49:55.912322Z`
+    - Node1 `recv_raw` starts at `2026-05-23T03:49:55.585446Z`
+    - That implies Node1 receives the ack about `327 ms` before Node2 sends it, which cannot be real.
+  - The SDK timestamps spans from device wall-clock time in util.py and stamps span start/end directly in trace.py and trace.py.
+  - Both nodes only do a one-time `ntptime.settime()` at startup in node1/demo.py and node2/demo.py, so inter-device skew is expected.
+
+- The current timing is much better than the earlier 25-30 second RX queue problem. In the newest full traces I checked:
+  - Trace `c157238b5e4eae7c3266821021009926`
+    - Node2 `recv_raw`: `2.031 ms`, `rx.queue_ms=13`
+    - Node2 `on_message`: `289.825 ms`
+    - Node2 `send_event_ack`: `198.595 ms`
+    - Node2 transport send: `6.402 ms`
+  - Trace `0732ceebee5413b4436144940a3076d4`
+    - Node2 `recv_raw`: `1.995 ms`, `rx.queue_ms=20`
+    - Node2 `on_message`: `275.117 ms`
+    - Node2 `send_event_ack`: `199.685 ms`
+    - Node2 transport send: `6.425 ms`
+  - Trace `0e0b6e042e075cfde965d13cd0fdc4eb`
+    - Node2 `recv_raw`: `2.764 ms`, `rx.queue_ms=1`
+    - Node2 `on_message`: `170.587 ms`
+    - Node2 `send_event_ack`: `98.565 ms`
+    - Node2 transport send: `8.555 ms`
+
+- The main remaining latency is Node2 application handling after decode, not raw radio transport.
+  - `recv_raw` is consistently about `2 ms`
+  - `rx.queue_ms` is now `1-20 ms` in the newest traces, which is healthy relative to the earlier `24-30 s`
+  - `node2.on_message` is still about `170-290 ms`
+  - `node2.send_event_ack` is still about `99-200 ms`
+  - The actual send path inside that ack is only about `6-9 ms`
+
+**Conclusion**
+
+The new timing is materially improved. The severe RX starvation appears resolved in the latest traces. The remaining real bottleneck is Node2’s post-receive handling path, while the “start time looks off” issue is a clock-skew problem between devices, not a bad enqueue/export timestamp bug.
+
+If you want, I can patch the tracing next so each node emits a clock-offset marker or monotonic delta attribute, which will make cross-device latency analysis trustworthy even when RTCs drift.</div></div><div class="row right"><div class="bubble">Yes make the cross device latency more trustworthy,
+
+Also for node1 and node2 by default emit logs to the otel stack, if the otel stack is down then emit logs to the console as it does now on node1
+
+Set the default loggin level to ERROR to reduce any side effect of logging</div></div><div class="row left"><div class="bubble">Implemented the telemetry changes across the SDK, `dnet`, and both nodes.
+
+Cross-device timing is more trustworthy now in two ways. `dnet` messages now carry sender-captured timing in the trace carrier, and receive-side spans annotate that as `tx.sender_unix_ms`, `tx.sender_monotonic_ms`, `tx.message_age_ms`, and `tx.observed_clock_offset_ms`. I also added periodic NTP resync on both nodes, so they no longer rely only on a one-time startup sync. The new timing path is in protocol.py, codec.py, and LighthouseTransport.py.
+
+Logging now defaults to OTEL-first with console fallback when the collector is unavailable. I added severity filtering and export-failure fallback in the shared SDK, then wired both demos to use it with default level `ERROR`. That means logs go to OTEL when healthy, and fall back to console if startup probe disables telemetry or later log export fails. The main SDK changes are in api.py, logging.py, and processor.py. Node wiring is in node1/demo.py and node2/demo.py.
+
+Versions bumped:
+- mp_opentelemetry/package.json: `2.2` -&gt; `2.3`
+- dnet/package.json: `0.085` -&gt; `0.086`
+- node1/package.json: `0.146` -&gt; `0.147`
+- node2/package.json: `0.157` -&gt; `0.158`
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+Once you deploy these builds, the next Tempo pass should be able to distinguish actual transport delay from clock skew much more cleanly.</div></div><div class="row right"><div class="bubble">analyse the timing now, it looks better except for the first send from node 1</div></div><div class="row left"><div class="bubble">The timing is better overall, and the “first send from Node1” outlier is not actually a slow send on Node1.
+
+In the likely first-send outlier, trace `1365018625e32887e6c0377085661ccd`:
+- `node1.send_distance_event`: `23.901 ms`
+- `dnet.messaging.send.event`: `16.976 ms`
+- `dnet.signalling.transport.send`: `8.862 ms`
+- `dnet.signalling.mesh.send_raw`: `3.613 ms`
+
+So Node1’s send path is normal.
+
+What makes that trace look bad is downstream delay on Node2:
+- `node2 recv_raw`: `2.373 ms`
+- `node2 rx.queue_ms`: `614 ms`
+- `node2.on_message`: `232.309 ms`
+- `node2.send_event_ack`: `118.777 ms`
+
+That first-send trace is slow because the packet sits on Node2 for about `614 ms` before processing starts, then Node2 still spends another `~232 ms` handling it.
+
+A newer steady-state trace, `0ac6926cc93914f4ccbe93a2e53e0715`, looks healthier:
+- `node1.send_distance_event`: `24.390 ms`
+- `node2 rx.queue_ms`: `29 ms`
+- `node2.on_message`: `188.532 ms`
+- `node2.send_event_ack`: `108.316 ms`
+
+So the pattern is:
+- Node1 send is consistently fine: about `24 ms` end-to-end app span, `~9 ms` transport send, `~1-4 ms` raw send.
+- The first bad event is mostly Node2 warm-up / queue delay.
+- Steady-state is much better, but Node2 app handling is still the dominant remaining cost.
+
+One important detail: the new cross-device timing fields are useful for relative comparison, but `tx.sender_unix_ms` is misnamed right now. It is being populated from `dnet`’s `time.time()*1000`, which on these devices appears to still be on the 2000-based epoch, not true Unix epoch. That is why values like `832825452000` appear. The offset comparison is still internally useful because both nodes are using the same basis, but the field is not true Unix time yet.
+
+So the diagnosis now is:
+- Yes, timing is better overall.
+- The “first send from Node1” issue is really first-receive queueing on Node2, not a Node1 send bottleneck.
+- Remaining steady-state bottleneck is still Node2 `on_message` / ack handling, not ESP-NOW send.
+
+If you want, I can patch the timing field naming and source so `tx.sender_unix_ms` becomes a true Unix timestamp and add a separate `tx.sender_device_ms` for the local device epoch.</div></div><div class="row right"><div class="bubble">Yes patch the code also node1 is still emiting send announce and send distance logs to the console, change that so they go to the otel collector
+
+I am also seeing this error
+Send Distance
+Send Distance
+send claim
+Traceback (most recent call last):
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 452, in _on_espnow_irq
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 462, in _drain_incoming
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 542, in _ingest_rx_packet
+RuntimeError: maximum recursion depth exceeded
+Send Distance</div></div><div class="row left"><div class="bubble">Patched the code.
+
+`tx.sender_unix_ms` now comes from the OTEL Unix clock source instead of `time.time()*1000`, and I added `tx.sender_device_ms` so the device-local epoch is still available separately. That change is in protocol.py, codec.py, and LighthouseTransport.py.
+
+I also fixed the `maximum recursion depth exceeded` fault in LighthouseMesh.py by adding an IRQ re-entry guard around `_drain_incoming()`. If the ESP-NOW IRQ fires while a drain is already in progress, it now marks a redraw request and loops once the current drain completes instead of recursing.
+
+For Node1 logging, the raw `print(&quot;send announce&quot;)`, `print(&quot;send claim&quot;)`, and `print(&quot;Send Distance&quot;)` calls are gone. Those messages now emit as forced OTEL `INFO` logs, so they go to the collector even though the default log level remains `ERROR`, and they still fall back to console if OTEL is down. The node changes are in node1/demo.py, with the SDK support in logging.py.
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+I did not bump package versions in this step. If you want, I can do that next.</div></div><div class="row right"><div class="bubble">I am seeing this on node2 now
+
+INFO LighthouseMesh: mesh init node_id=806599df5e80 mac=806599df5e80
+INFO LighthouseMesh: mesh wifi channel=1 peer_channel=1
+INFO LighthouseMesh: mesh peers=()
+INFO LighthouseMesh: interrupt rx enabled callback=&lt;bound_method&gt;
+INFO LighthouseMesh: initial espnow stats=(0, 0, 0, 0, 0)
+ERROR LighthouseMesh: dropped 2 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 1 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 3 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 1 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 2 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 1 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 1 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 1 stale fragment buffer(s)
+ERROR LighthouseMesh: dropped 3 stale fragment buffer(s)</div></div><div class="row left"><div class="bubble">Two things were happening.
+
+First, the repeated `dropped N stale fragment buffer(s)` messages were because traced event packets were still too large and were being fragmented. Node2 was receiving only part of some multi-frame events, then timing out and discarding the incomplete reassembly buffers 30 seconds later. I patched that by removing the extra timing fields from the on-wire trace carrier and deriving sender timing from the existing message timestamp instead. After the patch, a standard traced distance event is back to `222` bytes and the ack report is `202` bytes, both below the single-frame limit.
+
+Second, I downgraded stale fragment expiry logging from `ERROR` to debug-only, because incomplete fragment expiry is a transport diagnostic, not an application error.
+
+I also removed the remaining Node1 console send prints by routing those send messages to forced OTEL `INFO` logs, so they go to the collector even with default log level `ERROR`, and only fall back to console if OTEL is unavailable.
+
+Files changed:
+- protocol.py
+- LighthouseTransport.py
+- LighthouseMesh.py
+- node1/demo.py
+- logging.py
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+After deploying this build, the current stale fragment spam on Node2 should stop. You may still see a few old expirations for previously queued partial fragments until that device restarts or those buffers age out once.</div></div><div class="row right"><div class="bubble">seeing this on node2
+
+INFO LighthouseMesh: mesh peers=()
+INFO LighthouseMesh: interrupt rx enabled callback=&lt;bound_method&gt;
+INFO LighthouseMesh: initial espnow stats=(0, 0, 0, 0, 0)
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;
+ERROR LighthouseMesh: endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;</div></div><div class="row left"><div class="bubble">Patched.
+
+The Node2 error was caused by essential-mode trace suppression. `dnet.signalling.mesh.recv_raw` was returning a no-op span, and LighthouseMesh.py was still unconditionally reading `span.context.span_id`. When `span.context` was `None`, `endpoint.poll()` failed and the mesh loop logged `endpoint.poll failed err=&#x27;NoneType&#x27; object has no attribute &#x27;span_id&#x27;`.
+
+I fixed that by guarding the receive-span context before storing `recv_span_id`. If the span is suppressed, the mesh now keeps going and just omits that metadata field.
+
+I also added a regression test in test_mesh_invalid_frames.py that forces `essential` mode and verifies `_trace_recv()` works without a span context.
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+After deploying this build, that repeated `endpoint.poll failed ... span_id` error on Node2 should stop.</div></div><div class="row right"><div class="bubble">Seeing this on node2
+
+machine:/lib/node2 upy$ demo.main()
+load profile
+ERROR node2.demo: ntp sync failed err=-202
+otel endpoint is down
+ERROR LighthouseMesh: wifi channel config failed channel=6 err=Wifi Unknown Error 0xffffffff
+INFO LighthouseMesh: mesh init node_id=806599dd48f4 mac=806599dd48f4
+INFO LighthouseMesh: mesh wifi channel=3 peer_channel=3
+INFO LighthouseMesh: mesh peers=()
+INFO LighthouseMesh: interrupt rx enabled callback=&lt;bound_method&gt;
+INFO LighthouseMesh: initial espnow stats=(0, 0, 0, 0, 0)
+ERROR LighthouseMesh: send failed target=806599df5e80 bytes=121 err=(-12397, &#x27;ESP_ERR_ESPNOW_CHAN&#x27;)
+ERROR LighthouseMesh: on_message(decoded) failed err=(-12397, &#x27;ESP_ERR_ESPNOW_CHAN&#x27;)
+ERROR LighthouseMesh: send failed target=806599df5e80 bytes=121 err=(-12397, &#x27;ESP_ERR_ESPNOW_CHAN&#x27;)
+
+Also when trying to sync with the ntp server add a retry loop that will retry the update when the update fails, about from the program after 10 failed tries</div></div><div class="row left"><div class="bubble">Patched both issues.
+
+The `ntp sync failed err=-202` path now retries up to 10 times and aborts startup if all 10 attempts fail. I applied that to both node1/demo.py and node2/demo.py. The retry count and retry delay are configurable via `NTP_SYNC_MAX_ATTEMPTS` / `ntp_sync_max_attempts` and `NTP_SYNC_RETRY_DELAY_S` / `ntp_sync_retry_delay_s`.
+
+I also changed the mesh to fail fast on channel mismatch in LighthouseMesh.py. In your log, Node2 requested channel `6`, failed to switch, stayed on channel `3`, and then later hit `ESP_ERR_ESPNOW_CHAN` when replying to Node1. With the patch, that mismatch now raises at mesh initialization instead of letting the program run into broken send behavior.
+
+That means your current Node2 log is telling you two separate startup blockers:
+- NTP could not be reached after Wi‑Fi setup.
+- ESP-NOW could not get onto channel `6`; the device stayed on channel `3`.
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+If you want, I can also bump the affected package versions for this retry/channel-mismatch fix.</div></div><div class="row right"><div class="bubble">on node1 and node2
+
+machine:/lib/node1 upy$ demo.main()
+INFO LighthouseMesh: wifi STA connected on channel 1; keeping existing channel
+ERROR LighthouseMesh: Refusing channel switch while STA is connected to keep network reachable. Set up STA on requested channel 6 before startup or pass an unconnected mesh
+Traceback (most recent call last):
+  File &quot;/lib/mpshell/sh.py&quot;, line 546, in _execute_python_line
+  File &quot;/lib/mpshell/sh.py&quot;, line 506, in _run_python_expr
+  File &quot;&lt;string&gt;&quot;, line 1, in &lt;module&gt;
+  File &quot;demo.py&quot;, line 590, in main
+  File &quot;asyncio/core.py&quot;, line 1, in run
+  File &quot;asyncio/core.py&quot;, line 1, in run_until_complete
+  File &quot;asyncio/core.py&quot;, line 1, in run_until_complete
+  File &quot;demo.py&quot;, line 573, in run
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 114, in __init__
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 842, in _ensure_requested_channel
+RuntimeError: ESP-NOW channel mismatch requested=6 effective=1</div></div><div class="row left"><div class="bubble">Patched both nodes.
+
+They now resolve the ESP-NOW mesh channel from the active STA connection before creating `LighthouseMesh`. If Wi‑Fi is already connected on channel `1`, the mesh will use channel `1` instead of still passing the hardcoded `6` and hitting the fail-fast mismatch. If Wi‑Fi is not connected, they still fall back to the configured/default mesh channel.
+
+The change is in:
+- node1/demo.py
+- node2/demo.py
+
+I also added a regression in test_node2_tracing.py that verifies a connected WLAN on channel `1` causes `_resolve_mesh_channel(...)` to return `1`.
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+With this build, the specific startup failure you pasted should stop as long as both nodes are connected to Wi‑Fi on the same AP channel. If you want, I can bump the affected package versions next.</div></div><div class="row right"><div class="bubble">add the same retry loop we did for the ntpserver fo the test to see if the OLTP server is up</div></div><div class="row left"><div class="bubble">Added the same bounded retry loop for the OTLP availability probe.
+
+`setup_otlp(...)` in api.py now retries `probe_endpoint(...)` before declaring `otel endpoint is down`. Both nodes pass defaults of 10 attempts with a 1 second delay, matching the NTP retry behavior:
+- node1/demo.py
+- node2/demo.py
+
+The new OTLP probe settings are configurable through:
+- `OTLP_PROBE_MAX_ATTEMPTS` / `otlp_probe_max_attempts`
+- `OTLP_PROBE_RETRY_DELAY_S` / `otlp_probe_retry_delay_s`
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+If you want, I can bump the affected package versions next.</div></div><div class="row right"><div class="bubble">sometimes when I start the demo on node1 and node2, the first few WIFI  packets fail on both tx and rx but once they start working, they are solid.  what can we do so they calls always work ??</div></div><div class="row left"><div class="bubble">Added the same bounded retry loop for the OTLP server probe.
+
+`setup_otlp(...)` in api.py now retries endpoint probing before declaring `otel endpoint is down`. Both nodes pass defaults of 10 attempts with a 1 second delay, matching the NTP retry behavior:
+
+- node1/demo.py
+- node2/demo.py
+
+Config knobs:
+- `OTLP_PROBE_MAX_ATTEMPTS` / `otlp_probe_max_attempts`
+- `OTLP_PROBE_RETRY_DELAY_S` / `otlp_probe_retry_delay_s`
+
+I also added a regression test covering the retry behavior in test_mp_otel_async_processors.py.
+
+Verification passed:
+```bash
+python -m unittest tests.test_mp_otel_async_processors tests.test_dnet_trace_continuity tests.test_node2_tracing tests.test_mesh_invalid_frames
+```
+
+If you want, I can bump the affected package versions next.</div></div><div class="row right"><div class="bubble">analyse the timming now</div></div><div class="row left"><div class="bubble">**Findings**
+
+- Cross-device timestamp verification is still not correct. The new traces are still carrying a non-Unix sender timestamp on receive spans, so `tx.message_age_ms` and `tx.observed_clock_offset_ms` are garbage.
+  - In trace `0eba81702aef19f3881f9f257670fc4c`, Node2 receive shows `tx.sender_unix_ms=832829681000` and `tx.message_age_ms=946684800855`.
+  - In trace `ac7053cb2b863815b92ded5913ae350a`, Node1 receive of the ack shows `tx.sender_unix_ms=832829700000` and `tx.message_age_ms=946684799932`.
+  - `832829...` is not a real Unix timestamp in May 2026. It is still a device-local epoch, so cross-device start-time comparisons are not yet trustworthy.
+
+- The transport itself looks healthy in the latest successful traces. Raw radio send/receive is consistently low:
+  - `send_raw`: about `1.3-1.4 ms`
+  - `recv_raw`: about `1.8-1.9 ms`
+  - `transport.recv`: about `1.7-1.8 ms`
+
+- Node2 is much better than the earlier queue-starvation state, but it is still the main steady-state latency source.
+  - Trace `0eba81702aef19f3881f9f257670fc4c`
+    - Node2 `rx.queue_ms=30`
+    - `node2.on_message=227.9 ms`
+    - `node2.send_event_ack=118.6 ms`
+    - `dnet.messaging.receive=359.2 ms`
+  - Trace `ac7053cb2b863815b92ded5913ae350a`
+    - Node2 `rx.queue_ms=3`
+    - `node2.on_message=264.5 ms`
+    - `node2.send_event_ack=98.4 ms`
+    - `dnet.messaging.receive=275.5 ms`
+
+- Node1 now shows intermittent sender-side stalls before the packet leaves, and those are real.
+  - In trace `ac7053cb2b863815b92ded5913ae350a`:
+    - `node1.send_distance_event=116.2 ms`
+    - `dnet.messaging.send.event=103.0 ms`
+    - `dnet.signalling.transport.send=92.8 ms`
+    - `send_raw=1.37 ms`
+  - That means the delay is not the raw ESP-NOW transmit itself. It is inside the higher-level send path on Node1 before or around `transport.send`.
+
+- There are still occasional large Node2 processing outliers even when RX queueing is low.
+  - In trace `042378a24e82192632a60b9aabe1739f`:
+    - Node2 `rx.queue_ms=2`
+    - `node2.on_message=186.8 ms`
+    - but `dnet.messaging.receive=1161.5 ms`
+    - and `dispatch_decoded=1155.8 ms`
+  - That points to post-receive handling or scheduling delay on Node2, not radio delivery.
+
+**Current diagnosis**
+
+The timing is better overall. ESP-NOW raw TX/RX is not the bottleneck. The remaining latency is split between:
+- Node2 app-side handling and ack generation, usually `~100-275 ms`, sometimes much worse.
+- New intermittent Node1 sender-side stalls in `dnet.signalling.transport.send`, usually `~90 ms` in the latest bad samples.
+
+The cross-device timing metadata is still not trustworthy because the receive spans are still interpreting a device-local timestamp as Unix time.
+
+If you want, I can patch the timestamp path next so `tx.sender_unix_ms` is truly Unix ms on the wire and then re-run this analysis with trustworthy cross-device deltas.</div></div><div class="row right"><div class="bubble">yes patch it I am also seeing this on node2
+Traceback (most recent call last):
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 464, in _on_espnow_irq
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 478, in _drain_incoming
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 558, in _ingest_rx_packet
+RuntimeError: maximum recursion depth exceeded
+Traceback (most recent call last):
+
+nd this on node1</div></div><div class="row right"><div class="bubble">File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 464, in _on_espnow_irq
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 478, in _drain_incoming
+  File &quot;/lib/dnet/signalling/LighthouseMesh.py&quot;, line 558, in _ingest_rx_packet
+RuntimeError: maximum recursion depth exceeded
+Traceback (most recent call last):</div></div><div class="row left"><div class="bubble">Patched both issues.
+
+`dnet` now writes the protocol `ts` field as true Unix milliseconds instead of device-local `time.time()*1000`, so cross-device receive spans can compute `tx.sender_unix_ms` and `tx.message_age_ms` correctly from the on-wire message timestamp. That change is in protocol.py.
+
+I also hardened the Node2 IRQ receive path in LighthouseMesh.py. Fragment expiry no longer runs once per packet inside `_ingest_rx_packet()`. It now runs once per drain cycle, has an explicit non-reentrant guard, and tolerates partial object state. That closes the recursion path behind the repeated `maximum recursion depth exceeded` fault you were seeing from `_on_espnow_irq -&gt; _drain_incoming -&gt; _ingest_rx_packet`.
+
+I added regressions in:
+- test_dnet_trace_continuity.py
+- test_mesh_invalid_frames.py
+
+Verification passed:
+```bash
+python -m unittest tests.test_dnet_trace_continuity tests.test_mesh_invalid_frames
+```
+
+After you deploy this build to both nodes, I can re-check Tempo and confirm whether the cross-device timing fields are now sane and whether the Node2 recursion fault is gone.</div></div>
+              </div>
+            </section>
+            
+  </main>
+</body>
+</html>

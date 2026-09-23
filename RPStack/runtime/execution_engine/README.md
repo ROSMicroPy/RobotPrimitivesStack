@@ -34,3 +34,17 @@ Actions must be cooperative: quick synchronous functions are supported, but
 blocking functions do not become nonblocking merely by being placed in a task.
 Do not put synchronous loops, sleeps, socket reads, or long hardware waits in
 runtime actions. STEP/DIR pulses and VL53L4CD readiness waits now yield.
+
+
+## Distributed workflows
+
+The engine owns one coordinator per run, not one global engine per chip.
+A graph step's `node` selects a peer; absent `node`, it executes locally.
+`RemoteActions` dispatches correlated, leased operations through the shared
+signal bus. Workers validate and supervise them with their local runtime.
+Coordinator transitions emit revisioned `_rp.state` signals for other nodes.
+
+See [entity signals and distributed execution](../signals/README.md) for manifest
+configuration, correlated waits, reset fencing, observations, and failure limits.
+`EventBus` and `engine.events` are aliases for the shared signal implementation;
+there is no separate local-only event system or threaded execution path.

@@ -60,6 +60,7 @@ def document():
         ('distance_sensor', 'vl53l4cd', 'DistanceDriver'),
     ):
         doc['components'][component]['service']['implementations'][implementation]['entry_point'] = __name__ + ':' + cls
+    doc['apps'] = []
     doc['runtime'] = [{'id': 'http', 'entry_point': 'rpstack.micropyserver:NodeRestApi',
                        'config': {'host': '127.0.0.1', 'port': 0, 'request_timeout_s': 0.2}}]
     return doc
@@ -230,6 +231,20 @@ class NodeTests(unittest.IsolatedAsyncioTestCase):
         await shutdown
         self.assertFalse(self.node.accepting)
         self.assertEqual(self.node._started, [])
+
+    async def test_signal_endpoint_and_execution_status(self):
+        code, job = await self.request('POST', '/api/flows/start', {'name':'observe_on_signal'})
+        self.assertEqual(code, 202)
+        self.assertIn('run_id', job)
+        code, body = await self.request('POST', '/api/signals', {'name':'observe','payload':{'ok':True}})
+        self.assertEqual(code, 200)
+        self.assertEqual(body['signal']['entity'], 'Robie1')
+        await self.node.tasks.wait(job['task_id'])
+        code, status = await self.request('GET', '/api/execution')
+        self.assertEqual(code, 200)
+        self.assertEqual(status['runs'][0]['state'], 'succeeded')
+        for args in ({'name':'_rp.call'}, {'name':'x','routes':['missing']}, {'name':'x','ttl_ms':0}):
+            self.assertEqual((await self.request('POST', '/api/signals', args))[0], 422)
 
 
 if __name__ == '__main__':

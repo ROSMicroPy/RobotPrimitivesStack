@@ -51,6 +51,10 @@
     [
       "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/env",
       "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/apps/meshnet_gtwy",
+      "archdef"
     ]
   ]
 }

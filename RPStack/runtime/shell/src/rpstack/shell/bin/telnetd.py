@@ -1,3 +1,0 @@
-import utelnetserver
-utelnetserver.start()
-

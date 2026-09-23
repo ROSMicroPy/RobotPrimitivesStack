@@ -1,0 +1,23 @@
+{
+  "name": "rp-signals",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/signals/__init__.py",
+      "src/rpstack/signals/__init__.py"
+    ],
+    [
+      "rpstack/signals/bus.py",
+      "src/rpstack/signals/bus.py"
+    ],
+    [
+      "rpstack/signals/model.py",
+      "src/rpstack/signals/model.py"
+    ]
+  ],
+  "deps": []
+}

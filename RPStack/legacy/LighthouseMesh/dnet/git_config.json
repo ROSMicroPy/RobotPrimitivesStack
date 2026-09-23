@@ -1,0 +1,20 @@
+{
+  "gitlab_base_url": "https://gitlab.com/api/v4",
+  "project_id": "81490571",
+  "private_token": "{$GIT_LAB_TOKEN}",
+  "target_branch": "main",
+  "device_branch": "devices/device-42",
+  "local_root": ".",
+  "state_file": "./.glsync-state.json",
+  "managed_subpath": "",
+  "package_json_url": "https://gitlab.com/robot-primitives/lighthousemesh/dnet/-/raw/main/package.json",
+  "author_name": "{$GIT_USER_NAME}",
+  "author_email": "{$GIT_USER_EMAIL}",
+  "mr_title_template": "Device sync: {device_branch} -> {target_branch}",
+  "mr_remove_source_branch": false,
+  "timeout_seconds": 30.0,
+  "retry_attempts": 4,
+  "retry_backoff_seconds": 1.0
+}
+
+

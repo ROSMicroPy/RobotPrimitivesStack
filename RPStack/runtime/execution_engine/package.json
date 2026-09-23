@@ -17,7 +17,16 @@
     [
       "rpstack/execution_engine/tasks.py",
       "src/rpstack/execution_engine/tasks.py"
+    ],
+    [
+      "rpstack/execution_engine/distributed.py",
+      "src/rpstack/execution_engine/distributed.py"
     ]
   ],
-  "deps": []
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/signals",
+      "archdef"
+    ]
+  ]
 }

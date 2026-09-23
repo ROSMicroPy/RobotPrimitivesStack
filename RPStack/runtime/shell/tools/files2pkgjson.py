@@ -1,78 +1,33 @@
-import os
+"""Generate disjoint core and optional mip packages from the shell source tree."""
 import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / 'src'
+OPTIONAL_SUPPORT = {'microWebSrv.py', 'utelnetserver.py', 'pye.py'}
 
 
-class mipDefinition():
-    def __init__(self):
-        self.data = {}
-        self.data["name"] = ""
-        self.data["version"] = ""
-        self.data["urls"] = []
+def generate():
+    core, optional = [], []
+    for path in sorted(SOURCE.rglob('*.py')):
+        relative = path.relative_to(SOURCE)
+        is_optional = '/bin/optional/' in '/' + str(relative) or path.name in OPTIONAL_SUPPORT
+        if is_optional:
+            optional.append([str(relative), '../src/' + str(relative)])
+        else:
+            core.append([str(relative), 'src/' + str(relative)])
+    packages = [
+        (ROOT, 'rp-shell', core, [['github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine', 'archdef']]),
+        (ROOT / 'optional', 'rp-shell-optional', optional, [['github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/shell', 'archdef']]),
+    ]
+    for directory, name, urls, dependencies in packages:
+        directory.mkdir(exist_ok=True)
+        for local in (False, True):
+            deps = ([['../package.local.json', 'latest']] if name == 'rp-shell-optional' else []) if local else dependencies
+            document = {'name': name, 'version': '3.0.0', 'urls': urls, 'deps': deps}
+            filename = 'package.local.json' if local else 'package.json'
+            (directory / filename).write_text(json.dumps(document, indent=2) + '\n')
 
-    def addURL(self, url:list):
-        self.data["urls"].append(list)
 
-
-class mipJSON():
-    def __init__(self, repoBaseURL:str):
-        self.repoBaseURL = repoBaseURL;
-        self.mipDef = mipDefinition()
-        self.pkgName = None
-
-
-    def addFiles(self, directory:str, branch:str="main"):
-        """
-        Creates a mip package.json from a local directory listing.
-        """
-        # Walk through directory to find .py and .mpy files
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                if file.endswith(('.py', '.mpy')):
-                    # Create relative path
-                    full_path = os.path.join(root, file)
-                    rel_path = full_path
-                    if rel_path.startswith("./"): 
-                        rel_path=rel_path[2:]
-                    elif rel_path.startswith("/"): 
-                        rel_path=rel_path[1:]
-                    
-                    rel_path_store = os.path.relpath(full_path, directory)
-                    if rel_path_store.startswith("./"): 
-                        rel_path_store=rel_path_store[2:]
-                    elif rel_path_store.startswith("/"): 
-                        rel_path_store=rel_path_store[1:]
-
-                    flist = []
-
-                    if self.pkgName:
-                        flist.append(f"{self.pkgName}/{rel_path_store}")
-                    else:
-                        flist.append(f"{rel_path_store}")
-
-                    flist.append(f"{self.repoBaseURL}/{rel_path}")
-
-                    self.mipDef.data["urls"].append(flist)
-
-    def writeOutput(self, output_file:str="package.json"):
-        # Write to package.json
-        with open(output_file, 'w+') as f:
-            json.dump(self.mipDef.data, f, indent=4)
-        print(f"Created {output_file} for {len(self.mipDef.data['urls'])} files.")
-
-    def setName(self, name:str):
-        self.mipDef.data["name"] = name
-
-    def setVersion(self, version:str):
-        self.mipDef.data["version"] = version
-
-    def setPkgName(self, name:str):
-        self.pkgName = name
-# "urls": [
-#    ["dnet/__init__.py", "gitlab:robot-primitives/LighthouseMesh/-/blob/main/dnet/code/__init__.py?"],
-
-        
-mj = mipJSON(".")
-mj.setVersion("2.0.0")
-mj.setName("Micropython Extensible Shell")
-mj.addFiles("./code")
-mj.writeOutput("package.json")
+if __name__ == '__main__':
+    generate()

@@ -1,0 +1,36 @@
+{
+  "name": "rp-mesh-gateway-node",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "main.py",
+      "main.py"
+    ],
+    [
+      "mesh_gateway_manifest.json",
+      "manifest.json"
+    ]
+  ],
+  "deps": [
+    [
+      "../../RPStack/runtime/primitive_runtime/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/meshnet/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/env/package.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/apps/meshnet_gtwy/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/execution_engine/package.local.json",
+      "latest"
+    ]
+  ]
+}

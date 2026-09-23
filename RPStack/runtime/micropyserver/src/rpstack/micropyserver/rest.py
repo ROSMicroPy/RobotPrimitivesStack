@@ -17,6 +17,8 @@ class NodeRestApi:
             ("POST", "/api/node/stop"): self.stop_node,
             ("POST", "/api/node/reset"): self.reset_node,
             ("POST", "/api/events"): self.event,
+            ("POST", "/api/signals"): self.event,
+            ("GET", "/api/execution"): self.execution,
             ("POST", "/api/flows/start"): self.flow,
         }
         for service_id, service in node.discovery()["services"].items():
@@ -82,14 +84,20 @@ class NodeRestApi:
         await self.node.reset()
         send_json(response, {"ok": True, "state": self.node.state})
 
+    async def execution(self, request, response):
+        send_json(response, self.node.execution_status())
+
     async def event(self, request, response):
         args = json_body(request)
-        self.node.engine.events.publish(args["name"], args.get("payload"))
-        send_json(response, {"ok": True})
+        signal = self.node.publish_signal(args['name'], args.get('payload'),
+            correlation=args.get('correlation'), target=args.get('target', '*'),
+            routes=args.get('routes'), ttl_ms=args.get('ttl_ms', 10000), hops=args.get('hops', 8))
+        send_json(response, {'ok': True, 'signal': signal})
 
     async def flow(self, request, response):
         task_id = self.node.start_flow(json_body(request)["name"])
         send_json(response, {"ok": True, "task_id": task_id,
+                             "run_id": self.node.engine.runs[task_id]["run_id"],
                              "status_url": "/api/task?id={}".format(task_id)}, 202)
 
     async def start(self):

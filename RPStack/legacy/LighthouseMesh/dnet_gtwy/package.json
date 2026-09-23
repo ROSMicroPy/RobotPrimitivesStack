@@ -1,0 +1,12 @@
+{
+  "name": "Distributed Network Gateway",
+  "urls": [
+    
+    ["dnet_gtwy/__init__.py",      "https://gitlab.com/robot-primitives/lighthousemesh/dnet_gtwy/-/raw/main/src/__init__.py"],
+    ["dnet_gtwy/RestInterface.py", "https://gitlab.com/robot-primitives/lighthousemesh/dnet_gtwy/-/raw/main/src/RestInterface.py"],
+    ["dnet_gtwy/package.json",     "https://gitlab.com/robot-primitives/lighthousemesh/dnet_gtwy/-/raw/main/package.json"],
+    ["dnet_gtwy/git_config.json",  "https://gitlab.com/robot-primitives/lighthousemesh/dnet_gtwy/-/raw/main/git_config.json"]
+
+  ],
+  "version": "0.135"
+}

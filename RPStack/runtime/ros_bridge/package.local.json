@@ -1,0 +1,15 @@
+{
+  "name": "rp-ros-bridge",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/ros_bridge/__init__.py",
+      "src/rpstack/ros_bridge/__init__.py"
+    ]
+  ],
+  "deps": []
+}

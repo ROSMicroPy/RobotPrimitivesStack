@@ -971,6 +971,10 @@
     {
       "id": "shell",
       "entry_point": "rpstack.shell.async_shell:AsyncShell"
+    },
+    {
+      "id": "catalog",
+      "entry_point": "rpstack.catalog:Catalog"
     }
   ],
   "flows": {
@@ -990,5 +994,24 @@
         }
       }
     }
-  }
+  },
+  "identity": {
+    "entity": "Robie1",
+    "node": "slide"
+  },
+  "signals": {
+    "routes": [
+      "local"
+    ]
+  },
+  "apps": [
+    {
+      "id": "gateway",
+      "entry_point": "rpstack.apps.meshnet_gtwy:GatewayApp",
+      "requires": [
+        "http",
+        "catalog"
+      ]
+    }
+  ]
 }

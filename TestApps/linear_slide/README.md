@@ -108,3 +108,8 @@ scheduling; this implementation is not a precise high-rate pulse generator.
 Native I2C transactions remain synchronous bounded calls. Confirm pulse timing
 and stop latency on the target board; use a hardware pulse peripheral for tighter
 timing requirements.
+
+The deployment also runs `rpstack.catalog:Catalog` and the `meshnet_gtwy` app
+on its existing HTTP listener. Query `/api/robot` or use RobotArchitect System.
+The default local signal route lists only this node; configure a mesh transport
+and route to discover the complete robot.

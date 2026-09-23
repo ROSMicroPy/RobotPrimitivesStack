@@ -20,9 +20,8 @@
     },
     "components": {
       "type": "object",
-      "minProperties": 1,
       "additionalProperties": {
-        "$ref": "service-manifest.schema.json"
+        "$ref": "https://robot-primitives.dev/schema/service-manifest-v1.json"
       }
     },
     "resources": {
@@ -42,7 +41,6 @@
     },
     "services": {
       "type": "object",
-      "minProperties": 1,
       "additionalProperties": {
         "type": "object",
         "required": [
@@ -67,6 +65,9 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "inject_signals": {
+            "type": "boolean"
           }
         }
       }
@@ -141,6 +142,25 @@
                 },
                 "on_error": {
                   "type": "string"
+                },
+                "node": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "correlated": {
+                  "type": "boolean"
+                },
+                "signal_source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "routes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
                 }
               },
               "dependentRequired": {
@@ -152,6 +172,157 @@
           }
         }
       }
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "entity",
+        "node"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "node": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        }
+      }
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "routes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bridges": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "queue_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seen_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 128
+        },
+        "transports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "entry_point"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "entry_point": {
+                "type": "string",
+                "minLength": 1
+              },
+              "relay": {
+                "type": "boolean"
+              },
+              "config": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "peers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expose": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lease_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        }
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_point"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry_point": {
+            "type": "string",
+            "pattern": "^[^:]+:[^:]+$"
+          },
+          "config": {
+            "type": "object"
+          },
+          "requires": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "description": "Public physical composition metadata, advertised by catalog; never put secrets here."
     }
   }
 }

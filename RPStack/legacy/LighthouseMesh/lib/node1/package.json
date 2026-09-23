@@ -1,0 +1,12 @@
+{
+  "name": "Test node for dnet",
+  "urls": [
+    ["node1/demo.py", "./demo.py"],
+    ["node1/capability_selftest.py", "./capability_selftest.py"],
+    ["node1/profile.json", "./profile.json"],
+    ["node1/git_config.json", "./git_config.json"],
+    ["node1/package.json", "./package.json"]
+
+  ],
+  "version": "0.122"
+}

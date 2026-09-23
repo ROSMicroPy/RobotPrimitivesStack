@@ -1,8 +1,10 @@
 """Load one node manifest; assemble and supervise all declared services."""
 from rpstack.execution_engine import ExecutionEngine, asyncio, call
 from .manifest import ManifestError, ServiceManifest, load_document, load_entry_point
-from .supervisor import ServiceSupervisor, BusyError
+from .supervisor import ServiceSupervisor, BusyError, LifecycleError
 from .validation import validate_values
+from rpstack.signals import SignalBus
+from rpstack.execution_engine.distributed import RemoteActions
 
 
 class NodeRuntime(ServiceSupervisor):
@@ -11,8 +13,28 @@ class NodeRuntime(ServiceSupervisor):
         self.document = document
         self.resources = {}
         self.resource_factories = resource_factories or {}
-        self.engine = ExecutionEngine(self.tasks, self.invoke)
+        identity = document.get('identity', {})
+        options = document.get('signals', {})
+        self.signals = SignalBus(entity=identity.get('entity', 'local'),
+            node_id=identity.get('node', 'local'), routes=options.get('routes'),
+            bridges=options.get('bridges'), queue_limit=options.get('queue_limit', 16),
+            seen_limit=options.get('seen_limit', 512), max_bytes=options.get('max_bytes', 2048))
+        self._signal_transports = []
+        self._started_transports = []
+        for spec in options.get('transports', []):
+            factory = load_entry_point(spec['entry_point'])
+            transport = factory(self.signals.entity, self.signals.node_id, **spec.get('config', {}))
+            self.signals.add_transport(spec['id'], transport, spec.get('relay', False))
+            self._signal_transports.append((spec['id'], transport))
+        self.signals.validate_configuration()
+        execution = document.get('execution')
+        self.remote = RemoteActions(self, execution.get('peers', []), execution.get('expose', []),
+            execution.get('lease_ms', 3000), execution.get('capacity', 64)) if execution else None
+        self.engine = ExecutionEngine(self.tasks, self.invoke, self.signals, self.remote)
         self._runtime_instances = []
+        self.runtime_instances = {}
+        self.apps = {}
+        self._app_instances = []
         self._runtime_tasks = []
         self._closed = asyncio.Event()
         self._validate_and_register()
@@ -25,7 +47,7 @@ class NodeRuntime(ServiceSupervisor):
         doc = self.document
         if doc.get("manifest") != "rp.node/v1":
             raise ManifestError("expected rp.node/v1")
-        if not doc.get("services") or not isinstance(doc["services"], dict):
+        if not isinstance(doc.get("services"), dict):
             raise ManifestError("node requires services")
         catalog = doc.get("components", {})
         resources = doc.get("resources", {})
@@ -57,10 +79,12 @@ class NodeRuntime(ServiceSupervisor):
             # Resolve imports before touching any physical resources.
             factory = load_entry_point(manifest.entry_point)
             driver = load_entry_point(selected["entry_point"]) if implementation else None
-            def build_factory(factory=factory, driver=driver, constructor=constructor):
+            def build_factory(factory=factory, driver=driver, constructor=constructor, inject_signals=spec.get("inject_signals", False)):
                 def build(**dependencies):
                     args = self._resolve(constructor)
                     args.update(dependencies)
+                    if inject_signals:
+                        args["signals"] = self.signals
                     if driver:
                         args["driver"] = driver()
                     return factory(**args)
@@ -76,6 +100,26 @@ class NodeRuntime(ServiceSupervisor):
                 raise ManifestError("runtime ids must be unique")
             runtime_names.add(spec["id"])
             self._runtime_factories.append((spec, load_entry_point(spec["entry_point"])))
+        self._app_factories = []
+        app_names = set()
+        for spec in doc.get("apps", []):
+            name = spec.get("id")
+            if not isinstance(name, str) or not name or name in app_names:
+                raise ManifestError("app ids must be unique nonempty strings")
+            dependencies = spec.get("requires", [])
+            if not isinstance(dependencies, list) or any(dep not in runtime_names and dep not in app_names for dep in dependencies):
+                raise ManifestError("app dependencies must name runtime services or earlier apps")
+            if name in runtime_names:
+                raise ManifestError("app and runtime ids must be distinct")
+            app_names.add(name)
+            self._app_factories.append((spec, load_entry_point(spec["entry_point"])))
+        if self._signal_transports and (self.signals.entity == 'local' or self.signals.node_id == 'local'):
+            raise ManifestError('network signals require explicit entity and unique node identity')
+        if self.remote:
+            if self.signals.node_id in self.remote.peers:
+                raise ManifestError('execution peers must exclude this node')
+            for service in self.remote.expose:
+                self.registry.get(service)
         for name, flow in doc.get("flows", {}).items():
             nodes = flow.get("nodes", {})
             if flow.get("start") not in nodes:
@@ -84,7 +128,16 @@ class NodeRuntime(ServiceSupervisor):
                 for edge in ("next", "on_error"):
                     if node.get(edge) and node[edge] not in nodes:
                         raise ManifestError("unknown flow node")
+                if node.get('routes') is not None:
+                    self.signals._check_routes(node['routes'])
+                if 'timeout_s' in node and (isinstance(node['timeout_s'], bool) or not isinstance(node['timeout_s'], (int, float)) or node['timeout_s'] <= 0):
+                    raise ManifestError('invalid workflow timeout')
                 if "operation" in node:
+                    target = node.get('node', self.signals.node_id)
+                    if target != self.signals.node_id:
+                        if self.remote is None or target not in self.remote.peers:
+                            raise ManifestError('undeclared remote workflow node: ' + target)
+                        continue
                     d = self.registry.get(node["service"])
                     op = d.manifest.operation(node["operation"])
                     validate_values(op.get("arguments", {}), node.get("arguments", {}), name)
@@ -123,11 +176,28 @@ class NodeRuntime(ServiceSupervisor):
             await self.start()
             for spec, factory in self._runtime_factories:
                 instance = factory(self, **spec.get("config", {}))
+                self.runtime_instances[spec["id"]] = instance
                 self._runtime_instances.append(instance)
                 await call(instance.start)
                 task_id = self.tasks.spawn("runtime:" + spec["id"], instance.run,
                                            kind="runtime", owner=spec["id"])
                 self._runtime_tasks.append(task_id)
+            for name, transport in self._signal_transports:
+                self._started_transports.append(transport)
+                await call(transport.start)
+                for direction, operation in (('rx', self.signals.listen), ('tx', self.signals.transmit)):
+                    self._runtime_tasks.append(self.tasks.spawn('signals:' + name + ':' + direction,
+                        operation, name, kind='runtime', owner=name))
+            for spec, factory in self._app_factories:
+                instance = factory(self, **spec.get("config", {}))
+                self.apps[spec["id"]] = instance
+                self._app_instances.append(instance)
+                await call(instance.start)
+                self._runtime_tasks.append(self.tasks.spawn("app:" + spec["id"], instance.run,
+                    kind="app", owner=spec["id"]))
+            if self.remote:
+                self.remote.start()
+                self._runtime_tasks.append(self.tasks.spawn('execution:remote', self.remote.run, kind='runtime'))
             for name, flow in self.document.get("flows", {}).items():
                 if flow.get("autostart", False):
                     self.start_flow(name)
@@ -143,7 +213,7 @@ class NodeRuntime(ServiceSupervisor):
             watched = list(self._service_tasks.values()) + self._runtime_tasks
             failed = [task_id for task_id in watched if task_id not in handled
                       and task_id in self.tasks.records
-                      and self.tasks.records[task_id]["state"] in ("failed", "succeeded")]
+                      and self.tasks.records[task_id]["state"] in ("failed", "succeeded", "cancelled")]
             if failed:
                 handled.update(failed)
                 try:
@@ -157,6 +227,28 @@ class NodeRuntime(ServiceSupervisor):
             raise BusyError("node is " + self.state)
         return self.engine.start(name, self.document["flows"][name])
 
+    async def reset(self):
+        for task_id in self._runtime_tasks:
+            record = self.tasks.records.get(task_id)
+            if record is not None and record['done'].is_set():
+                raise LifecycleError('runtime listener stopped; restart the node before resetting services')
+        return await super().reset()
+
+    def _invalidate_execution(self):
+        if self.remote:
+            self.remote.invalidate()
+
+    def publish_signal(self, name, payload=None, **options):
+        if not isinstance(name, str) or name.startswith('_rp.'):
+            raise ValueError('reserved or invalid signal name')
+        return self.signals.publish(name, payload, **options)
+
+    def execution_status(self):
+        return {'entity': self.signals.entity, 'node': self.signals.node_id,
+                'runs': self.engine.snapshot(), 'signals': dict(self.signals.stats),
+                'observed_runs': list(self.remote.states.values()) if self.remote else [],
+                'remote_actions': self.remote.snapshot() if self.remote else []}
+
     async def shutdown(self):
         self._closing = True
         errors = []
@@ -169,12 +261,27 @@ class NodeRuntime(ServiceSupervisor):
             if task_id in self.tasks.records:
                 await self.tasks.cancel(task_id)
         self._runtime_tasks = []
+        for instance in reversed(self._app_instances):
+            try:
+                await call(instance.stop)
+            except Exception as error:
+                errors.append(str(error))
+        self._app_instances = []
+        for transport in reversed(self._started_transports):
+            try:
+                await call(transport.stop)
+            except Exception as error:
+                errors.append(str(error))
+        self._started_transports = []
+        self.signals.clear_pending()
         for instance in reversed(self._runtime_instances):
             try:
                 await call(instance.stop)
             except Exception as error:
                 errors.append(str(error))
         self._runtime_instances = []
+        self.apps.clear()
+        self.runtime_instances.clear()
         for resource in self.resources.values():
             deinit = getattr(resource, "deinit", None)
             if deinit:
@@ -202,7 +309,9 @@ class NodeRuntime(ServiceSupervisor):
             service["operations"] = operations
             services[d.service_id] = service
         return {"manifest": "rp.node/v1", "name": self.document.get("name", "node"),
-                "services": services, "flows": list(self.document.get("flows", {})),
+                "identity": {"entity": self.signals.entity, "node": self.signals.node_id},
+                "apps": [{"id": spec["id"], "entry_point": spec["entry_point"]} for spec in self.document.get("apps", [])],
+                "signal_routes": list(self.signals.routes), "services": services, "flows": list(self.document.get("flows", {})),
                 "control": {"stop": "/api/node/stop", "reset": "/api/node/reset",
                             "tasks": "/api/tasks", "status": "/api/node/status"}}
 
