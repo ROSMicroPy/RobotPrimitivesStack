@@ -223,7 +223,8 @@ class ReplTests(unittest.TestCase):
         with patch.object(_thread, 'start_new_thread', side_effect=launch):
             self.start()
         self.assertEqual(self.prepare_threads, [main_thread, main_thread])
-        self.assertEqual(seen_stack_sizes, [65536])
+        self.assertEqual(seen_stack_sizes[0], 65536)
+        self.assertEqual(len(seen_stack_sizes), 3)  # runtime plus two calibration workers
         self.assertEqual(_thread.stack_size(), original_stack_size)
         self.module.demo(100)
         self.module.demo(120)

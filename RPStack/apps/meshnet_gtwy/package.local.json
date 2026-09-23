@@ -1,6 +1,6 @@
 {
   "name": "rp-meshnet-gateway",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "urls": [
     [
       "rpstack/__init__.py",
@@ -15,14 +15,5 @@
       "src/rpstack/apps/meshnet_gtwy/__init__.py"
     ]
   ],
-  "deps": [
-    [
-      "../../runtime/catalog/package.local.json",
-      "latest"
-    ],
-    [
-      "../../runtime/micropyserver/package.local.json",
-      "latest"
-    ]
-  ]
+  "deps": []
 }

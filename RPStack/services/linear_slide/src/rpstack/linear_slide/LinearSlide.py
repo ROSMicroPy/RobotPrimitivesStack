@@ -35,7 +35,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
             self.positive_direction = bool(config["positive_direction"])
         if "tolerance_m" in config:
             tolerance = float(config["tolerance_m"])
-            if tolerance < 0:
+            if not math.isfinite(tolerance) or tolerance < 0:
                 raise ValueError("tolerance_m must be non-negative")
             self.tolerance_m = tolerance
         if "max_steps" in config:
@@ -142,6 +142,8 @@ class LinearSlide(PrimitiveService, PositionActuator):
             done.release()
             if result[0] is not None:
                 raise result[0]
+            if cancelled():
+                raise RuntimeError("Linear slide move was cancelled")
             if pending[0] is not None:
                 response = pending[0]
                 pending[0] = None

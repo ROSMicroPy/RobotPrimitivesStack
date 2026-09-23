@@ -1,6 +1,6 @@
 {
   "name": "rp-catalog",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "urls": [
     [
       "rpstack/__init__.py",
@@ -23,10 +23,5 @@
       "src/rpstack/catalog/schema.py"
     ]
   ],
-  "deps": [
-    [
-      "../signals/package.local.json",
-      "latest"
-    ]
-  ]
+  "deps": []
 }

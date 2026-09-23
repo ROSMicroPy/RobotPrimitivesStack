@@ -15,12 +15,12 @@
       "manifest": "rp.service/v1",
       "package": {
         "name": "motor-control",
-        "version": "0.3.1",
+        "version": "0.4.0",
         "import": "rpstack.motor_control"
       },
       "service": {
         "name": "motor-control",
-        "version": "0.3.1",
+        "version": "0.4.0",
         "kind": "individual_driver",
         "type": "actuator.motor",
         "description": "A runtime-managed motor with a selectable concrete driver.",
@@ -601,12 +601,12 @@
       "manifest": "rp.service/v1",
       "package": {
         "name": "rube-goldberg-linear-slide",
-        "version": "0.3.2",
+        "version": "0.4.0",
         "import": "rpstack.linear_slide"
       },
       "service": {
         "name": "observed-linear-actuator",
-        "version": "0.3.2",
+        "version": "0.4.0",
         "kind": "composite_driver",
         "type": "motion.linear_actuator",
         "description": "Closed-loop linear slide composed from motion and position capabilities.",

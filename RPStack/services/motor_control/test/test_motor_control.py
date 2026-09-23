@@ -42,6 +42,20 @@ class MotorControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(driver.get_status()["enabled"])
         self.assertEqual(enable.values[-2:], [0, 1])
 
+    def test_blocking_pulses_stop_between_steps(self):
+        step, direction, enable = FakePin(), FakePin(), FakePin()
+        driver = StepDirDriver()
+        driver.initialize(step, direction, enable, step_delay_us=1)
+        with self.assertRaisesRegex(RuntimeError, "motor stopped"):
+            driver.move_steps_blocking(100, False, lambda: driver.position_steps <= -3)
+        self.assertEqual(driver.position_steps, -3)
+        self.assertEqual(step.values.count(1), 3)
+        self.assertEqual(step.values[-1], 0)
+        self.assertFalse(driver.enabled)
+        self.assertTrue(driver.move_steps_blocking(2, True))
+        self.assertEqual(driver.position_steps, -1)
+        self.assertFalse(driver.enabled)
+
     async def test_controller_accepts_explicit_driver_class(self):
         pins = [FakePin(), FakePin()]
         controller = MotorController()

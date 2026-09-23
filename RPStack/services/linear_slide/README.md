@@ -18,24 +18,41 @@ slide = LinearSlide(
 )
 ~~~
 
-The constructor also accepts **position_observer** as the position role name for direct use.
-
 ## Control behavior
 
-**move_to(target)**:
+`await slide.init()` moves 1,000 steps with direction True, measures the
+position change, then moves 1,000 steps with direction False and measures
+again. It infers `positive_direction` and `steps_per_mm` from these observations.
+Both moves must produce valid, nonzero changes in opposite directions.
+Initialization moves the hardware; provide clearance for both calibration
+moves. Target limits cannot bound this initial travel before scale is known.
 
-1. validates the target against configured travel limits;
-2. reads the current PositionSample;
-3. determines which motor direction reduces error;
-4. commands one increment;
-5. reads position again;
-6. stops when error is within tolerance;
-7. fails if the sample is invalid, motion is cancelled, or max_steps is reached.
+`await slide.move_to(target)` requires successful calibration and:
 
-The returned value is the final PositionSample in metres.
+1. validates the target in metres against configured travel limits;
+2. measures the current position and calculates steps for 96% of the error;
+3. starts a fresh worker thread to execute that batch;
+4. waits for the worker to finish, then measures the actual position;
+5. updates the step estimate and repeats until within `tolerance_m`.
+
+At least one step is attempted for errors outside tolerance. `max_steps` bounds
+the entire target move, excluding initialization. Invalid readings, repeated
+lack of motion, movement away from the target, and cancellation stop the move.
+Concurrent motion requests are rejected. Cancellation waits for the worker to
+exit before releasing the slide for another operation.
+
+The STEP/DIR motor uses a blocking pulse loop on the worker, preserving configured
+pulse timing without asyncio scheduling between pulses. Synchronous incremental
+motors are stepped on the worker as well. Async-only capability bridges continue
+on the main event loop; they need `command_blocking(direction, steps, cancelled)`
+to support threaded pulse generation.
+
+The returned value is the final PositionSample in metres. `status()` includes
+`calibrated`, `positive_direction`, and `steps_per_mm`.
 
 ~~~python
-final_sample = slide.move_to(0.100)
+await slide.init()
+final_sample = await slide.move_to(0.100)
 print(final_sample.value)
 ~~~
 
@@ -43,9 +60,11 @@ print(final_sample.value)
 
 | Field | Meaning |
 |---|---|
-| positive_direction | Motor direction that increases observed position |
+| positive_direction | Initial direction setting; replaced by calibration |
 | tolerance_m | Allowed target error |
-| max_steps | Maximum increments attempted by one move |
+| max_steps | Maximum increments attempted by one target move |
+| steps_per_sample | Legacy setting accepted for compatibility; calibrated batch sizes take precedence |
+| no_motion_sample_limit | Consecutive batches without observed motion before failure |
 | min_position_m | Optional lower travel limit |
 | max_position_m | Optional upper travel limit |
 
@@ -91,27 +110,6 @@ runtime.register(
 ~~~
 
 The motor can be any matching incremental actuator. The position role can be supplied by DistanceToPosition, an encoder adapter, a simulation, or a remote bridge.
-
-## Direct hardware assembly
-
-A direct application can supply I2C and pin values:
-
-~~~python
-slide = LinearSlide(
-    i2c,
-    step_pin=17,
-    dir_pin=3,
-    enable_pin=21,
-    tolerance_mm=1,
-    max_steps=10000,
-)
-
-position_mm = slide.get_position()
-slide.goto_position(100)
-slide.shutdown()
-~~~
-
-This constructor assembles the step_dir motor, VL53L4CD sensor, and DistanceToPosition adapter inside the composite and owns their lifecycle.
 
 ## Declarative tests
 

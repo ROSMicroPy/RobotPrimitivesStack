@@ -1,6 +1,6 @@
 {
   "name": "rp-mesh-gateway-node",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "urls": [
     [
       "main.py",
@@ -30,6 +30,18 @@
     ],
     [
       "../../RPStack/runtime/execution_engine/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/signals/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/catalog/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/micropyserver/package.local.json",
       "latest"
     ]
   ]

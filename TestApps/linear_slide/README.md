@@ -11,7 +11,7 @@ The `rp.node/v1` manifest contains:
 - `services`: named instances, selected implementations, constructor arguments,
   configuration, and explicit capability bindings.
 - `runtime`: ordered runtime services: WiFi, HTTP, and the asyncio console.
-- `flows`: optional signal-driven execution graphs. No motion starts automatically.
+- `flows`: optional signal-driven execution graphs. Initialization automatically calibrates with 1,000 steps in each direction.
 
 The runtime validates configuration and dependencies, creates resources and
 services in dependency order, and registers all resident tasks. Passive adapters
@@ -31,6 +31,10 @@ The package installs libraries and the manifest under `/lib`. The second command
 installs the generic entry point as the device's boot `/main.py` (replacing an
 existing boot entry). `package.github.json` is the equivalent dependency list
 for a published repository; local installation does not need public GitHub.
+
+Local package dependencies are listed here at the application level because
+`mpremote` resolves dependency paths from the working directory. After an
+interrupted install, rerun the install command to complete it.
 
 Configure credentials once through the MicroPython REPL before booting:
 

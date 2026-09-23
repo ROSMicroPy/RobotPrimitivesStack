@@ -27,6 +27,14 @@ class MotorDriver(StepDirDriver):
             Carriage.position_mm += steps if direction else -steps
         return result
 
+    def move_steps_blocking(self, steps, direction=True, cancelled=None):
+        before = self.position_steps
+        try:
+            return super().move_steps_blocking(steps, direction, cancelled)
+        finally:
+            if not Carriage.stalled:
+                Carriage.position_mm += self.position_steps - before
+
 
 class DistanceDriver:
     def initialize(self, **kwargs):
