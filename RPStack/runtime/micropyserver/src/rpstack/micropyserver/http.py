@@ -7,7 +7,7 @@ except ImportError:
 
 
 HTTP_REASONS = {
-    200: "OK", 204: "No Content", 400: "Bad Request", 404: "Not Found",
+    200: "OK", 202: "Accepted", 409: "Conflict", 204: "No Content", 400: "Bad Request", 404: "Not Found",
     405: "Method Not Allowed", 422: "Unprocessable Entity",
     500: "Internal Server Error",
 }

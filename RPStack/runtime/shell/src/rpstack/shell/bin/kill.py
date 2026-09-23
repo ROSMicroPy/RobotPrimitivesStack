@@ -1,15 +1,11 @@
-from rpstack.shell.sh import _active_threads, _active_threads_ksignal
+from rpstack.shell import async_shell
 
 
 def __main__(args):
-	global _active_threads
-	global _active_threads_ksignal
-	if len(args) < 3:
-		print ("Thread ID is required")
-		return
-
-	tid = int(args[2])
-	if tid not in _active_threads or tid not in _active_threads_ksignal:
-		print ("No such thread {}".format(tid))
-		print ("Available {}".format(_active_threads_ksignal.keys()))
-	_active_threads_ksignal[tid] = 9
+    node = async_shell.current_node
+    if node is None or len(args) < 3:
+        raise ValueError("kill requires an active node and task ID")
+    task_id = int(args[2])
+    if node.tasks.records[task_id]["kind"] not in ("operation", "flow"):
+        raise ValueError("use node stop for services")
+    node.tasks.spawn("shell:kill", node.tasks.cancel, task_id, kind="command")

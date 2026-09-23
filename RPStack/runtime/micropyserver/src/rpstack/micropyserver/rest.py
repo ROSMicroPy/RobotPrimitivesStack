@@ -1,101 +1,112 @@
-"""Expose an rp.service/v1 manifest and its allow-listed operations over REST."""
-
-try:
-    import ujson as json
-except ImportError:
-    import json
-
-from .http import json_body, query_arguments, request_method, send_json
+"""Node discovery, background operations and out-of-band lifecycle controls."""
+from .http import json_body, query_arguments, send_json
+from .server import MicroPyServer
+from rpstack.primitive_runtime.supervisor import BusyError, LifecycleError, _validate_arguments
 
 
-class RestError(ValueError):
-    pass
+class NodeRestApi:
+    def __init__(self, node, host="0.0.0.0", port=80, **config):
+        self.node = node
+        self.server = MicroPyServer(host, port, tasks=node.tasks, **config)
+        routes = {
+            ("GET", "/manifest"): self.manifest,
+            ("GET", "/api/tasks"): self.tasks,
+            ("GET", "/api/task"): self.task,
+            ("POST", "/api/task/cancel"): self.cancel,
+            ("GET", "/api/node/status"): self.status,
+            ("POST", "/api/node/stop"): self.stop_node,
+            ("POST", "/api/node/reset"): self.reset_node,
+            ("POST", "/api/events"): self.event,
+            ("POST", "/api/flows/start"): self.flow,
+        }
+        for service_id, service in node.discovery()["services"].items():
+            for name, operation in service["operations"].items():
+                routes[("POST", operation["rest"]["path"])] = self.operation(service_id, name, operation)
+        for (method, path), handler in routes.items():
+            self.server.add_route(path, self._guard(handler), method)
 
+    def _guard(self, handler):
+        async def guarded(request, response):
+            try:
+                await handler(request, response)
+            except BusyError as error:
+                send_json(response, {"ok": False, "error": str(error)}, 409)
+            except KeyError as error:
+                send_json(response, {"ok": False, "error": str(error)}, 404)
+            except (ValueError, TypeError, LifecycleError) as error:
+                send_json(response, {"ok": False, "error": str(error)}, 422)
+            except Exception as error:
+                send_json(response, {"ok": False, "error": str(error)}, 500)
+        return guarded
 
-class ManifestRestApi:
-    """Bind one service instance to routes declared by its service manifest."""
+    def operation(self, service_id, name, operation):
+        async def invoke(request, response):
+            args = _validate_arguments(name, operation, json_body(request))
+            if operation.get("control") == "stop":
+                await self.node.stop()
+                send_json(response, {"ok": True, "state": self.node.state})
+            elif operation.get("snapshot"):
+                send_json(response, {"ok": True, "result": _json_value(await self.node.status(service_id))})
+            else:
+                task_id = self.node.submit(service_id, name, args)
+                send_json(response, {"ok": True, "task_id": task_id, "state": "pending",
+                                     "status_url": "/api/task?id={}".format(task_id)}, 202)
+        return invoke
 
-    def __init__(self, server, manifest, service, manifest_path="/manifest"):
-        document = getattr(manifest, "document", manifest)
-        if not isinstance(document, dict) or document.get("manifest") != "rp.service/v1":
-            raise RestError("expected an rp.service/v1 manifest")
-        self.server = server
-        self.manifest = document
-        self.service = service
-        self.manifest_path = manifest_path
-        self.routes = {}
-        self._bind()
+    async def manifest(self, request, response):
+        send_json(response, self.node.discovery())
 
-    def _bind(self):
-        self.server.add_route(self.manifest_path, self._serve_manifest, "GET")
-        self.server.add_route(self.manifest_path, self._serve_options, "OPTIONS")
-        operations = self.manifest.get("service", {}).get("operations", {})
-        for name, operation in operations.items():
-            rest = operation.get("rest", {})
-            path = rest.get("path", "/api/operations/{}".format(name))
-            method = rest.get("method", "POST").upper()
-            self.routes[name] = {"path": path, "method": method, "operation": operation}
-            self.server.add_route(path, self._handler(name), method)
-            self.server.add_route(path, self._serve_options, "OPTIONS")
+    async def tasks(self, request, response):
+        send_json(response, {"tasks": _json_value(self.node.tasks.snapshot(True))})
 
-    def _handler(self, operation_name):
-        def handle(request):
-            self.invoke(operation_name, request)
-        return handle
+    async def task(self, request, response):
+        task_id = int(query_arguments(request)["id"])
+        send_json(response, _json_value(self.node.tasks.describe(task_id)))
 
-    def _serve_manifest(self, request):
-        send_json(self.server, self.manifest)
+    async def cancel(self, request, response):
+        task_id = int(json_body(request)["id"])
+        record = self.node.tasks.records[task_id]
+        if record["kind"] not in ("flow", "operation"):
+            raise ValueError("use node stop for services")
+        await self.node.tasks.cancel(task_id)
+        send_json(response, {"ok": True})
 
-    def _serve_options(self, request):
-        send_json(self.server, {}, 204)
+    async def status(self, request, response):
+        send_json(response, {"state": self.node.state, "accepting": self.node.accepting})
 
-    def invoke(self, operation_name, request):
-        operation = self.routes[operation_name]["operation"]
-        try:
-            arguments = query_arguments(request) if request_method(request) == "GET" else json_body(request)
-            arguments = _coerce_arguments(arguments, operation.get("arguments", {}))
-            result = getattr(self.service, operation["method"])(**arguments)
-            send_json(self.server, {"ok": True, "operation": operation_name, "result": _json_value(result)})
-        except (ValueError, TypeError, KeyError) as error:
-            send_json(self.server, {"ok": False, "operation": operation_name, "error": str(error)}, 422)
-        except Exception as error:
-            send_json(self.server, {"ok": False, "operation": operation_name, "error": str(error)}, 500)
+    async def stop_node(self, request, response):
+        await self.node.stop()
+        send_json(response, {"ok": True, "state": self.node.state})
 
+    async def reset_node(self, request, response):
+        await self.node.reset()
+        send_json(response, {"ok": True, "state": self.node.state})
+
+    async def event(self, request, response):
+        args = json_body(request)
+        self.node.engine.events.publish(args["name"], args.get("payload"))
+        send_json(response, {"ok": True})
+
+    async def flow(self, request, response):
+        task_id = self.node.start_flow(json_body(request)["name"])
+        send_json(response, {"ok": True, "task_id": task_id,
+                             "status_url": "/api/task?id={}".format(task_id)}, 202)
+
+    async def start(self):
+        await self.server.start()
+
+    async def run(self):
+        await self.server.run()
+
+    async def stop(self):
+        await self.server.stop()
 
 
 def _json_value(value):
-    as_dict = getattr(value, "as_dict", None)
-    if as_dict is not None:
-        return _json_value(as_dict())
+    if hasattr(value, "as_dict"):
+        return _json_value(value.as_dict())
     if isinstance(value, dict):
         return {key: _json_value(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
         return [_json_value(item) for item in value]
     return value
-
-def _coerce_arguments(values, schema):
-    if not isinstance(values, dict):
-        raise ValueError("request body must be a JSON object")
-    unknown = [name for name in values if name not in schema]
-    if unknown:
-        raise ValueError("unknown arguments: {}".format(", ".join(unknown)))
-    result = {}
-    for name, definition in schema.items():
-        if name not in values:
-            if definition.get("required"):
-                raise ValueError("{} is required".format(name))
-            if "default" in definition:
-                result[name] = definition["default"]
-            continue
-        value = values[name]
-        kind = definition.get("type")
-        if kind == "integer":
-            value = int(value)
-        elif kind == "number":
-            value = float(value)
-        elif kind == "boolean" and isinstance(value, str):
-            value = value.lower() in ("1", "true", "yes", "on")
-        elif kind in ("object", "i2c_ref", "pin_ref") and isinstance(value, str):
-            value = json.loads(value)
-        result[name] = value
-    return result

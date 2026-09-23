@@ -7,10 +7,7 @@ except ImportError:
         """Import and return a nested module without requiring importlib."""
         return __import__(name, None, None, ("*",))
 
-try:
-    import threading
-except ImportError:
-    threading = None
+from rpstack.execution_engine import asyncio, call
 
 from rpstack.interfaces import DistanceObserver, DistanceSample, PrimitiveService
 
@@ -42,9 +39,7 @@ class DistanceSensor(PrimitiveService, DistanceObserver):
         self.active = False
         self.alerts = []
         self.last_distance_mm = None
-        self.last_poll_error = None
-        self._polling = False
-        self._poll_thread = None
+        self._read_lock = asyncio.Lock()
         self._config = {}
 
     def configure(self, config=None, **kwargs):
@@ -52,40 +47,42 @@ class DistanceSensor(PrimitiveService, DistanceObserver):
         values.update(kwargs)
         if values.get("poll_frequency_hz", 0) < 0:
             raise ValueError("poll_frequency_hz cannot be negative")
+        self.reference_frame = values.get("reference_frame", self.reference_frame)
         self._config = values
         return True
 
-    def init(self):
+    async def init(self):
         config = dict(self._config)
         config.pop("poll_frequency_hz", None)
-        self.active = bool(self.driver.initialize(**config))
+        self.active = bool(await call(self.driver.initialize, **config))
         return self.active
 
     def start(self):
         if not self.active:
             self.active = bool(self.driver.set_active(True))
-        frequency = self._config.get("poll_frequency_hz", 0)
-        if self.active and frequency:
-            self.start_polling(frequency)
         return self.active
 
-    def initialize(self, poll_frequency_hz=0, **config):
-        """Compatibility entry point combining configure/init/start."""
+    async def run(self):
+        frequency = self._config.get("poll_frequency_hz", 0)
+        if not frequency:
+            await asyncio.Event().wait()
+        while True:
+            await self.read_distance()
+            await asyncio.sleep(1.0 / frequency)
+
+    async def initialize(self, poll_frequency_hz=0, **config):
         config["poll_frequency_hz"] = poll_frequency_hz
-        return self.configure(config) and self.init() and self.start()
+        return self.configure(config) and await self.init() and self.start()
 
-    def distance(self):
-        """Return a canonical SI distance sample."""
-        return DistanceSample(
-            self.read_distance_mm() / 1000.0,
-            "m",
-            reference_frame=self.reference_frame,
-        )
+    async def distance(self):
+        return DistanceSample(await self.read_distance_mm() / 1000.0, "m",
+                              reference_frame=self.reference_frame)
 
-    def read_distance(self):
+    async def read_distance(self):
         if not self.active:
             raise RuntimeError("Distance sensor {} is inactive".format(self.name))
-        distance = int(round(self.driver.read_distance_mm()))
+        async with self._read_lock:
+            distance = int(round(await call(self.driver.read_distance_mm)))
         self.last_distance_mm = distance
         self._evaluate_alerts(distance)
         return distance
@@ -112,51 +109,19 @@ class DistanceSensor(PrimitiveService, DistanceObserver):
         self.alerts = retained
 
     def set_active(self, active):
-        if not active:
-            self.stop_polling()
         result = bool(self.driver.set_active(bool(active)))
         if result:
             self.active = bool(active)
         return result
 
-    def start_polling(self, frequency_hz):
-        if threading is None:
-            raise RuntimeError("background polling is unavailable; poll from an OnEvent task")
-        if frequency_hz <= 0:
-            raise ValueError("frequency_hz must be positive")
-        if self._polling:
-            return
-        self._polling = True
-        interval = 1.0 / float(frequency_hz)
-
-        def poll():
-            import time
-            while self._polling:
-                try:
-                    self.read_distance()
-                    self.last_poll_error = None
-                except Exception as error:
-                    self.last_poll_error = error
-                time.sleep(interval)
-
-        self._poll_thread = threading.Thread(target=poll, daemon=True)
-        self._poll_thread.start()
-
-    def stop_polling(self):
-        self._polling = False
-        if self._poll_thread and self._poll_thread is not threading.current_thread():
-            self._poll_thread.join(timeout=1)
-        self._poll_thread = None
-
     def stop(self):
         return self.set_active(False)
 
-    def reset(self):
+    async def reset(self):
         self.stop()
-        return self.init() and self.start()
+        return await self.init() and self.start()
 
     def shutdown(self):
-        self.stop_polling()
         result = bool(self.driver.shutdown())
         self.active = False
         return result
@@ -188,7 +153,7 @@ class DistanceSensorController:
             self._driver_cache[driver_name] = driver_class
         return self._driver_cache[driver_name]
 
-    def create_sensor(self, name, driver_name=None, driver_class=None, **config):
+    async def create_sensor(self, name, driver_name=None, driver_class=None, **config):
         if name in self.sensors:
             raise ValueError("Sensor {} already exists".format(name))
         if driver_class is None:
@@ -197,7 +162,7 @@ class DistanceSensorController:
             driver_class = self._load_driver(driver_name)
         reference_frame = config.pop("reference_frame", None)
         sensor = DistanceSensor(name, driver_class(), reference_frame)
-        if not sensor.initialize(**config):
+        if not await sensor.initialize(**config):
             raise RuntimeError("Driver failed to initialize sensor {}".format(name))
         self.sensors[name] = sensor
         return sensor

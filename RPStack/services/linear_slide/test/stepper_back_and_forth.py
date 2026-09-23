@@ -4,7 +4,7 @@
 Pin numbers are MicroPython GPIO numbers, not physical header pin numbers.
 """
 
-import time
+from rpstack.execution_engine import asyncio
 
 # MotorControl is installed into the MicroPython library path by mip.
 from rpstack.motor_control import MotorController, MotorType
@@ -19,7 +19,7 @@ DIRECTION_SETTLE_US = 10
 TURNAROUND_DELAY_MS = 500
 
 
-def main():
+async def main():
     controller = MotorController()
     slide = controller.create_motor(
         "linear_slide",
@@ -35,13 +35,13 @@ def main():
 
     try:
         print("Moving forward {} steps".format(TRAVEL_STEPS))
-        if not slide.move_steps(TRAVEL_STEPS, True):
+        if not await slide.move_steps(TRAVEL_STEPS, True):
             raise RuntimeError("Forward movement failed")
 
-        time.sleep_ms(TURNAROUND_DELAY_MS)
+        await asyncio.sleep(TURNAROUND_DELAY_MS / 1000)
 
         print("Moving backward {} steps".format(TRAVEL_STEPS))
-        if not slide.move_steps(TRAVEL_STEPS, False):
+        if not await slide.move_steps(TRAVEL_STEPS, False):
             raise RuntimeError("Backward movement failed")
 
         print("Test complete; position = {} steps".format(
@@ -52,4 +52,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

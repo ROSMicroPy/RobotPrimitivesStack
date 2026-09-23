@@ -9,7 +9,7 @@ class ManifestTestRunner:
     def __init__(self, supervisor):
         self.supervisor = supervisor
 
-    def run(self, service_id, test_name, parameters=None, allow_manual=False):
+    async def run(self, service_id, test_name, parameters=None, allow_manual=False):
         definition = self.supervisor.registry.get(service_id)
         specification = definition.manifest.test(test_name)
         mode = specification.get("mode", "manual")
@@ -23,7 +23,7 @@ class ManifestTestRunner:
         results = []
         for index, step in enumerate(specification["steps"]):
             try:
-                result = self.supervisor.invoke(
+                result = await self.supervisor.invoke(
                     service_id,
                     step["operation"],
                     _substitute(step.get("arguments", {}), parameters),

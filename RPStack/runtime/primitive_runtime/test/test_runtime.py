@@ -6,6 +6,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "runtime" / "primitive_runtime" / "src"))
 
+for runtime_src in (ROOT / "runtime").glob("*/src"):
+    sys.path.insert(0, str(runtime_src))
+
 from rpstack.primitive_runtime import (  # noqa: E402
     LifecycleError,
     ManifestTestError,
@@ -111,8 +114,8 @@ def load_manifest(directory):
     return ServiceManifest.load(str(SERVICES / directory / "component.yaml"))
 
 
-class RuntimeTests(unittest.TestCase):
-    def test_all_service_manifests_load(self):
+class RuntimeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_all_service_manifests_load(self):
         for directory in (
             "interfaces", "distance_sensor", "motor_control",
             "distance_to_position", "linear_slide",
@@ -143,26 +146,26 @@ class RuntimeTests(unittest.TestCase):
         )
         return runtime, events
 
-    def test_capabilities_bind_and_start_in_dependency_order(self):
+    async def test_capabilities_bind_and_start_in_dependency_order(self):
         runtime, events = self.build_runtime()
-        self.assertEqual(runtime.prepare(), ["distance", "motor", "position", "slide"])
+        self.assertEqual(await runtime.prepare(), ["distance", "motor", "position", "slide"])
         self.assertIs(runtime.instance("position").distance_observer,
                       runtime.instance("distance"))
         self.assertIs(runtime.instance("slide").motor, runtime.instance("motor"))
-        self.assertEqual(runtime.start(), ["distance", "motor", "position", "slide"])
-        self.assertTrue(runtime.stop())
+        self.assertEqual(await runtime.start(), ["distance", "motor", "position", "slide"])
+        self.assertTrue(await runtime.stop())
         stops = [event[0] for event in events if event[1] == "stop"]
         self.assertEqual(stops, ["slide", "position", "motor", "distance"])
 
-    def test_declared_operation_invocation_and_argument_allowlist(self):
+    async def test_declared_operation_invocation_and_argument_allowlist(self):
         runtime, _ = self.build_runtime()
-        runtime.start()
-        sample = runtime.invoke("slide", "move_to", {"target": 0.25})
+        await runtime.start()
+        sample = await runtime.invoke("slide", "move_to", {"target": 0.25})
         self.assertEqual(sample.value, 0.25)
         with self.assertRaises(LifecycleError):
-            runtime.invoke("slide", "move_to", {"target": 0.25, "unsafe": True})
+            await runtime.invoke("slide", "move_to", {"target": 0.25, "unsafe": True})
 
-    def test_implementation_specific_operation_is_enforced(self):
+    async def test_implementation_specific_operation_is_enforced(self):
         events = []
         runtime = ServiceSupervisor()
         runtime.register(
@@ -170,26 +173,26 @@ class RuntimeTests(unittest.TestCase):
             factory=lambda: FakeMotor(events, "servo"),
             implementation="pwm_servo",
         )
-        runtime.start()
+        await runtime.start()
         with self.assertRaises(LifecycleError):
-            runtime.invoke("servo", "command", {"direction": True, "amount": 1})
+            await runtime.invoke("servo", "command", {"direction": True, "amount": 1})
 
-    def test_manifest_tests_execute_and_hardware_tests_require_approval(self):
+    async def test_manifest_tests_execute_and_hardware_tests_require_approval(self):
         runtime, events = self.build_runtime()
-        runtime.start()
+        await runtime.start()
         runner = ManifestTestRunner(runtime)
-        result = runner.run("slide", "observe_position")
+        result = await runner.run("slide", "observe_position")
         self.assertTrue(result["passed"])
         with self.assertRaises(ManifestTestError):
-            runner.run("slide", "move_to_target", parameters={"target": 0.2})
-        result = runner.run(
+            await runner.run("slide", "move_to_target", parameters={"target": 0.2})
+        result = await runner.run(
             "slide", "move_to_target", parameters={"target": 0.2},
             allow_manual=True,
         )
         self.assertTrue(result["passed"])
         self.assertEqual(result["steps"][0]["result"].value, 0.2)
 
-    def test_ambiguous_capabilities_require_explicit_binding(self):
+    async def test_ambiguous_capabilities_require_explicit_binding(self):
         runtime, _ = self.build_runtime()
         runtime.register(
             "position_backup", load_manifest("distance_to_position"),
@@ -197,7 +200,7 @@ class RuntimeTests(unittest.TestCase):
             bindings={"distance_observer": "distance"},
         )
         with self.assertRaises(ResolutionError):
-            runtime.prepare()
+            await runtime.prepare()
 
 
 if __name__ == "__main__":

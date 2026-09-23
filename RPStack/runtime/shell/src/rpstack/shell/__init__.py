@@ -1,5 +1,4 @@
+"""RPStack node console and external command registration."""
+from .async_shell import AsyncShell
 from .registry import EXT_COMMANDS_FILE, ExternalCommand, registercommand
-from . import sh
-
-def run():
-    sh.start()
+__all__ = ("AsyncShell", "EXT_COMMANDS_FILE", "ExternalCommand", "registercommand")

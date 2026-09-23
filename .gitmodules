@@ -7,3 +7,6 @@
 [submodule "LighthouseMesh"]
 	path = LighthouseMesh
 	url = https://github.com/ROSMicroPy/LighthouseMesh.git
+[submodule "ROSMicroPy"]
+	path = ROSMicroPy
+	url = https://github.com/ROSMicroPy/ROSMicroPy.git

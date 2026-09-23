@@ -25,5 +25,15 @@
       "src/rpstack/micropyserver/utils.py"
     ]
   ],
-  "version": "0.3.2"
+  "version": "0.3.2",
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/primitive_runtime",
+      "archdef"
+    ]
+  ]
 }

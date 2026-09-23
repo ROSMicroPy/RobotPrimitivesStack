@@ -1,70 +1,21 @@
-import json
-import os
+"""Transport-independent validation rejects unsafe coercion before dispatch."""
+from pathlib import Path
 import sys
 import unittest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from rpstack.micropyserver import ManifestRestApi
-
-
-MANIFEST = {
-    "manifest": "rp.service/v1",
-    "service": {
-        "name": "test-distance", "version": "1",
-        "kind": "individual_driver", "type": "sensor.distance",
-        "operations": {
-            "read": {
-                "method": "read",
-                "arguments": {"samples": {"type": "integer", "required": True}},
-                "rest": {"method": "POST", "path": "/api/distance/read"},
-            }
-        },
-    },
-}
+for runtime_src in Path(__file__).resolve().parents[2].glob('*/src'):
+    sys.path.insert(0, str(runtime_src))
+from rpstack.primitive_runtime.validation import validate_values
 
 
-class FakeServer:
-    def __init__(self):
-        self.routes = []
-        self.response = ""
+class ValidationTest(unittest.TestCase):
+    def test_numeric_limits_and_booleans_are_not_coerced(self):
+        schema = {'steps': {'type': 'integer', 'minimum': 1, 'required': True}}
+        for value in (True, 0, 1.5, '3'):
+            with self.assertRaises(ValueError):
+                validate_values(schema, {'steps': value}, 'jog')
+        self.assertEqual(validate_values(schema, {'steps': 3}, 'jog'), {'steps': 3})
 
-    def add_route(self, path, handler, method="GET"):
-        self.routes.append((method, path, handler))
-
-    def send(self, data):
-        self.response += data.decode() if isinstance(data, bytes) else data
-
-
-class Service:
-    def read(self, samples):
-        return {"samples": samples, "millimetres": 125}
-
-
-class ManifestRestApiTest(unittest.TestCase):
-    def setUp(self):
-        self.server = FakeServer()
-        self.api = ManifestRestApi(self.server, MANIFEST, Service())
-
-    def body(self):
-        return json.loads(self.server.response.split("\r\n\r\n", 1)[1])
-
-    def test_registers_manifest_and_declared_operation(self):
-        routes = [(method, path) for method, path, _ in self.server.routes]
-        self.assertIn(("GET", "/manifest"), routes)
-        self.assertIn(("POST", "/api/distance/read"), routes)
-
-    def test_invokes_declared_method_with_coerced_arguments(self):
-        request = 'POST /api/distance/read HTTP/1.1\r\nContent-Type: application/json\r\n\r\n{"samples":"3"}'
-        self.api.invoke("read", request)
-        self.assertEqual(self.body()["result"], {"samples": 3, "millimetres": 125})
-
-    def test_rejects_unknown_arguments(self):
-        request = 'POST /api/distance/read HTTP/1.1\r\n\r\n{"samples":1,"oops":2}'
-        self.api.invoke("read", request)
-        self.assertFalse(self.body()["ok"])
-        self.assertIn("unknown arguments", self.body()["error"])
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_nonfinite_motion_target_rejected(self):
+        for value in (float('nan'), float('inf'), -float('inf')):
+            with self.assertRaises(ValueError):
+                validate_values({'target': {'type': 'number'}}, {'target': value}, 'move')

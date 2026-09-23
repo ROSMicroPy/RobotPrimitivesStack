@@ -1,0 +1,43 @@
+{
+  "name": "rp-primitive-runtime",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/primitive_runtime/__init__.py",
+      "src/rpstack/primitive_runtime/__init__.py"
+    ],
+    [
+      "rpstack/primitive_runtime/manifest.py",
+      "src/rpstack/primitive_runtime/manifest.py"
+    ],
+    [
+      "rpstack/primitive_runtime/registry.py",
+      "src/rpstack/primitive_runtime/registry.py"
+    ],
+    [
+      "rpstack/primitive_runtime/supervisor.py",
+      "src/rpstack/primitive_runtime/supervisor.py"
+    ],
+    [
+      "rpstack/primitive_runtime/testing.py",
+      "src/rpstack/primitive_runtime/testing.py"
+    ],
+    [
+      "rpstack/primitive_runtime/node.py",
+      "src/rpstack/primitive_runtime/node.py"
+    ],
+    [
+      "rpstack/primitive_runtime/network.py",
+      "src/rpstack/primitive_runtime/network.py"
+    ],
+    [
+      "rpstack/primitive_runtime/validation.py",
+      "src/rpstack/primitive_runtime/validation.py"
+    ]
+  ],
+  "deps": []
+}

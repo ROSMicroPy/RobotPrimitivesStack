@@ -120,13 +120,13 @@ class Motor(PrimitiveService, MotionActuator):
         status.update(name=self.name, type=self.motor_type, initialized=self.initialized)
         return status
 
-    def command(self, direction, amount=1):
+    async def command(self, direction, amount=1):
         """Implement incremental motion capability for stepper motors."""
         self._require_type(MotorType.STEPPER)
         amount = int(amount)
         if amount < 0:
             raise ValueError("amount must be non-negative")
-        return self.driver.move_steps(amount, bool(direction))
+        return await self.driver.move_steps(amount, bool(direction))
 
     def set_position(self, position):
         self._require_type(MotorType.SERVO)
@@ -142,9 +142,9 @@ class Motor(PrimitiveService, MotionActuator):
         self._require_type(MotorType.STEPPER)
         return self.driver.get_position()
 
-    def move_steps(self, steps, direction=True):
+    async def move_steps(self, steps, direction=True):
         self._require_type(MotorType.STEPPER)
-        return self.driver.move_steps(steps, direction)
+        return await self.driver.move_steps(steps, direction)
 
     def set_speed(self, rpm):
         if self.motor_type not in (MotorType.STEPPER, MotorType.BLDC):

@@ -1,5 +1,6 @@
 """Adapter from raw distance observations to installed linear position."""
 
+from rpstack.execution_engine import call
 from rpstack.interfaces import PositionObserver, PositionSample, PrimitiveService
 
 
@@ -49,8 +50,8 @@ class DistanceToPositionAdapter(PrimitiveService, PositionObserver):
     def status(self):
         return {"running": self.running, "reference_frame": self.reference_frame}
 
-    def position(self):
-        distance = self.distance_observer.distance()
+    async def position(self):
+        distance = await call(self.distance_observer.distance)
         value = self.zero_offset_m + self.direction * distance.value
         valid = distance.valid
         if self.min_position_m is not None and value < self.min_position_m:

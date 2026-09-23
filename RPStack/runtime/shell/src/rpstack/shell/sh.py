@@ -21,21 +21,9 @@ except ImportError:
 
 
 ## Internal variables
-next_thread_index = 1
-_active_threads = {}
-_active_threads_ksignal = {}
-
 _vfses = {}
 _shell_instance = None
 _external_command_defs = {}
-
-_threads_enabled = False
-try:
-    import _thread
-    _threads_enabled = True
-except:
-    pass
-
 
 ## Utility functions
 def root_info():
@@ -275,61 +263,10 @@ def _run_external_command(command_def, args):
         return instance.__main__(args)
     raise AttributeError("External command has no run() or __main__()")
 
-if _threads_enabled:
-    def _run_thread(args, command, _func):
-        global _active_threads
-        global _active_threads_ksignal
-        
-        tid = _thread.get_ident()
-        _active_threads_ksignal[tid] = -1
-        def _thread_watchdog(timer):
-            if _active_threads_ksignal[tid] != -1:
-                timer.deinit()
-                def _quit(msg):
-                    print ("Quitting from {}".format(_thread.get_ident()))
-                    _thread.exit()
-    #                raise Exception(msg)
-    #             micropython.schedule(_quit, ("[{}] Kill thread signal {}".format(tid, _active_threads_ksignal[tid])))
-                print ("Quitting from {}".format(_thread.get_ident()))
-                _thread.exit()
-                _thread.exit()
-        
-        _active_threads[tid] = (command, time.ticks_us())
-        print ("[1] {}".format(tid))
-        try:
-            timer = machine.Timer(-1)
-            #timer.init(period=100, mode=machine.Timer.PERIODIC, callback=_thread_watchdog)
-            
-            _func(args)
-            timer.deinit()
-            del _active_threads[tid]
-            print ("Exited [{}] {}".format(tid, command))
-            gc.collect()
-        except Exception as e:
-            timer.deinit()
-            del _active_threads[tid]
-            print ("Exited [{}] {}".format(tid, command))
-            gc.collect()
-            raise e
-
 def execute_command(command):
     if command.endswith("&"):
-        if not _threads_enabled:
-            print ("Backgrounding (threading) is not available")
-            return True
-        #global _active_threads
-        #global _next_thread_index
-        
-        args = command[:-1].split(" ")
-        #new_thread = 
-        _thread.start_new_thread(_run_thread, (args, command, _exec_cmd))#TODO: ovo moze exceptat MemoryError: memory allocation failed
-        #td = (new_thread, command)
-        #_active_threads[_next_thread_index] = td
-        return True
-    else:
-#        args = command.strip().split(" ")
-        args = list(filter(lambda s: len(s) > 0, command.strip().split(" ")))
-        return _exec_cmd(args)
+        raise ValueError("Use the async node shell to launch managed tasks")
+    return _exec_cmd(command.split())
 
 def _exec_cmd(args):
     if not args:
@@ -393,9 +330,7 @@ def shell(args):
     del sys.modules["rpstack.shell.sh"]
 '''
 
-#_thread.start_new_thread(_run_thread, ([], "sh", shell))
 
-##_run_thread([], "sh", shell)
 #TODO: support for subpaths
 def complete_dir(start):
 #    cmps = start.split("/")

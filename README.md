@@ -6,6 +6,19 @@ A device is assembled from services such as a motor controller, distance sensor,
 
 RPStack is designed for constrained embedded systems, especially MicroPython targets, while keeping the same architectural model usable in host simulations, test tools, ROS 2 bridges, and web interfaces.
 
+## Run the manifest-driven test node
+
+The [linear slide test app](TestApps/linear_slide/README.md) now boots from one
+`rp.node/v1` manifest. It declares hardware resources, service instances, driver
+choices, runtime listeners, and optional signal-driven workflows. The generic
+boot entry only calls `run_manifest(path)`.
+
+All node services run as tracked asyncio tasks. The console's `ps` lists them;
+HTTP operations return task IDs. Stop/reset remain available during motion and
+signal waits. See the [node schema](RPStack/spec/node-manifest.schema.json) and
+[execution engine](RPStack/runtime/execution_engine/README.md). Runtime API examples
+below use `await` inside an async application entry point.
+
 ## The basic idea
 
 A robotic device is divided into four layers:
@@ -78,6 +91,8 @@ All stack components live under the **RPStack** directory.
 RPStack/
 ├── runtime/
 │   ├── primitive_runtime/
+│   ├── execution_engine/
+│   ├── micropyserver/
 │   ├── bootmgr/
 │   ├── env/
 │   ├── opentelemetry/
@@ -222,9 +237,9 @@ runtime.register(
     },
 )
 
-runtime.start()
-runtime.invoke("lift", "move_to", {"target": 0.100})
-runtime.stop()
+await runtime.start()
+await runtime.invoke("lift", "move_to", {"target": 0.100})
+await runtime.stop()
 ~~~
 
 Factories are responsible for supplying platform resources such as I2C buses, GPIO pins, timers, and concrete driver instances. The runtime is responsible for capability binding and lifecycle management.
@@ -685,7 +700,7 @@ from rpstack.primitive_runtime import ManifestTestRunner
 
 runner = ManifestTestRunner(runtime)
 
-result = runner.run(
+result = await runner.run(
     "lift",
     "move_to_target",
     parameters={"target": 0.100},
@@ -698,15 +713,15 @@ result = runner.run(
 Applications invoke services through operation names from the manifest:
 
 ~~~python
-sample = runtime.invoke("lift", "observe_position")
+sample = await runtime.invoke("lift", "observe_position")
 
-final_position = runtime.invoke(
+final_position = await runtime.invoke(
     "lift",
     "move_to",
     {"target": 0.100},
 )
 
-runtime.invoke("lift", "stop")
+await runtime.invoke("lift", "stop")
 ~~~
 
 This operation layer provides a stable boundary for local code, CLI commands, WebTester forms, REST endpoints, and bridge implementations.

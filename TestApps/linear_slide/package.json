@@ -1,6 +1,6 @@
 {
   "name": "rp-test-linear-slide",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "urls": [
     [
       "main.py",
@@ -33,7 +33,23 @@
       "latest"
     ],
     [
-      "../../RPStack/runtime/micropyserver/package.json",
+      "../../RPStack/runtime/micropyserver/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/execution_engine/package.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/primitive_runtime/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/shell/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/env/package.json",
       "latest"
     ]
   ]

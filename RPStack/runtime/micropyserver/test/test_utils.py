@@ -4,7 +4,11 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from rpstack.micropyserver import (
+from pathlib import Path
+for runtime_src in Path(__file__).resolve().parents[2].glob("*/src"):
+    sys.path.insert(0, str(runtime_src))
+
+from rpstack.micropyserver.utils import (
     create_cookie,
     get_cookies,
     get_request_post_params,

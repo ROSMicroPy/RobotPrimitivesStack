@@ -15,6 +15,10 @@
     [
       "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
       "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
     ]
   ]
 }

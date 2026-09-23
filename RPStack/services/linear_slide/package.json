@@ -31,6 +31,10 @@
     [
       "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position",
       "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
     ]
   ]
 }

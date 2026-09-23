@@ -169,7 +169,16 @@
     [
       "init.d/S999_mp_shell.py",
       "src/init.d/S999_mp_shell.py"
+    ],
+    [
+      "rpstack/shell/async_shell.py",
+      "src/rpstack/shell/async_shell.py"
     ]
   ],
-  "deps": []
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
+    ]
+  ]
 }

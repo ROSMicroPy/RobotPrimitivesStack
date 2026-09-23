@@ -1,12 +1,6 @@
 """STEP/DIR driver for A4988, DRV8825, TMC and compatible controllers."""
 
-try:
-    from time import sleep_us
-except ImportError:
-    from time import sleep
-
-    def sleep_us(value):
-        sleep(value / 1000000.0)
+from rpstack.execution_engine import asyncio
 
 from rpstack.motor_control import StepperDriver
 
@@ -52,7 +46,7 @@ class StepDirDriver(StepperDriver):
         self.microsteps = int(microsteps)
         self.position_steps = int(initial_position_steps)
         _write(self.step_pin, 0)
-        self._set_enabled(True)
+        self._set_enabled(False)
         self.initialized = True
         return True
 
@@ -61,23 +55,28 @@ class StepDirDriver(StepperDriver):
             _write(self.enable_pin, int(not enabled) if self.enable_active_low else int(enabled))
         self.enabled = bool(enabled)
 
-    def move_steps(self, steps, direction=True):
+    async def move_steps(self, steps, direction=True):
         if not self.initialized:
             raise RuntimeError("step/dir driver is not initialized")
         steps = int(steps)
-        self._set_enabled(True)
         if steps < 0:
             steps, direction = -steps, not direction
+        self._set_enabled(True)
         _write(self.dir_pin, int(bool(direction)))
-        if self.direction_settle_us:
-            sleep_us(self.direction_settle_us)
-        for _ in range(steps):
-            _write(self.step_pin, 1)
-            sleep_us(self.step_delay_us)
+        try:
+            await asyncio.sleep(self.direction_settle_us / 1000000.0)
+            for _ in range(steps):
+                if not self.enabled:
+                    raise RuntimeError("motor stopped")
+                _write(self.step_pin, 1)
+                self.position_steps += 1 if direction else -1
+                await asyncio.sleep(self.step_delay_us / 1000000.0)
+                _write(self.step_pin, 0)
+                await asyncio.sleep(self.step_delay_us / 1000000.0)
+            return True
+        finally:
             _write(self.step_pin, 0)
-            sleep_us(self.step_delay_us)
-        self.position_steps += steps if direction else -steps
-        return True
+            self._set_enabled(False)
 
     def set_speed(self, rpm):
         rpm = float(rpm)
@@ -92,6 +91,8 @@ class StepDirDriver(StepperDriver):
         return self.position_steps
 
     def stop(self):
+        if self.step_pin is not None:
+            _write(self.step_pin, 0)
         self._set_enabled(False)
         return True
 

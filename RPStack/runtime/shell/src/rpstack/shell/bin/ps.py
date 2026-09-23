@@ -1,11 +1,8 @@
-from rpstack.shell.sh import _active_threads
-import time
+from rpstack.shell import async_shell
 
 
 def __main__(args):
-	print ("TID		TIME		COMMAND")
-	for tid in _active_threads.keys():
-		t = _active_threads[tid]
-		stime = t[1]
-		running = (time.ticks_us() - stime) / 1000000
-		print ("{}	{}s		{}".format(tid, round(running,2), t[0]))
+    if async_shell.current_node is None:
+        print("No node runtime is active")
+        return
+    async_shell.print_tasks(async_shell.current_node)

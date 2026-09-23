@@ -25,7 +25,24 @@
     [
       "rpstack/primitive_runtime/testing.py",
       "src/rpstack/primitive_runtime/testing.py"
+    ],
+    [
+      "rpstack/primitive_runtime/node.py",
+      "src/rpstack/primitive_runtime/node.py"
+    ],
+    [
+      "rpstack/primitive_runtime/network.py",
+      "src/rpstack/primitive_runtime/network.py"
+    ],
+    [
+      "rpstack/primitive_runtime/validation.py",
+      "src/rpstack/primitive_runtime/validation.py"
     ]
   ],
-  "deps": []
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
+    ]
+  ]
 }

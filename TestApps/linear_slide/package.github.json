@@ -1,6 +1,6 @@
 {
   "name": "rp-test-linear-slide",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "urls": [
     [
       "main.py",
@@ -34,6 +34,22 @@
     ],
     [
       "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/micropyserver",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/primitive_runtime",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/shell",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/env",
       "archdef"
     ]
   ]

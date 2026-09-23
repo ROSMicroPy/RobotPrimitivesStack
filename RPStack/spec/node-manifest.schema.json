@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robot-primitives.dev/schema/node-manifest-v1.json",
+  "title": "RPStack node manifest",
+  "type": "object",
+  "required": [
+    "manifest",
+    "name",
+    "components",
+    "services"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "manifest": {
+      "const": "rp.node/v1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "components": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "service-manifest.schema.json"
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "services": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "component"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "implementation": {
+            "type": "string"
+          },
+          "constructor": {
+            "type": "object"
+          },
+          "config": {
+            "type": "object"
+          },
+          "bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_point"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry_point": {
+            "type": "string",
+            "pattern": "^[^:]+:[^:]+$"
+          },
+          "config": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "flows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "start",
+          "nodes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "string"
+          },
+          "autostart": {
+            "type": "boolean"
+          },
+          "nodes": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "operation": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "object"
+                },
+                "wait_for": {
+                  "type": "string"
+                },
+                "timeout_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "emit": {
+                  "type": "string"
+                },
+                "next": {
+                  "type": "string"
+                },
+                "on_error": {
+                  "type": "string"
+                }
+              },
+              "dependentRequired": {
+                "operation": [
+                  "service"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ VL53L4CD Ultra Lite Driver. No CircuitPython ``I2CDevice`` dependency is used.
 """
 
 import time
+from rpstack.execution_engine import asyncio
 
 
 DEFAULT_CONFIGURATION = bytes((
@@ -65,23 +66,23 @@ class VL53L4CD:
         self._write(register, bytes(((value >> 24) & 0xFF, (value >> 16) & 0xFF,
                                      (value >> 8) & 0xFF, value & 0xFF)))
 
-    def _wait_until(self, predicate, message):
+    async def _wait_until(self, predicate, message):
         start = time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
         while not predicate():
-            time.sleep_ms(1) if hasattr(time, "sleep_ms") else time.sleep(0.001)
+            await asyncio.sleep(0.001)
             now = time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
             elapsed = time.ticks_diff(now, start) if hasattr(time, "ticks_diff") else now - start
             if elapsed >= self.io_timeout_ms:
                 raise TimeoutError(message)
 
-    def initialize(self, timing_budget_ms=50, inter_measurement_ms=0):
+    async def initialize(self, timing_budget_ms=50, inter_measurement_ms=0):
         if self._read_u16(0x010F) != self.MODEL_ID:
             raise RuntimeError("VL53L4CD model ID did not match 0xEBAA")
-        self._wait_until(lambda: self._read_u8(0x00E5) == 0x03,
+        await self._wait_until(lambda: self._read_u8(0x00E5) == 0x03,
                          "VL53L4CD boot timed out")
         self._write(0x002D, DEFAULT_CONFIGURATION)
         self._write_u8(0x0087, 0x40)
-        self._wait_until(lambda: self.data_ready, "VL53L4CD VHV start timed out")
+        await self._wait_until(lambda: self.data_ready, "VL53L4CD VHV start timed out")
         self.clear_interrupt()
         self.stop_ranging()
         self._write_u8(0x0008, 0x09)
