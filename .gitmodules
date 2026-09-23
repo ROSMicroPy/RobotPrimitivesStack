@@ -4,3 +4,6 @@
 [submodule "RobotArchitect"]
 	path = RobotArchitect
 	url = https://github.com/ROSMicroPy/RobotArchitect.git
+[submodule "LighthouseMesh"]
+	path = LighthouseMesh
+	url = https://github.com/ROSMicroPy/LighthouseMesh.git
