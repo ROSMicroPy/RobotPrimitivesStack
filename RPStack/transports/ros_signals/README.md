@@ -33,3 +33,32 @@ ROSMicroPy agent address/port). Queue overflow drops new messages and increments
 `transport.dropped`. Mesh/ROS echo loops are suppressed by the shared bus.
 Actual ROS 2 middleware and micro-ROS agent communication still need hardware
 and environment validation.
+
+## Optional typed device publishers
+
+The bundled ROSMicroPy `rclpy` API can publish typed messages directly. Configure
+the transport with `publishers` to project local slide measurements before the
+native worker starts:
+
+```json
+{
+  "publishers": [{
+    "kind": "linear_joint_state",
+    "service": "slide",
+    "topic": "/rpstack/slide_device/joint_states",
+    "joint_name": "slide_joint"
+  }]
+}
+```
+
+Enable `inject_signals` on the slide and match its `signal_id` to the service ID.
+Only finite, valid linear/metre samples emitted by this transport's local node
+are projected. The String signal publisher remains active. Projection failures
+increment `projection_dropped` without suppressing the execution envelope.
+Firmware joint-state timestamps are zero/unspecified; desktop projections use
+receipt time. No coordinate transforms or synchronized device clocks are implied.
+
+The firmware shim accepts QoS arguments but currently uses native default
+publisher/subscriber configuration. Its action/executor/future APIs are not full
+desktop rclpy equivalents. Use the optional `rpstack.apps.ros_gateway` desktop app
+for the typed move action and diagnostics; see `examples/ros_slide/README.md`.

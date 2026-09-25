@@ -85,13 +85,14 @@ def main():
         'transports/espnow': 'from rpstack.espnow import Framing, EspNowTransport\nfrom rpstack.espnow.shared import SharedEspNowTransport',
         'transports/ros_signals': 'from rpstack.ros_signals import RosTransport',
         'apps/robot_gateway': 'from rpstack.apps.robot_gateway import GatewayApp',
+        'apps/ros_gateway': 'from rpstack.apps.ros_gateway import SlideRosGateway\nassert "rclpy" not in sys.modules',
         'platform/env': 'from rpstack.env.cmds.envcmd import EnvCommand\nfrom rpstack.env.cmds.exportcmd import ExportCommand',
         'services/linear_slide': 'from rpstack.linear_slide import LinearSlide\nassert "rpstack.apps.slide_commands" not in sys.modules',
     }
     for package, script in packages.items():
         probe('RPStack/' + package + '/package.json', script)
     # Local example manifests must supply dependencies even without remote recursion.
-    for example in ('linear_slide', 'mesh_gateway', 'slide_nodes'):
+    for example in ('linear_slide', 'mesh_gateway', 'slide_nodes', 'ros_slide'):
         probe('examples/' + example + '/package.json', '''
 import json
 from pathlib import Path
@@ -107,7 +108,7 @@ for path in Path('.').glob('*.json'):
         if component.get('entry_point'):
             load_entry_point(component['entry_point'])
 ''')
-    print('Architecture checks passed:', len(manifests), 'source/dependency maps and 14 isolated installations.')
+    print('Architecture checks passed:', len(manifests), 'source/dependency maps and 16 isolated installations.')
 
 
 if __name__ == '__main__':

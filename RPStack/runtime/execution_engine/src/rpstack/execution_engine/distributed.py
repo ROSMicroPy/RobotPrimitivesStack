@@ -3,6 +3,10 @@ from rpstack.support import asyncio, now_ms, elapsed_ms
 from rpstack.signals.model import nonce, plain
 
 
+class RemoteCancelled(RuntimeError):
+    """The worker confirmed cancellation after managed operation cleanup."""
+
+
 class RemoteActions:
     # Validate peers and limits, then prepare leased remote calls and observed workflow states.
     def __init__(self, node, peers, expose, lease_ms=3000, capacity=64):
@@ -30,8 +34,22 @@ class RemoteActions:
         return self.bus.publish('_rp.' + name, payload, target=target,
                                 correlation=correlation, ttl_ms=min(self.lease_ms, 1000))
 
+    async def probe(self, target, timeout_s=1):
+        """Check admission and generation without executing or retaining an operation."""
+        if target not in self.peers:
+            raise ValueError('undeclared execution peer: ' + target)
+        correlation = nonce()
+        sub = self.bus.subscribe('_rp.ready', correlation=correlation, source=target)
+        try:
+            self._send('probe', target, correlation, None)
+            response = await sub.get(timeout_s)
+            return response['payload']['epoch']
+        finally:
+            sub.close()
+
     # Negotiate the peer's epoch, issue one call, and renew its lease while awaiting a result.
-    async def invoke(self, target, service, operation, arguments, run_id, timeout_s=30):
+    async def invoke(self, target, service, operation, arguments, run_id, timeout_s=30,
+                     cancel_event=None, cancel_timeout_s=3):
         if target not in self.peers:
             raise ValueError('undeclared execution peer: ' + target)
         correlation = run_id + '/' + nonce()
@@ -42,23 +60,41 @@ class RemoteActions:
             self._send('probe', target, correlation, None)
             handshake = await ready.get(min(timeout_s, self.lease_ms / 1000))
             epoch = handshake['payload']['epoch']
+            if cancel_event is not None and cancel_event.is_set():
+                raise RemoteCancelled('cancelled before dispatch')
             self._send('call', target, correlation, {'service': service, 'operation': operation,
                        'arguments': arguments, 'lease_ms': self.lease_ms, 'epoch': epoch})
+            cancelling = False
+            cancelled_at = None
+            last_control = now_ms()
             while True:
                 remaining = timeout_s - elapsed_ms(started) / 1000
+                if cancelled_at is not None:
+                    remaining = min(remaining, cancel_timeout_s - elapsed_ms(cancelled_at) / 1000)
                 if remaining <= 0:
                     raise TimeoutError('remote action timed out')
+                if cancel_event is not None and cancel_event.is_set():
+                    if not cancelling:
+                        cancelled_at = now_ms()
+                        self._send('cancel', target, correlation, None)
+                        last_control = now_ms()
+                    cancelling = True
                 try:
-                    response = await sub.get(min(remaining, self.lease_ms / 3000))
+                    response = await sub.get(min(remaining, self.lease_ms / 3000,
+                                                 0.05 if cancel_event is not None else remaining))
                 except asyncio.TimeoutError:
                     if elapsed_ms(started) >= timeout_s * 1000:
                         raise TimeoutError('remote action timed out')
-                    self._send('renew', target, correlation, None)
+                    if elapsed_ms(last_control) >= self.lease_ms / 3:
+                        self._send('cancel' if cancelling else 'renew', target, correlation, None)
+                        last_control = now_ms()
                     continue
                 payload = response['payload']
                 if not isinstance(payload, dict) or 'ok' not in payload:
                     raise ValueError('invalid remote result')
                 if not payload['ok']:
+                    if payload.get('cancelled') is True:
+                        raise RemoteCancelled(payload.get('error', 'remote action cancelled'))
                     raise RuntimeError(payload.get('error', 'remote action failed'))
                 return payload.get('result')
         finally:
@@ -78,7 +114,8 @@ class RemoteActions:
             result = {'ok': True, 'result': plain(await self.node.invoke(
                 payload['service'], payload['operation'], payload.get('arguments', {})))}
         except asyncio.CancelledError:
-            result = {'ok': False, 'error': 'remote action cancelled or lease expired'}
+            result = {'ok': False, 'cancelled': True,
+                      'error': 'remote action cancelled or lease expired'}
             raise
         except Exception as error:
             result = {'ok': False, 'error': str(error)[:256]}
@@ -128,7 +165,14 @@ class RemoteActions:
             if record and record.get('task') in self.node.tasks.records:
                 await self.node.tasks.cancel(record['task'])
             if record is None and len(self.records) < self.capacity:
-                self.records[key] = {'finished': now_ms(), 'result': {'ok': False, 'error': 'cancelled'}}
+                self.records[key] = {'finished': now_ms(), 'result': {
+                    'ok': False, 'cancelled': True, 'error': 'cancelled before dispatch'}}
+                record = self.records[key]
+            if record and record.get('result') is not None:
+                try:
+                    self._send('result', key[0], key[2], record['result'])
+                except (RuntimeError, ValueError):
+                    pass  # Cleanup succeeded; a cancellation retry can recover the result.
             return
         if kind == '_rp.renew':
             if record and record.get('finished') is None:

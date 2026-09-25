@@ -1,6 +1,6 @@
 {
   "name": "rp-ros-signals",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "urls": [
     [
       "rpstack/__init__.py",
@@ -13,6 +13,10 @@
     [
       "rpstack/ros_signals/transport.py",
       "src/rpstack/ros_signals/transport.py"
+    ],
+    [
+      "rpstack/ros_signals/typed.py",
+      "src/rpstack/ros_signals/typed.py"
     ]
   ],
   "deps": [

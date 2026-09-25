@@ -1,0 +1,27 @@
+name: ROS gateway
+on:
+  push:
+    paths: ['ros2/**', 'RPStack/apps/ros_gateway/**', 'RPStack/runtime/**', 'RPStack/foundation/**', 'RPStack/services/**', 'RPStack/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
+  pull_request:
+    paths: ['ros2/**', 'RPStack/apps/ros_gateway/**', 'RPStack/runtime/**', 'RPStack/foundation/**', 'RPStack/services/**', 'RPStack/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ros-jazzy:
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install interface build dependencies
+        run: |
+          apt-get update
+          apt-get install -y python3-colcon-common-extensions ros-jazzy-diagnostic-msgs ros-jazzy-sensor-msgs
+      - name: Build interfaces and run real ROS tests
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --base-paths ros2 --build-base /tmp/rpstack-build --install-base /tmp/rpstack-install
+          source /tmp/rpstack-install/setup.bash
+          python3 -c 'import rclpy; from rpstack_interfaces.action import MoveLinear'
+          python3 -B -m unittest discover -s RPStack/apps/ros_gateway/test -v

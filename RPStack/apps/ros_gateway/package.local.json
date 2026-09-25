@@ -1,0 +1,27 @@
+{
+  "name": "rp-ros-gateway",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/apps/__init__.py",
+      "src/rpstack/apps/__init__.py"
+    ],
+    [
+      "rpstack/apps/ros_gateway/__init__.py",
+      "src/rpstack/apps/ros_gateway/__init__.py"
+    ],
+    [
+      "rpstack/apps/ros_gateway/controller.py",
+      "src/rpstack/apps/ros_gateway/controller.py"
+    ],
+    [
+      "rpstack/apps/ros_gateway/gateway.py",
+      "src/rpstack/apps/ros_gateway/gateway.py"
+    ]
+  ],
+  "deps": []
+}

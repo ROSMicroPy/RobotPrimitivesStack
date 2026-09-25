@@ -48,3 +48,16 @@ See [entity signals and distributed execution](../signals/README.md) for manifes
 configuration, correlated waits, reset fencing, observations, and failure limits.
 
 Use `SignalBus` from `rpstack.signals`; each engine exposes its shared bus as `engine.signals`.
+
+## Confirmed remote cancellation
+
+`RemoteActions.invoke(..., cancel_event=event, cancel_timeout_s=3)` optionally
+waits for worker confirmation after cancellation instead of immediately abandoning
+the result subscription. The event must expose `is_set()`. Once set, the caller
+stops renewing the action lease and sends cancellation requests without resending
+the operation. A worker-confirmed cleanup raises `RemoteCancelled`; a completion
+that wins the race still returns its result. Timeout is an unconfirmed outcome.
+Older workers without the explicit cancellation result flag cannot provide this
+confirmation. Ordinary task cancellation retains the existing best-effort cancel
+plus receiver-lease behavior. `probe(target, timeout_s)` checks admission and
+returns the worker generation without allocating operation history.

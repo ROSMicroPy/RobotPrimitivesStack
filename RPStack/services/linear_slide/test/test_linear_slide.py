@@ -69,6 +69,23 @@ class FakeDistanceObserver:
 
 
 class LinearSlideTests(unittest.IsolatedAsyncioTestCase):
+    async def test_position_telemetry_uses_real_samples_and_congestion_does_not_stop_motion(self):
+        slide, motor = await self.make_slide(value=0.1)
+        published = []
+        class Bus:
+            def publish(self, name, payload):
+                published.append((name, payload))
+                if len(published) > 1:
+                    raise RuntimeError('egress full')
+        slide.signals = Bus()
+        slide.configure({'signal_id': 'carriage'})
+        result = await slide.move_to(0.15)
+        self.assertAlmostEqual(result.value, 0.15, delta=slide.tolerance_m)
+        self.assertEqual(published[0][0], 'motion.position.updated')
+        self.assertEqual(published[0][1]['service'], 'carriage')
+        self.assertAlmostEqual(published[0][1]['value'], 0.1)
+        self.assertGreater(slide.telemetry_dropped, 0)
+
     # Build and calibrate a simulated slide, then clear setup motion from assertion history.
     async def make_slide(self, value=0.0, **kwargs):
         observer = FakePositionObserver(value)

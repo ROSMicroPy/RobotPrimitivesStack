@@ -58,16 +58,38 @@ class RosTests(unittest.IsolatedAsyncioTestCase):
                 return None
             return invoke
         native.__getattr__=lambda name:stub(name)
-        original={key:value for key,value in sys.modules.items() if key=='rclpy' or key.startswith('rclpy.') or key=='std_msgs' or key.startswith('std_msgs.')}
+        prefixes = ('rclpy', 'std_msgs', 'sensor_msgs', 'rosmicropy_interfaces')
+        original={key:value for key,value in sys.modules.items() if key.split('.')[0] in prefixes}
         for key in original: sys.modules.pop(key)
         old_bytecode = sys.dont_write_bytecode
         sys.dont_write_bytecode = True
         sys.path.insert(0,str(firmware))
         try:
             with patch.dict(sys.modules,{'ROSMicroPy':native}):
-                transport=RosTransport('Robie1','arm',backend='rosmicropy')
+                transport=RosTransport('Robie1','arm',backend='rosmicropy', publishers=[{
+                    'kind': 'linear_joint_state', 'service': 'slide',
+                    'topic': '/arm/joint_states', 'joint_name': 'carriage'}])
                 await transport.start()
-                await transport.send(b'hello')
+                from rpstack.signals import SignalBus, encode
+                bus = SignalBus('Robie1', 'arm')
+                sample = dict(service='slide', kind='linear', unit='m', value=0.12,
+                              valid=True, reference_frame='carriage', timestamp_ns=123456)
+                await transport.send(encode(bus.publish('motion.position.updated', sample)))
+                published = [args for name,args,_ in calls if name == 'publishMsg' and args[0] == '/arm/joint_states']
+                self.assertEqual(len(published), 1)
+                self.assertEqual(published[0][1]['position'], [0.12])
+                self.assertEqual(published[0][1]['name'], ['carriage'])
+                self.assertEqual(published[0][1]['header']['stamp'], {'sec': 0, 'nanosec': 0})
+                registered = [args for name,args,_ in calls if name == 'registerDataType']
+                self.assertTrue(any(args[0]['message_name'] == 'JointState' for args in registered))
+                start_index = next(i for i, (name,_,_) in enumerate(calls) if name == 'run_ROS_Stack')
+                self.assertTrue(all(i < start_index for i,(name,_,_) in enumerate(calls) if name == 'registerROSPublisher'))
+                for payload in (dict(sample, valid=False), dict(sample, unit='mm'), dict(sample, service='other')):
+                    await transport.send(encode(bus.publish('motion.position.updated', payload)))
+                other = SignalBus('Robie1', 'other')
+                await transport.send(encode(other.publish('motion.position.updated', sample)))
+                self.assertEqual(sum(name == 'publishMsg' and args[0] == '/arm/joint_states'
+                                     for name,args,_ in calls), 1)
                 self.assertEqual(sum(name=='run_ROS_Stack' for name,_,_ in calls),1)
                 message=transport.message_type();message.data='incoming'
                 transport._receive(message)
@@ -79,6 +101,6 @@ class RosTests(unittest.IsolatedAsyncioTestCase):
             sys.dont_write_bytecode = old_bytecode
             sys.path.remove(str(firmware))
             for key in tuple(sys.modules):
-                if key=='rclpy' or key.startswith('rclpy.') or key=='std_msgs' or key.startswith('std_msgs.'):
+                if key.split('.')[0] in prefixes:
                     sys.modules.pop(key)
             sys.modules.update(original)

@@ -8,6 +8,7 @@ Start with a host simulation, then install the linear-slide example on an ESP32.
 
 - [Getting Started](getting-started.html): run a simulation and install your first device.
 - [Basic Concepts](concepts.html): understand entities, nodes, apps, services, and signals.
+- [ROS 2 Integration](ros-integration.html): use typed telemetry and the linear-slide action gateway with ROSMicroPy.
 - [Provisioning & Bootstrap](bootstrap.html): proposed identity provisioning, Architect-managed updates, and coordinated startup.
 - [Service & App Registries](registries.html): proposed versioned descriptors, dependency resolution, and private registry sources.
 - [Linear Slide](linear-slide.html): calibrate, set a range, and issue a move from the REPL.
