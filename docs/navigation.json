@@ -46,6 +46,11 @@
   },
   {
     "group": "Architecture",
+    "slug": "ros-integration",
+    "title": "ROS 2 integration"
+  },
+  {
+    "group": "Architecture",
     "slug": "bootstrap",
     "title": "Provisioning & bootstrap"
   },

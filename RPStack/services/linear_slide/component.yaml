@@ -1,12 +1,12 @@
 manifest: rp.service/v1
 package:
   name: rube-goldberg-linear-slide
-  version: 0.4.0
+  version: 0.4.1
   import: rpstack.linear_slide
 
 service:
   name: observed-linear-actuator
-  version: 0.4.0
+  version: 0.4.1
   kind: composite_driver
   type: motion.linear_actuator
   description: Closed-loop linear slide composed from motion and position capabilities.
@@ -28,6 +28,7 @@ service:
         version: 1
         constraints: {quantity: linear, dimensions: 1, canonical_unit: m}
   configuration:
+    signal_id: {type: string, default: slide, description: Service ID attached to optional position telemetry.}
     positive_direction: {type: boolean, default: true}
     tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
     max_steps: {type: integer, minimum: 1, default: 10000}

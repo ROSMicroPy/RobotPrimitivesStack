@@ -15,8 +15,11 @@ class LinearSlide(PrimitiveService, PositionActuator):
 
     # Connect motion and position capabilities, then prepare limits, calibration, and
     # cancellation state.
-    def __init__(self, motor, position):
+    def __init__(self, motor, position, signals=None):
         self.motor = motor
+        self.signals = signals
+        self.signal_id = 'slide'
+        self.telemetry_dropped = 0
         self.position_observer = position
         self.positive_direction = True
         self.tolerance_m = 0.001
@@ -34,6 +37,10 @@ class LinearSlide(PrimitiveService, PositionActuator):
     # Validate travel and motion settings before storing them for subsequent slide commands.
     def configure(self, config=None):
         config = config or {}
+        if 'signal_id' in config:
+            if not isinstance(config['signal_id'], str) or not config['signal_id']:
+                raise ValueError('signal_id must be a nonempty service ID')
+            self.signal_id = config['signal_id']
         if "positive_direction" in config:
             self.positive_direction = bool(config["positive_direction"])
         if "tolerance_m" in config:
@@ -254,6 +261,7 @@ class LinearSlide(PrimitiveService, PositionActuator):
             "steps_per_mm": self.steps_per_mm,
             "positive_direction": self.positive_direction,
             "position": self._last_position.as_dict() if self._last_position else None,
+            "telemetry_dropped": self.telemetry_dropped,
         }
 
     # Read and retain a position sample, requiring linear coordinates in metres.
@@ -263,6 +271,13 @@ class LinearSlide(PrimitiveService, PositionActuator):
         if sample.kind != "linear" or sample.unit != "m":
             raise TypeError("position_observer must return linear positions in metres")
         self._last_position = sample
+        if self.signals is not None:
+            try:
+                self.signals.publish('motion.position.updated',
+                                     dict(sample.as_dict(), service=self.signal_id))
+            except (RuntimeError, ValueError):
+                # Telemetry congestion must not interrupt motion or its cleanup.
+                self.telemetry_dropped += 1
         return sample
 
     async def move_to(self, target):

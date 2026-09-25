@@ -2,6 +2,10 @@
 
 Signals connect publishers and subscribers within an entity. Applications use the same envelope through local delivery, in-process transports, ESP-NOW, or ROS adapters.
 
+See [ROS 2 integration](ros-integration.html) for direct typed ROSMicroPy
+telemetry and the optional desktop action/diagnostics gateway. The generic ROS
+signal envelope remains available alongside those native interfaces.
+
 ## Publish and subscribe
 
 Inside an app with a node reference:

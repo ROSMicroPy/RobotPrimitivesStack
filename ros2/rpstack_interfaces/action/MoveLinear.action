@@ -1,0 +1,10 @@
+# Absolute target in the configured linear coordinate frame, in metres.
+float64 target_m
+---
+# False means the physical outcome could not be established.
+bool outcome_confirmed
+bool position_valid
+float64 final_position_m
+string message
+---
+rpstack_interfaces/LinearPosition position

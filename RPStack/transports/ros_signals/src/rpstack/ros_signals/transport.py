@@ -5,7 +5,7 @@ from rpstack.support import asyncio
 class RosTransport:
     # Choose the ROS backend/topic and prepare a bounded incoming signal mailbox.
     def __init__(self, entity, node_id, backend='rclpy', topic=None, qos=10,
-                 poll_ms=10, queue_limit=32, max_bytes=2048, init=None):
+                 poll_ms=10, queue_limit=32, max_bytes=2048, init=None, publishers=None):
         if backend not in ('rclpy', 'rosmicropy') or poll_ms < 1 or queue_limit < 1:
             raise ValueError('invalid ROS transport configuration')
         self.backend, self.topic = backend, topic or '/rpstack/' + entity + '/signals'
@@ -15,6 +15,10 @@ class RosTransport:
         self.queue, self.dropped = [], 0
         self.active, self.node, self.owns_context = False, None, False
         self.lock = None
+        self.source = node_id
+        self.publisher_specs = publishers or []
+        self.typed_publishers = []
+        self.projection_dropped = 0
 
     # Create ROS publishers/subscribers and start native firmware processing when required.
     async def start(self):
@@ -34,6 +38,10 @@ class RosTransport:
         self.node = rclpy.create_node(self.node_name)
         self.publisher = self.node.create_publisher(String, self.topic, self.qos)
         self.subscription = self.node.create_subscription(String, self.topic, self._receive, self.qos)
+        # Register all native publishers before the firmware worker starts.
+        from .typed import JointPositionPublisher
+        self.typed_publishers = [JointPositionPublisher(self.node, spec, self.backend, self.source)
+                                 for spec in self.publisher_specs]
         self.active = True
         if self.backend == 'rosmicropy':
             # The reference firmware's spin_once is a stub; run_ROS_Stack starts
@@ -81,11 +89,20 @@ class RosTransport:
         message = self.message_type()
         message.data = data.decode('utf-8')
         self.publisher.publish(message)
+        if self.typed_publishers:
+            from rpstack.signals import decode
+            signal = decode(data, self.max_bytes)
+            for publisher in self.typed_publishers:
+                try:
+                    publisher.send(signal)
+                except (ValueError, RuntimeError):
+                    self.projection_dropped += 1
         await asyncio.sleep(0)
 
     # Disable callbacks, release host ROS resources, and clear queued data.
     async def stop(self):
         self.active = False
+        self.typed_publishers = []
         if self.node is not None and self.backend == 'rclpy':
             self.node.destroy_node()
             if self.owns_context:

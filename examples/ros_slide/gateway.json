@@ -1,0 +1,43 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "slide-ros-gateway",
+  "identity": {
+    "entity": "RosSlide",
+    "node": "ros_gateway"
+  },
+  "components": {},
+  "services": {},
+  "execution": {
+    "peers": [
+      "slide_device"
+    ],
+    "expose": [],
+    "lease_ms": 3000
+  },
+  "signals": {
+    "routes": [
+      "local",
+      "ros"
+    ],
+    "transports": [
+      {
+        "id": "ros",
+        "entry_point": "rpstack.ros_signals:RosTransport",
+        "config": {
+          "backend": "rclpy"
+        }
+      }
+    ]
+  },
+  "apps": [
+    {
+      "id": "ros",
+      "entry_point": "rpstack.apps.ros_gateway:SlideRosGateway",
+      "config": {
+        "target_node": "slide_device",
+        "service": "slide",
+        "namespace": "rpstack/slide"
+      }
+    }
+  ]
+}
