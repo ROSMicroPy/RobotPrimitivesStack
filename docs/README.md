@@ -37,15 +37,21 @@ pinned in `requirements.txt`. No JavaScript framework or Node build is needed.
 
 ## GitHub Pages
 
-After merging this change into `main`, open repository **Settings → Pages**.
-Under **Build and deployment**, choose **Deploy from a branch**, select **main**
-and **/docs**, and click **Save**. GitHub's built-in Pages workflow publishes
-`docs/index.html` and the other static files. The committed `.nojekyll` file
-turns off Jekyll processing.
+In repository **Settings → Pages → Build and deployment**, select
+**GitHub Actions** as the source. Do not select **Deploy from a branch**:
+GitHub's built-in branch publisher recursively fetches submodules, including
+`RobotArchitect`, which its repository-scoped token cannot access.
 
-The `Documentation Pages` workflow builds and link-checks the site on pull
-requests and pushes, and verifies that the committed generated files are current.
-It does not deploy a second copy through the Actions Pages API.
+The `Documentation Pages` workflow checks out `docs/` without submodules, builds
+and link-checks the site, and verifies that committed generated files are current.
+It packages only HTML, assets, the search index, and `.nojekyll` in `docs/_site`.
+Pushes to the default branch deploy that artifact; pull requests only validate
+and build. No cross-repository credentials are required.
+
+After enabling the Actions source and merging the workflow, deployment runs
+automatically on documentation changes. To retry, open **Actions → Documentation
+Pages → Run workflow**, selecting **main**. Re-running an old **pages build and
+deployment** run will still use the built-in submodule checkout.
 
 After changing Markdown, navigation, or the builder, run `python3 docs/build.py`
 and commit the generated files along with the source changes. Preview with
