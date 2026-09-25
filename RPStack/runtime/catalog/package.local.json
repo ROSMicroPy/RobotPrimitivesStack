@@ -21,6 +21,10 @@
     [
       "rpstack/catalog/schema.py",
       "src/rpstack/catalog/schema.py"
+    ],
+    [
+      "rpstack/catalog/discovery.py",
+      "src/rpstack/catalog/discovery.py"
     ]
   ],
   "deps": []

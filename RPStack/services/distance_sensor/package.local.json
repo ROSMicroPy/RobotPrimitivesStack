@@ -25,6 +25,10 @@
     [
       "rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py",
       "src/rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py"
+    ],
+    [
+      "rpstack/distance_sensor/service.py",
+      "src/rpstack/distance_sensor/service.py"
     ]
   ],
   "deps": []

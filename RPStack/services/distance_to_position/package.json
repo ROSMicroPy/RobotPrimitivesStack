@@ -9,15 +9,19 @@
     [
       "rpstack/distance_to_position/__init__.py",
       "src/rpstack/distance_to_position/__init__.py"
+    ],
+    [
+      "rpstack/distance_to_position/service.py",
+      "src/rpstack/distance_to_position/service.py"
     ]
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/interfaces",
       "archdef"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
       "archdef"
     ]
   ]

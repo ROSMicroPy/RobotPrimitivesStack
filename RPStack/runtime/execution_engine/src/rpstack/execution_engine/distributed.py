@@ -1,8 +1,10 @@
 """One workflow coordinator dispatches leased, correlated actions to peer nodes."""
-from rpstack.signals.model import asyncio, now_ms, elapsed, nonce, plain
+from rpstack.support import asyncio, now_ms, elapsed_ms
+from rpstack.signals.model import nonce, plain
 
 
 class RemoteActions:
+    # Validate peers and limits, then prepare leased remote calls and observed workflow states.
     def __init__(self, node, peers, expose, lease_ms=3000, capacity=64):
         if type(lease_ms) is not int or type(capacity) is not int or not 100 <= lease_ms <= 10000 or not 1 <= capacity <= 256:
             raise ValueError('invalid remote action limits')
@@ -17,15 +19,18 @@ class RemoteActions:
         self.epoch = nonce()
         self.subscriptions = []
 
+    # Subscribe to execution protocol messages before workflows can issue remote calls.
     def start(self):
         # Establish subscriptions synchronously before autostarting workflows.
         for name in ('state', 'probe', 'call', 'renew', 'cancel'):
             self.subscriptions.append(self.bus.subscribe('_rp.' + name))
 
+    # Publish a correlated protocol message with a TTL bounded by the action lease.
     def _send(self, name, target, correlation, payload):
         return self.bus.publish('_rp.' + name, payload, target=target,
                                 correlation=correlation, ttl_ms=min(self.lease_ms, 1000))
 
+    # Negotiate the peer's epoch, issue one call, and renew its lease while awaiting a result.
     async def invoke(self, target, service, operation, arguments, run_id, timeout_s=30):
         if target not in self.peers:
             raise ValueError('undeclared execution peer: ' + target)
@@ -40,13 +45,13 @@ class RemoteActions:
             self._send('call', target, correlation, {'service': service, 'operation': operation,
                        'arguments': arguments, 'lease_ms': self.lease_ms, 'epoch': epoch})
             while True:
-                remaining = timeout_s - elapsed(started) / 1000
+                remaining = timeout_s - elapsed_ms(started) / 1000
                 if remaining <= 0:
                     raise TimeoutError('remote action timed out')
                 try:
                     response = await sub.get(min(remaining, self.lease_ms / 3000))
                 except asyncio.TimeoutError:
-                    if elapsed(started) >= timeout_s * 1000:
+                    if elapsed_ms(started) >= timeout_s * 1000:
                         raise TimeoutError('remote action timed out')
                     self._send('renew', target, correlation, None)
                     continue
@@ -64,6 +69,7 @@ class RemoteActions:
             except (RuntimeError, ValueError):
                 pass  # Receiver lease still bounds execution if cancellation is lost.
 
+    # Invoke an exposed local operation and retain/send a compact success or failure response.
     async def _execute(self, key, record, payload):
         result = None
         try:
@@ -87,6 +93,8 @@ class RemoteActions:
                 except (ValueError, RuntimeError):
                     pass
 
+    # Validate protocol traffic and dispatch state updates, handshakes, calls, renewals, and
+    # cancellations.
     async def _message(self, signal):
         if signal['name'] == '_rp.state':
             payload = signal['payload']
@@ -152,6 +160,7 @@ class RemoteActions:
             record['finished'], record['result'] = now_ms(), {'ok': False, 'error': str(error)}
             self._send('result', key[0], key[2], record['result'])
 
+    # Process cancellation before new calls, expire leases, and retire completed-call history.
     async def run(self):
         try:
             while True:
@@ -167,9 +176,9 @@ class RemoteActions:
                         raise RuntimeError('remote command queue overflow')
                 for key, record in tuple(self.records.items()):
                     if record.get('finished') is not None:
-                        if elapsed(record['finished']) >= 60000:
+                        if elapsed_ms(record['finished']) >= 60000:
                             del self.records[key]
-                    elif elapsed(record['renewed']) >= record['lease']:
+                    elif elapsed_ms(record['renewed']) >= record['lease']:
                         if record.get('task') in self.node.tasks.records:
                             await self.node.tasks.cancel(record['task'])
                 await asyncio.sleep(0.01)
@@ -178,10 +187,12 @@ class RemoteActions:
                 sub.close()
             self.subscriptions = []
 
+    # Change the epoch so calls negotiated before reset cannot start new service work.
     def invalidate(self):
         # In-flight calls negotiated before a reset cannot start fresh services.
         self.epoch = nonce()
 
+    # Expose retained remote action outcomes and whether each call has finished.
     def snapshot(self):
         return [{'coordinator': key[0], 'correlation': key[2],
                  'state': 'finished' if record.get('finished') is not None else 'running',

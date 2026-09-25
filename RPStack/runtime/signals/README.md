@@ -7,7 +7,7 @@ its actions can execute on different nodes. Other nodes observe its revisioned
 state and can send signals to advance it. Each run has a unique correlation ID.
 There is no replicated consensus or automatic coordinator failover.
 
-The runnable [Robie1 example](../../../TestApps/robie1/README.md) loads three
+The runnable [Robie1 example](../../../examples/robie1/README.md) loads three
 node manifests and exercises this model without hardware.
 
 ## Manifest configuration
@@ -19,8 +19,8 @@ node manifests and exercises this model without hardware.
     "routes": ["local", "mesh", "ros"],
     "bridges": {"mesh": ["ros"], "ros": ["mesh"]},
     "transports": [
-      {"id": "mesh", "entry_point": "rpstack.meshnet:EspNowTransport", "relay": true},
-      {"id": "ros", "entry_point": "rpstack.ros_bridge:RosTransport",
+      {"id": "mesh", "entry_point": "rpstack.espnow:EspNowTransport", "relay": true},
+      {"id": "ros", "entry_point": "rpstack.ros_signals:RosTransport",
        "config": {"backend": "rosmicropy", "init": {"agent_ip": "192.168.1.10", "agent_port": 8888}}}
     ]
   },
@@ -89,7 +89,7 @@ is bounded. Signals emitted before subscriptions exist are not replayed.
 `GET /api/execution` reports local runs, remote actions, observed coordinator
 states and signal counters. Observed state is best-effort telemetry and can be
 stale. `POST /api/flows/start` returns both task ID and run ID. Use
-`POST /api/signals` (also `/api/events`) with `name`, `payload` and optional
+`POST /api/signals` with `name`, `payload` and optional
 routing/correlation fields. Shell `execution` prints the same execution status.
 
 ## Delivery and cancellation limits
@@ -126,21 +126,3 @@ Lease and dedup state are in RAM. Reboots discard it; there is no exactly-once
 execution across crashes. Reset invalidates the worker generation and cancels
 local actions. Stopping a coordinator cancels the remote actions of its active
 flows, but is not a broadcast stop of unrelated workflows on every robot node.
-
-## LighthouseMesh refactor
-
-The source analysis covered `LighthouseMesh/dnet/src/signalling`, `messaging`,
-and `execution`. The new runtime implementation is in RPStack's `signals`,
-`meshnet`, `ros_bridge`, and `execution_engine` packages; it does not import or
-run the prototype submodule. The original sources are available in Git history.
-
-Retained concepts: transient signals separate from persistent composition,
-source/boot/sequence identities, and ESP-NOW fragmentation. Replaced the
-singleton mesh/telemetry coupling, IRQ processing and threaded workflow execution
-with manifest-owned async services. Added robot scope, targeting, correlation,
-explicit bridges, replay windows, bounded reassembly, leased remote execution
-and reset fencing. The old `dnet` APIs and v2 event envelope are not supported.
-Persistent node/capability discovery is provided by `runtime/catalog`, with
-REST access through `apps/meshnet_gtwy`. Legacy composition models are retained
-in the catalog package. OTA and prototype topology tooling are not part of the
-active runtime; their original sources are available in Git history.

@@ -5,12 +5,14 @@ try:
 except ImportError:
     from time import sleep
 
+    # Provide the microsecond delay interface on hosts that only expose seconds.
     def sleep_us(value):
         sleep(value / 1000000.0)
 
 from rpstack.distance_sensor import DistanceSensorDriver
 
 
+# Drive either a Pin-style object or a callable test pin.
 def _write(pin, value):
     try:
         pin.value(value)
@@ -19,10 +21,12 @@ def _write(pin, value):
 
 
 class HCSR04Driver(DistanceSensorDriver):
+    # Start inactive with no trigger or echo pins attached.
     def __init__(self):
         self.active = False
         self.trigger_pin = self.echo_pin = None
 
+    # Resolve pins and pulse timing, derive sound speed from temperature, then activate sensing.
     def initialize(self, trigger_pin, echo_pin, pin_factory=None,
                    time_pulse_us=None, timeout_us=30000,
                    temperature_c=20.0, **_):
@@ -45,6 +49,7 @@ class HCSR04Driver(DistanceSensorDriver):
         self.active = True
         return True
 
+    # Trigger an ultrasonic pulse and convert its round-trip echo time into millimetres.
     def read_distance_mm(self):
         if not self.active:
             raise RuntimeError("ultrasonic sensor is inactive")
@@ -58,14 +63,13 @@ class HCSR04Driver(DistanceSensorDriver):
             raise TimeoutError("ultrasonic echo timed out")
         return duration_us * self.speed_mm_per_us / 2.0
 
+    # Update sensing state and hold the trigger low when deactivated.
     def set_active(self, active):
         self.active = bool(active)
         if not self.active and self.trigger_pin is not None:
             _write(self.trigger_pin, 0)
         return True
 
+    # Report whether sensing is active and the configured echo timeout.
     def get_status(self):
         return {"active": self.active, "timeout_us": self.timeout_us}
-
-
-DRIVER_CLASS = HCSR04Driver

@@ -1,19 +1,18 @@
 """A coordinator advances a robot-wide workflow using entity-scoped signals."""
-from .tasks import asyncio
+from rpstack.support import asyncio
 from rpstack.signals import SignalBus
 from rpstack.signals.model import nonce
 
-# Existing callers can use the event vocabulary; there is only one signal bus.
-EventBus = SignalBus
 
 
 class ExecutionEngine:
+    # Connect managed tasks, capability invocation, and signals for workflow execution.
     def __init__(self, tasks, invoke, signals=None, remote=None):
         self.tasks, self.invoke, self.remote = tasks, invoke, remote
         self.signals = signals or SignalBus()
-        self.events = self.signals
         self.runs = {}
 
+    # Assign a unique run identity, schedule the workflow, and retain its observable state.
     def start(self, name, flow):
         run_id = self.signals.node_id + '/' + self.signals.boot + '/' + nonce()
         task_id = self.tasks.spawn('flow:' + name, self.run, flow, run_id, kind='flow', owner=name)
@@ -23,9 +22,12 @@ class ExecutionEngine:
                 del self.runs[old]
         return task_id
 
+    # Expose workflow records whose managed tasks are still retained.
     def snapshot(self):
         return [dict(value, task_id=key) for key, value in self.runs.items() if key in self.tasks.records]
 
+    # Update and broadcast a run revision without letting telemetry failures interrupt
+    # execution.
     def _state(self, run_id, state, step):
         record = next((r for r in self.runs.values() if r['run_id'] == run_id), None)
         if record is not None:
@@ -35,6 +37,8 @@ class ExecutionEngine:
             except (ValueError, RuntimeError):
                 pass  # State telemetry never prevents cancellation/cleanup.
 
+    # Follow workflow nodes through actions and signal waits, tracking state and releasing
+    # subscriptions.
     async def run(self, flow, run_id=None):
         run_id = run_id or self.signals.node_id + '/' + nonce()
         subscriptions, nodes = {}, flow['nodes']

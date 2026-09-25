@@ -1,15 +1,19 @@
 """Entity-scoped local delivery, bounded transport queues and loop suppression."""
-from .model import asyncio, now_ms, elapsed, nonce, encode, decode
+from rpstack.support import asyncio, now_ms, elapsed_ms
+from .model import nonce, encode, decode
 
 
 class Subscription:
+    # Store subscription filters and prepare a queue with readiness and overflow state.
     def __init__(self, bus, name, correlation=None, source=None):
         self.bus, self.name, self.correlation, self.source = bus, name, correlation, source
         self.items = []
         self.ready = asyncio.Event()
         self.overflow = False
 
+    # Await the next live matching signal, optionally bounding the wait with a timeout.
     async def get(self, timeout=None):
+        # Skip expired queued signals and surface overflow instead of silently losing events.
         async def receive():
             while True:
                 while not self.items and not self.overflow:
@@ -19,10 +23,11 @@ class Subscription:
                 signal, received = self.items.pop(0)
                 if not self.items:
                     self.ready.clear()
-                if elapsed(received) < signal["ttl_ms"]:
+                if elapsed_ms(received) < signal["ttl_ms"]:
                     return signal
         return await receive() if timeout is None else await asyncio.wait_for(receive(), timeout)
 
+    # Detach this listener and remove an empty subscription group from the bus.
     def close(self):
         subscribers = self.bus.subscribers.get(self.name, [])
         if self in subscribers:
@@ -32,6 +37,7 @@ class Subscription:
 
 
 class SignalBus:
+    # Prepare node identity, routes, bounded queues, replay tracking, and delivery statistics.
     def __init__(self, entity="local", node_id="local", queue_limit=16,
                  routes=None, bridges=None, seen_limit=512, max_bytes=2048):
         if any(type(value) is not int for value in (queue_limit, seen_limit, max_bytes)) or queue_limit < 1 or seen_limit < 1 or max_bytes < 128:
@@ -47,6 +53,7 @@ class SignalBus:
         self.stats = {"published": 0, "received": 0, "duplicate": 0, "foreign": 0,
                       "invalid": 0, "dropped": 0, "sent": 0}
 
+    # Validate node identities and every route before transports touch hardware.
     def validate_configuration(self):
         # Validate identities even on local-only nodes, before touching hardware.
         encode({'version': 1, 'entity': self.entity, 'source': self.node_id, 'boot': self.boot,
@@ -58,11 +65,13 @@ class SignalBus:
                 raise ValueError('unknown bridge ingress: ' + ingress)
             self._check_routes(routes)
 
+    # Register a listener with optional correlation and source filters.
     def subscribe(self, name, correlation=None, source=None):
         sub = Subscription(self, name, correlation, source)
         self.subscribers.setdefault(name, []).append(sub)
         return sub
 
+    # Attach a uniquely named transport with its outgoing queue and relay setting.
     def add_transport(self, name, transport, relay=False):
         if not isinstance(name, str) or not name or type(relay) is not bool:
             raise ValueError("invalid transport name or relay option")
@@ -71,11 +80,12 @@ class SignalBus:
         self.ports[name] = {"transport": transport, "relay": relay, "queue": [],
                             "ready": asyncio.Event()}
 
+    # Maintain a bounded replay window per source boot, rejecting duplicate or stale sequences.
     def _remember(self, signal):
         # A sliding replay window bounds memory per origin, not per signal rate.
         # Packets more than 63 positions behind the highest sequence are stale.
         for key, record in tuple(self.seen.items()):
-            if elapsed(record['updated']) >= 60000:
+            if elapsed_ms(record['updated']) >= 60000:
                 del self.seen[key]
         key = (signal['source'], signal['boot'])
         sequence = signal['sequence']
@@ -98,6 +108,7 @@ class SignalBus:
         record['updated'] = now_ms()
         return True
 
+    # Deliver addressed signals to matching subscribers using isolated payload copies.
     def _deliver(self, signal):
         if signal["target"] not in ("*", self.node_id):
             return
@@ -115,6 +126,7 @@ class SignalBus:
                 sub.items.append((decode(encode(signal, self.max_bytes), self.max_bytes), now_ms()))
             sub.ready.set()
 
+    # Reject unknown, duplicate, or congested routes before queuing a publication.
     def _check_routes(self, routes):
         if not isinstance(routes, (list, tuple)) or not all(isinstance(route, str) for route in routes):
             raise ValueError('signal routes must be a list of names')
@@ -127,6 +139,7 @@ class SignalBus:
                 if len(self.ports[route]["queue"]) >= self.queue_limit:
                     raise RuntimeError("signal transport queue full: " + route)
 
+    # Copy signals onto transport queues and wake their transmit loops.
     def _enqueue(self, signal, routes):
         for route in routes:
             if route != "local":
@@ -134,6 +147,7 @@ class SignalBus:
                 port["queue"].append((decode(encode(signal, self.max_bytes), self.max_bytes), now_ms()))
                 port["ready"].set()
 
+    # Build and validate a fresh signal, remember its identity, then route and deliver it.
     def publish(self, name, payload=None, *, correlation=None, target="*", routes=None,
                 ttl_ms=10000, hops=8):
         routes = self.routes if routes is None else routes
@@ -152,6 +166,8 @@ class SignalBus:
         self.stats["published"] += 1
         return signal
 
+    # Validate incoming traffic, suppress duplicates, deliver locally, and relay within the hop
+    # budget.
     def receive(self, data, ingress):
         try:
             signal = decode(data, self.max_bytes)
@@ -180,13 +196,14 @@ class SignalBus:
                     self.stats["dropped"] += 1
         return True
 
+    # Drain a transport queue, subtract queue time from TTL, and drop expired signals.
     async def transmit(self, name):
         port = self.ports[name]
         while True:
             await port["ready"].wait()
             while port["queue"]:
                 signal, queued = port["queue"].pop(0)
-                signal["ttl_ms"] -= elapsed(queued)
+                signal["ttl_ms"] -= elapsed_ms(queued)
                 if signal["ttl_ms"] > 0:
                     await port["transport"].send(encode(signal, self.max_bytes))
                     self.stats["sent"] += 1
@@ -195,6 +212,7 @@ class SignalBus:
                 await asyncio.sleep(0)
             port["ready"].clear()
 
+    # Feed received transport messages into the bus while yielding between packets.
     async def listen(self, name):
         transport = self.ports[name]["transport"]
         while True:
@@ -202,6 +220,7 @@ class SignalBus:
             self.receive(data, name)
             await asyncio.sleep(0)
 
+    # Clear outgoing queues and their readiness flags.
     def clear_pending(self):
         for port in self.ports.values():
             port["queue"].clear()

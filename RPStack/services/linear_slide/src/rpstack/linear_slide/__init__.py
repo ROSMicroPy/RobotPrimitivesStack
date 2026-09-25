@@ -1,5 +1,5 @@
 """Observed linear-actuator composite service."""
 
-from .LinearSlide import LinearSlide
+from .service import LinearSlide
 
 __all__ = ("LinearSlide",)

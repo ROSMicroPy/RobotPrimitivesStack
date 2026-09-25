@@ -1,0 +1,56 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "slide-client-gateway",
+  "identity": {
+    "entity": "SlideDemo",
+    "node": "node2-host"
+  },
+  "components": {},
+  "services": {},
+  "signals": {
+    "routes": [
+      "local",
+      "link"
+    ],
+    "transports": [
+      {
+        "id": "link",
+        "entry_point": "rpstack.espnow.shared:SharedEspNowTransport",
+        "config": {
+          "channel": 6
+        }
+      }
+    ]
+  },
+  "apps": [
+    {
+      "id": "gateway",
+      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
+      "requires": [
+        "http",
+        "catalog"
+      ]
+    }
+  ],
+  "runtime": [
+    {
+      "id": "wifi",
+      "entry_point": "rpstack.node_runtime.network:WifiService",
+      "config": {
+        "ssid_env": "WIFI_SSID",
+        "password_env": "WIFI_PASSWORD"
+      }
+    },
+    {
+      "id": "http",
+      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "config": {
+        "port": 80
+      }
+    },
+    {
+      "id": "catalog",
+      "entry_point": "rpstack.catalog:Catalog"
+    }
+  ]
+}

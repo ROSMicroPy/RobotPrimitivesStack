@@ -4,11 +4,13 @@ from rpstack.motor_control import ServoDriver
 
 
 class PWMServoDriver(ServoDriver):
+    # Prepare an uninitialized servo with no PWM output attached.
     def __init__(self):
         self.initialized = False
         self.position_degrees = 0.0
         self.pwm = None
 
+    # Validate angle/pulse limits, configure PWM, and command the minimum angle.
     def initialize(self, pin, pwm_factory=None, frequency_hz=50, min_angle=0,
                    max_angle=180, min_pulse_us=500, max_pulse_us=2500, **_):
         if max_angle <= min_angle or max_pulse_us <= min_pulse_us:
@@ -27,6 +29,7 @@ class PWMServoDriver(ServoDriver):
         self.set_position(self.min_angle)
         return True
 
+    # Map an allowed angle onto pulse width and PWM duty, remembering the command.
     def set_position(self, position):
         if not self.initialized:
             raise RuntimeError("servo driver is not initialized")
@@ -40,18 +43,18 @@ class PWMServoDriver(ServoDriver):
         self.position_degrees = position
         return True
 
+    # Return the last commanded angle rather than a measured shaft position.
     def get_position(self):
         return self.position_degrees
 
+    # Release PWM resources and mark the servo driver uninitialized.
     def shutdown(self):
         if self.pwm is not None:
             self.pwm.deinit()
         self.initialized = False
         return True
 
+    # Report readiness, commanded angle, and PWM frequency.
     def get_status(self):
         return {"initialized": self.initialized, "position_degrees": self.position_degrees,
                 "frequency_hz": self.frequency_hz}
-
-
-DRIVER_CLASS = PWMServoDriver

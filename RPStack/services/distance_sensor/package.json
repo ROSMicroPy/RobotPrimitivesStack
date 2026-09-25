@@ -25,15 +25,19 @@
     [
       "rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py",
       "src/rpstack/distance_sensor/distance_drivers/vl53l4cd_core.py"
+    ],
+    [
+      "rpstack/distance_sensor/service.py",
+      "src/rpstack/distance_sensor/service.py"
     ]
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/interfaces",
       "archdef"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
       "archdef"
     ]
   ]

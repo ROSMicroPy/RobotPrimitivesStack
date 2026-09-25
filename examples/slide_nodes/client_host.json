@@ -1,0 +1,45 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "slide-client-gateway",
+  "identity": {
+    "entity": "SlideDemo",
+    "node": "node2-host"
+  },
+  "components": {},
+  "services": {},
+  "signals": {
+    "routes": [
+      "local",
+      "link"
+    ],
+    "transports": [
+      {
+        "id": "link",
+        "entry_point": "rpstack.signals.inprocess:InProcessTransport"
+      }
+    ]
+  },
+  "apps": [
+    {
+      "id": "gateway",
+      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
+      "requires": [
+        "http",
+        "catalog"
+      ]
+    }
+  ],
+  "runtime": [
+    {
+      "id": "http",
+      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "config": {
+        "port": 8081
+      }
+    },
+    {
+      "id": "catalog",
+      "entry_point": "rpstack.catalog:Catalog"
+    }
+  ]
+}

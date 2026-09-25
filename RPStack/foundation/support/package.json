@@ -1,0 +1,15 @@
+{
+  "name": "rp-support",
+  "version": "0.1.0",
+  "deps": [],
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/support/__init__.py",
+      "src/rpstack/support/__init__.py"
+    ]
+  ]
+}

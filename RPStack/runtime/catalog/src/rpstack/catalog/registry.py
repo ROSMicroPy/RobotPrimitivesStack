@@ -13,6 +13,7 @@ class CompositionRegistry:
         Schema.LOCATION_NFC: 3,
     }
 
+    # Prepare node and claim indexes alongside report and event history.
     def __init__(self):
         self._nodes = {}
         self._claims = {}
@@ -20,6 +21,7 @@ class CompositionRegistry:
         self._reports = []
         self._events = []
 
+    # Accept newer node announcements and retire old claims when a node changes boot identity.
     def register_announce(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         node_id = msg[Schema.F_NODE_ID]
@@ -45,6 +47,7 @@ class CompositionRegistry:
         }
         return True
 
+    # Register a fresh composition claim, superseding claims from a previous node boot.
     def register_claim(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         node_id = msg[Schema.F_NODE_ID]
@@ -88,6 +91,7 @@ class CompositionRegistry:
         self._node_claims.setdefault(node_id, set()).add(claim_id)
         return True
 
+    # Refresh an existing claim only when its owner, boot, and sequence are valid.
     def register_update(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         node_id = msg[Schema.F_NODE_ID]
@@ -125,6 +129,7 @@ class CompositionRegistry:
         }
         return True
 
+    # Mark an owned claim withdrawn after validating message freshness.
     def register_withdraw(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         node_id = msg[Schema.F_NODE_ID]
@@ -161,6 +166,7 @@ class CompositionRegistry:
         }
         return True
 
+    # Retain a composition report with its local reception time.
     def register_report(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         report = dict(msg)
@@ -168,6 +174,7 @@ class CompositionRegistry:
         self._reports.append(report)
         return True
 
+    # Retain an event with its name, reception time, and initial expiry state.
     def register_event(self, msg, seen_at_ms=None):
         seen_at_ms = self._normalize_seen_at(seen_at_ms)
         event = dict(msg)
@@ -178,6 +185,7 @@ class CompositionRegistry:
         self._events.append(event)
         return True
 
+    # Expire stale state before returning a copy of a requested claim.
     def get_claim(self, claim_id, now_ms=None):
         self.prune_expired(now_ms=now_ms)
         claim = self._claims.get(claim_id)
@@ -185,12 +193,14 @@ class CompositionRegistry:
             return None
         return dict(claim)
 
+    # Return a shallow copy of known node metadata, or None if unknown.
     def get_node(self, node_id):
         node = self._nodes.get(node_id)
         if node is None:
             return None
         return dict(node)
 
+    # Return non-expired active claims ordered by location and node identity.
     def active_claims(self, now_ms=None):
         self.prune_expired(now_ms=now_ms)
         claims = []
@@ -200,6 +210,7 @@ class CompositionRegistry:
         claims.sort(key=lambda item: (item["location"].get(Schema.F_LOCATION_ID, ""), item["node_id"]))
         return claims
 
+    # Select the active claims competing for a particular physical location.
     def claims_for_location(self, location_id, now_ms=None):
         matches = []
         for claim in self.active_claims(now_ms=now_ms):
@@ -207,6 +218,7 @@ class CompositionRegistry:
                 matches.append(claim)
         return matches
 
+    # Identify empty, active, or conflicting locations and select the highest-priority claim.
     def resolve_location(self, location_id, now_ms=None):
         claims = self.claims_for_location(location_id, now_ms=now_ms)
         if not claims:
@@ -222,6 +234,7 @@ class CompositionRegistry:
             "winner": dict(winner),
         }
 
+    # Resolve each currently claimed location into a deterministic composition view.
     def all_locations(self, now_ms=None):
         self.prune_expired(now_ms=now_ms)
         location_ids = {}
@@ -236,9 +249,11 @@ class CompositionRegistry:
             results.append(self.resolve_location(location_id, now_ms=now_ms))
         return results
 
+    # Return shallow copies of the recorded composition reports.
     def reports(self):
         return [dict(item) for item in self._reports]
 
+    # Filter recorded events by name and expiry while preserving reception order.
     def events(self, event_name=None, now_ms=None, include_expired=False):
         self.prune_expired(now_ms=now_ms)
         results = []
@@ -250,6 +265,7 @@ class CompositionRegistry:
             results.append(dict(event))
         return results
 
+    # Return the newest event matching the filters, or None when no event qualifies.
     def latest_event(self, event_name=None, now_ms=None, include_expired=False):
         events = self.events(
             event_name=event_name,
@@ -260,6 +276,7 @@ class CompositionRegistry:
             return None
         return events[-1]
 
+    # Mark expired claims and time-limited events without deleting their history.
     def prune_expired(self, now_ms=None):
         now_ms = self._normalize_seen_at(now_ms)
         for claim in self._claims.values():
@@ -278,6 +295,7 @@ class CompositionRegistry:
             if expires_at <= now_ms:
                 event["expired"] = True
 
+    # Retire a node's previous claims when its boot identity changes.
     def _drop_node_claims(self, node_id):
         claim_ids = list(self._node_claims.get(node_id, set()))
         for claim_id in claim_ids:
@@ -287,6 +305,7 @@ class CompositionRegistry:
                 claim["superseded"] = True
         self._node_claims[node_id] = set()
 
+    # Rank competing claims by location confidence, source, state confidence, and node ID.
     @classmethod
     def _claim_priority(cls, claim):
         location = claim.get("location") or {}
@@ -299,6 +318,7 @@ class CompositionRegistry:
             claim.get("node_id", ""),
         )
 
+    # Accept a new boot or a strictly increasing sequence within the current boot.
     @staticmethod
     def _is_newer(existing, boot_id, sequence):
         if existing is None:
@@ -309,6 +329,7 @@ class CompositionRegistry:
             return True
         return int(sequence) > existing_sequence
 
+    # Normalize a supplied reception time or derive milliseconds from the wall clock.
     @staticmethod
     def _normalize_seen_at(seen_at_ms):
         if seen_at_ms is None:

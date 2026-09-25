@@ -38,13 +38,6 @@ service:
       returns: {type: DistanceSample, unit: m}
       concurrency: read_only
       rest: {method: GET, path: /api/distance/observe}
-    read_distance_mm:
-      method: read_distance_mm
-      description: Compatibility operation returning integer millimetres.
-      arguments: {}
-      returns: {type: integer, unit: mm}
-      concurrency: read_only
-      rest: {method: GET, path: /api/distance/mm}
     set_active:
       method: set_active
       description: Enable or disable sensor acquisition.

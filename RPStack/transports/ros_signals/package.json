@@ -1,0 +1,28 @@
+{
+  "name": "rp-ros-signals",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/ros_signals/__init__.py",
+      "src/rpstack/ros_signals/__init__.py"
+    ],
+    [
+      "rpstack/ros_signals/transport.py",
+      "src/rpstack/ros_signals/transport.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/signals",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
+      "archdef"
+    ]
+  ]
+}

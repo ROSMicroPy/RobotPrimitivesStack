@@ -2,11 +2,12 @@
 
 import time
 
-from rpstack.execution_engine import asyncio
+from rpstack.support import asyncio
 
 from rpstack.motor_control import StepperDriver
 
 
+# Write a digital level through a hardware pin or callable substitute.
 def _write(pin, value):
     try:
         pin.value(value)
@@ -15,6 +16,7 @@ def _write(pin, value):
 
 
 class StepDirDriver(StepperDriver):
+    # Prepare pulse timing, step accounting, and enable polarity before pins are assigned.
     def __init__(self):
         self.initialized = False
         self.position_steps = 0
@@ -27,6 +29,7 @@ class StepDirDriver(StepperDriver):
         self.enabled = False
         self.step_pin = self.dir_pin = self.enable_pin = None
 
+    # Validate timing and geometry, bind output pins, and begin with the driver disabled.
     def initialize(self, step_pin, dir_pin, enable_pin=None, pin_factory=None,
                    enable_active_low=True, step_delay_us=500,
                    direction_settle_us=10, steps_per_revolution=200, microsteps=1,
@@ -52,11 +55,14 @@ class StepDirDriver(StepperDriver):
         self.initialized = True
         return True
 
+    # Apply the configured enable polarity and mirror the resulting logical state.
     def _set_enabled(self, enabled):
         if self.enable_pin is not None:
             _write(self.enable_pin, int(not enabled) if self.enable_active_low else int(enabled))
         self.enabled = bool(enabled)
 
+    # Emit asynchronous step pulses, track signed position, and always disable outputs
+    # afterward.
     async def move_steps(self, steps, direction=True):
         if not self.initialized:
             raise RuntimeError("step/dir driver is not initialized")
@@ -88,6 +94,7 @@ class StepDirDriver(StepperDriver):
         if steps < 0:
             steps, direction = -steps, not direction
 
+        # Use native microsecond sleeps where available, with a seconds-based host fallback.
         def delay(microseconds):
             if hasattr(time, "sleep_us"):
                 time.sleep_us(microseconds)
@@ -113,6 +120,7 @@ class StepDirDriver(StepperDriver):
             _write(self.step_pin, 0)
             self._set_enabled(False)
 
+    # Convert RPM and microstep geometry into the delay for each pulse half-cycle.
     def set_speed(self, rpm):
         rpm = float(rpm)
         if rpm <= 0:
@@ -122,15 +130,18 @@ class StepDirDriver(StepperDriver):
         self.step_delay_us = max(1, int(30000000 / pulses_per_minute))
         return True
 
+    # Return accumulated commanded steps; no encoder feedback is involved.
     def get_position(self):
         return self.position_steps
 
+    # Hold the step output low and disable the driver to interrupt further pulses.
     def stop(self):
         if self.step_pin is not None:
             _write(self.step_pin, 0)
         self._set_enabled(False)
         return True
 
+    # Disable pulse outputs and require reinitialization before future motion.
     def shutdown(self):
         if self.step_pin is not None:
             _write(self.step_pin, 0)
@@ -138,10 +149,8 @@ class StepDirDriver(StepperDriver):
         self.initialized = False
         return True
 
+    # Expose commanded position, speed, pulse timing, and driver enable state.
     def get_status(self):
         return {"initialized": self.initialized, "position_steps": self.position_steps,
                 "speed_rpm": self.speed_rpm, "step_delay_us": self.step_delay_us,
                 "enabled": self.enabled}
-
-
-DRIVER_CLASS = StepDirDriver

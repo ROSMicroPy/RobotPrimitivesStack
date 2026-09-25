@@ -21,11 +21,19 @@
     [
       "rpstack/catalog/schema.py",
       "src/rpstack/catalog/schema.py"
+    ],
+    [
+      "rpstack/catalog/discovery.py",
+      "src/rpstack/catalog/discovery.py"
     ]
   ],
   "deps": [
     [
       "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/signals",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
       "archdef"
     ]
   ]

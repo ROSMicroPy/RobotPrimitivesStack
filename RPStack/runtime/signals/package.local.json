@@ -15,12 +15,12 @@
       "src/rpstack/signals/bus.py"
     ],
     [
-      "rpstack/signals/model.py",
-      "src/rpstack/signals/model.py"
-    ],
-    [
       "rpstack/signals/inprocess.py",
       "src/rpstack/signals/inprocess.py"
+    ],
+    [
+      "rpstack/signals/model.py",
+      "src/rpstack/signals/model.py"
     ]
   ],
   "deps": []

@@ -1,0 +1,56 @@
+{
+  "name": "rp-node-runtime",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/node_runtime/__init__.py",
+      "src/rpstack/node_runtime/__init__.py"
+    ],
+    [
+      "rpstack/node_runtime/host.py",
+      "src/rpstack/node_runtime/host.py"
+    ],
+    [
+      "rpstack/node_runtime/manifest.py",
+      "src/rpstack/node_runtime/manifest.py"
+    ],
+    [
+      "rpstack/node_runtime/network.py",
+      "src/rpstack/node_runtime/network.py"
+    ],
+    [
+      "rpstack/node_runtime/node.py",
+      "src/rpstack/node_runtime/node.py"
+    ],
+    [
+      "rpstack/node_runtime/registry.py",
+      "src/rpstack/node_runtime/registry.py"
+    ],
+    [
+      "rpstack/node_runtime/supervisor.py",
+      "src/rpstack/node_runtime/supervisor.py"
+    ],
+    [
+      "rpstack/node_runtime/testing.py",
+      "src/rpstack/node_runtime/testing.py"
+    ],
+    [
+      "rpstack/node_runtime/validation.py",
+      "src/rpstack/node_runtime/validation.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
+      "archdef"
+    ]
+  ]
+}

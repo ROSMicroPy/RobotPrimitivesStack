@@ -25,6 +25,10 @@
     [
       "rpstack/motor_control/motor_drivers/step_dir.py",
       "src/rpstack/motor_control/motor_drivers/step_dir.py"
+    ],
+    [
+      "rpstack/motor_control/service.py",
+      "src/rpstack/motor_control/service.py"
     ]
   ],
   "deps": []

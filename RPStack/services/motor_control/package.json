@@ -25,15 +25,19 @@
     [
       "rpstack/motor_control/motor_drivers/step_dir.py",
       "src/rpstack/motor_control/motor_drivers/step_dir.py"
+    ],
+    [
+      "rpstack/motor_control/service.py",
+      "src/rpstack/motor_control/service.py"
     ]
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/interfaces",
       "archdef"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
       "archdef"
     ]
   ]

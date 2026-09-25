@@ -1,8 +1,6 @@
 # Robot Primitive Service Manifest v1
 
-`component.yaml` is now the canonical Robot Primitive service manifest. It is
-not only WebTester metadata: it is the generic, transport-independent contract
-used by the runtime, tooling, bridges, and future WebTester implementation.
+`component.yaml` defines the transport-independent service contract used by the runtime, tooling, bridges, and service interfaces.
 
 Every manifest uses `manifest: rp.service/v1` and describes:
 

@@ -53,39 +53,35 @@ The selected implementation determines which manifest operations and capabilitie
 A stepper instance exposes:
 
 ~~~python
-motor.command(direction=True, amount=200)
+await motor.command(direction=True, amount=200)
 motor.stop()
 ~~~
+
+Run these examples inside an async function on the application event loop.
 
 **amount** is a number of driver increments. Mechanism geometry and absolute positioning belong in an adapter or composite service.
 
 ## Direct construction
 
 ~~~python
-from rpstack.motor_control import MotorController, MotorType
+from rpstack.motor_control import Motor, MotorType
+from rpstack.motor_control.motor_drivers.step_dir import StepDirDriver
 
-motors = MotorController()
-
-axis = motors.create_motor(
-    "lift_motor",
-    MotorType.STEPPER,
-    "step_dir",
-    step_pin=17,
-    dir_pin=3,
-    enable_pin=21,
-    step_delay_us=500,
-)
-
-axis.command(True, 200)
-axis.stop()
-motors.shutdown()
+axis = Motor("lift_motor", MotorType.STEPPER, StepDirDriver())
+axis.configure(dict(step_pin=17, dir_pin=3, enable_pin=21, step_delay_us=500))
+axis.init()
+axis.start()
+try:
+    await axis.command(True, 200)
+finally:
+    axis.shutdown()
 ~~~
 
-**MotorController** is a convenient factory for direct applications. PrimitiveRuntime applications can provide a factory that constructs a configured Motor instance.
+Manifest deployments let the node runtime construct the service and own its lifecycle.
 
 ## Lifecycle
 
-The Motor service supports configure, init, start, stop, reset, and status. **initialize()** combines configuration and initialization for direct use.
+The Motor service supports configure, init, start, stop, reset, and status.
 
 Stopping calls the concrete driver stop operation when available. Shutdown releases driver resources.
 
@@ -101,7 +97,7 @@ The canonical **component.yaml** describes:
 | set_speed | step_dir, pwm_bldc |
 | status | all |
 
-PrimitiveRuntime rejects an operation that is not available for the registered implementation.
+The node runtime rejects an operation that is not available for the registered implementation.
 
 ## Tests and safety
 

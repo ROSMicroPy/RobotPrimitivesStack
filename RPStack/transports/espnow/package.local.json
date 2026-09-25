@@ -1,0 +1,23 @@
+{
+  "name": "rp-espnow",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/espnow/__init__.py",
+      "src/rpstack/espnow/__init__.py"
+    ],
+    [
+      "rpstack/espnow/shared.py",
+      "src/rpstack/espnow/shared.py"
+    ],
+    [
+      "rpstack/espnow/transport.py",
+      "src/rpstack/espnow/transport.py"
+    ]
+  ],
+  "deps": []
+}

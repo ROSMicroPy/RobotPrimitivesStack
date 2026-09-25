@@ -7,21 +7,17 @@
       "src/rpstack/__init__.py"
     ],
     [
-      "rpstack/linear_slide/LinearSlide.py",
-      "src/rpstack/linear_slide/LinearSlide.py"
-    ],
-    [
       "rpstack/linear_slide/__init__.py",
       "src/rpstack/linear_slide/__init__.py"
     ],
     [
-      "rpstack/linear_slide/apps.py",
-      "src/rpstack/linear_slide/apps.py"
+      "rpstack/linear_slide/service.py",
+      "src/rpstack/linear_slide/service.py"
     ]
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/interfaces",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/interfaces",
       "archdef"
     ],
     [
@@ -37,7 +33,7 @@
       "archdef"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
       "archdef"
     ]
   ]

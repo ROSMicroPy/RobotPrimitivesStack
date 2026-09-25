@@ -9,6 +9,10 @@
     [
       "rpstack/distance_to_position/__init__.py",
       "src/rpstack/distance_to_position/__init__.py"
+    ],
+    [
+      "rpstack/distance_to_position/service.py",
+      "src/rpstack/distance_to_position/service.py"
     ]
   ],
   "deps": []

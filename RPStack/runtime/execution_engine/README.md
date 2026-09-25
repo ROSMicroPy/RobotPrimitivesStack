@@ -33,7 +33,7 @@ Cancellation bypasses error routing and always removes subscriptions.
 Actions must be cooperative: quick synchronous functions are supported, but
 blocking functions do not become nonblocking merely by being placed in a task.
 Do not put synchronous loops, sleeps, socket reads, or long hardware waits in
-runtime actions. STEP/DIR pulses and VL53L4CD readiness waits now yield.
+runtime actions. STEP/DIR pulses and VL53L4CD readiness waits yield.
 
 
 ## Distributed workflows
@@ -46,5 +46,5 @@ Coordinator transitions emit revisioned `_rp.state` signals for other nodes.
 
 See [entity signals and distributed execution](../signals/README.md) for manifest
 configuration, correlated waits, reset fencing, observations, and failure limits.
-`EventBus` and `engine.events` are aliases for the shared signal implementation;
-there is no separate local-only event system or threaded execution path.
+
+Use `SignalBus` from `rpstack.signals`; each engine exposes its shared bus as `engine.signals`.

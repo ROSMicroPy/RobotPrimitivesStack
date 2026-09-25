@@ -1,9 +1,9 @@
 # Node apps
 
 `RPStack/apps/<app>/src/rpstack/apps/<app>/` is the home for reusable node
-applications, including internal services. `RPStack/services` contains reusable
+applications that orchestrate node capabilities. `RPStack/services` contains reusable
 hardware primitives and capability providers; `RPStack/runtime` contains shared
-infrastructure (HTTP, signals, catalog, execution, shell). `TestApps` holds complete
+lifecycle, signals, discovery, and execution. `RPStack/control` provides HTTP and shell interfaces; `RPStack/transports` provides ESP-NOW and ROS signal adapters. `examples` holds complete
 deployments and hardware examples that assemble these layers.
 
 A node can run multiple apps and primitive services concurrently on its single
@@ -18,7 +18,7 @@ Declare apps in the node manifest, in dependency order:
 "apps": [
   {
     "id": "gateway",
-    "entry_point": "rpstack.apps.meshnet_gtwy:GatewayApp",
+    "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
     "requires": ["http", "catalog"],
     "config": {"http": "http", "catalog": "catalog"}
   }
@@ -37,7 +37,7 @@ monitor to stop primitive services; restart the node to recover a failed residen
 app. Shutdown cancels resident tasks and stops apps in reverse startup order,
 including partially started apps after a boot error.
 
-The linear-slide deployment now runs its motor, distance sensor, position adapter,
+The linear-slide deployment runs its motor, distance sensor, position adapter,
 and slide controller alongside the gateway app. Test interfaces can similarly be
 implemented as apps, reusing `node.submit`, `node.status`, and the shared HTTP
 runtime. Gateway-only nodes may use empty `services` and `components` objects.

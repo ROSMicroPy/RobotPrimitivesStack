@@ -1,10 +1,11 @@
 """Bounded signal link between logical nodes in one Python interpreter."""
-from .model import asyncio
+from rpstack.support import asyncio
 
 
 class InProcessTransport:
     _segments = {}
 
+    # Prepare a bounded mailbox on an entity-scoped in-process link segment.
     def __init__(self, entity, node_id, segment='default', capacity=16):
         if type(capacity) is not int or capacity < 1:
             raise ValueError('capacity must be positive')
@@ -16,6 +17,7 @@ class InProcessTransport:
         self.active = False
         self.dropped = 0
 
+    # Join the link segment while rejecting duplicate node identities.
     async def start(self):
         if self.active:
             return
@@ -25,6 +27,7 @@ class InProcessTransport:
         peers.append(self)
         self.active = True
 
+    # Copy bytes to other local peers, counting drops when their mailboxes are full.
     async def send(self, data):
         if not self.active:
             raise RuntimeError('transport is stopped')
@@ -38,6 +41,7 @@ class InProcessTransport:
             peer.ready.set()
         await asyncio.sleep(0)
 
+    # Wait for and consume the oldest available local message.
     async def recv(self):
         while not self.items:
             await self.ready.wait()
@@ -46,6 +50,7 @@ class InProcessTransport:
             self.ready.clear()
         return data
 
+    # Leave the shared segment and clear this transport's pending messages.
     async def stop(self):
         peers = self._segments.get(self.key, [])
         if self in peers:

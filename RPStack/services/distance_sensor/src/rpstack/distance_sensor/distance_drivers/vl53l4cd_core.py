@@ -5,7 +5,7 @@ VL53L4CD Ultra Lite Driver. No CircuitPython ``I2CDevice`` dependency is used.
 """
 
 import time
-from rpstack.execution_engine import asyncio
+from rpstack.support import asyncio
 
 
 DEFAULT_CONFIGURATION = bytes((
@@ -24,6 +24,7 @@ DEFAULT_CONFIGURATION = bytes((
 class VL53L4CD:
     MODEL_ID = 0xEBAA
 
+    # Bind the I2C bus and validated address without starting hardware measurements.
     def __init__(self, i2c, address=0x29, io_timeout_ms=1000):
         if not 0x08 <= address <= 0x77:
             raise ValueError("address must be a 7-bit I2C address")
@@ -32,10 +33,12 @@ class VL53L4CD:
         self.io_timeout_ms = int(io_timeout_ms)
         self.ranging = False
 
+    # Prefix outgoing bytes with the sensor's 16-bit register address.
     def _write(self, register, data):
         payload = bytes(((register >> 8) & 0xFF, register & 0xFF)) + bytes(data)
         self.i2c.writeto(self.address, payload)
 
+    # Select a register and read bytes using either supported I2C read interface.
     def _read(self, register, length=1):
         pointer = bytes(((register >> 8) & 0xFF, register & 0xFF))
         self.i2c.writeto(self.address, pointer, False)
@@ -45,36 +48,44 @@ class VL53L4CD:
         self.i2c.readfrom_into(self.address, data)
         return data
 
+    # Read one register byte as an unsigned value.
     def _read_u8(self, register):
         return self._read(register, 1)[0]
 
+    # Combine two register bytes into a big-endian unsigned value.
     def _read_u16(self, register):
         data = self._read(register, 2)
         return (data[0] << 8) | data[1]
 
+    # Combine four register bytes into a big-endian unsigned value.
     def _read_u32(self, register):
         data = self._read(register, 4)
         return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]
 
+    # Write the low eight bits of a value to a register.
     def _write_u8(self, register, value):
         self._write(register, bytes((value & 0xFF,)))
 
+    # Split a value into two big-endian register bytes.
     def _write_u16(self, register, value):
         self._write(register, bytes(((value >> 8) & 0xFF, value & 0xFF)))
 
+    # Split a value into four big-endian register bytes.
     def _write_u32(self, register, value):
         self._write(register, bytes(((value >> 24) & 0xFF, (value >> 16) & 0xFF,
                                      (value >> 8) & 0xFF, value & 0xFF)))
 
+    # Yield while waiting for a hardware condition, raising on the I/O deadline.
     async def _wait_until(self, predicate, message):
         start = time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
         while not predicate():
             await asyncio.sleep(0.001)
             now = time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
-            elapsed = time.ticks_diff(now, start) if hasattr(time, "ticks_diff") else now - start
-            if elapsed >= self.io_timeout_ms:
-                raise TimeoutError(message)
+            elapsed_ms = time.ticks_diff(now, start) if hasattr(time, "ticks_diff") else now - start
+            if elapsed_ms >= self.io_timeout_ms:
+                raise RuntimeError(message)
 
+    # Verify the chip, wait for boot, load defaults, calibrate, and configure range timing.
     async def initialize(self, timing_budget_ms=50, inter_measurement_ms=0):
         if self._read_u16(0x010F) != self.MODEL_ID:
             raise RuntimeError("VL53L4CD model ID did not match 0xEBAA")
@@ -91,15 +102,18 @@ class VL53L4CD:
         self.set_range_timing(timing_budget_ms, inter_measurement_ms)
         return True
 
+    # Interpret the interrupt polarity to determine whether a measurement is ready.
     @property
     def data_ready(self):
         polarity = 0 if (self._read_u8(0x0030) & 0x10) else 1
         return (self._read_u8(0x0031) & 0x01) == polarity
 
+    # Read the sensor's current distance register in millimetres.
     @property
     def distance_mm(self):
         return self._read_u16(0x0096)
 
+    # Translate the chip's raw range code into the public status convention.
     @property
     def range_status(self):
         raw = self._read_u8(0x0089) & 0x1F
@@ -107,6 +121,7 @@ class VL53L4CD:
                     9, 13, 255, 255, 255, 255, 10, 6, 255, 255, 11, 12)
         return statuses[raw] if raw < len(statuses) else 255
 
+    # Collect distance, quality status, uncertainty, and optical rates in documented units.
     def read_result(self):
         return {
             "range_status": self.range_status,
@@ -116,6 +131,7 @@ class VL53L4CD:
             "ambient_rate_kcps": self._read_u16(0x0090) * 8,
         }
 
+    # Validate timing settings and convert them into oscillator-dependent register values.
     def set_range_timing(self, timing_budget_ms, inter_measurement_ms=0):
         timing_budget_ms = int(timing_budget_ms)
         inter_measurement_ms = int(inter_measurement_ms)
@@ -138,6 +154,7 @@ class VL53L4CD:
         self._write_u16(0x005E, self._encode_timeout(timing_us, macro_period_us * 16))
         self._write_u16(0x0061, self._encode_timeout(timing_us, macro_period_us * 12))
 
+    # Encode a timing interval in the sensor's mantissa-and-exponent register format.
     @staticmethod
     def _encode_timeout(timing_us, macro_period):
         timing_us <<= 12
@@ -149,17 +166,21 @@ class VL53L4CD:
             exponent += 1
         return (exponent << 8) | (value & 0xFF)
 
+    # Select continuous or timed ranging from the configured inter-measurement period.
     def start_ranging(self):
         self._write_u8(0x0087, 0x21 if self._read_u32(0x006C) == 0 else 0x40)
         self.ranging = True
 
+    # Stop hardware ranging and mirror that state locally.
     def stop_ranging(self):
-        self._write_u8(0x0087, 0x80)
+        self._write_u8(0x0087, 0x00)
         self.ranging = False
 
+    # Acknowledge the completed measurement at the sensor.
     def clear_interrupt(self):
         self._write_u8(0x0086, 0x01)
 
+    # Program a validated I2C address before switching subsequent bus accesses to it.
     def set_address(self, new_address):
         if not 0x08 <= new_address <= 0x77:
             raise ValueError("address must be a 7-bit I2C address")

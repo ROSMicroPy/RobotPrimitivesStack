@@ -26,7 +26,7 @@ distance_observer:
   version: 1
 ~~~
 
-PrimitiveRuntime passes the bound provider to the constructor using the **distance_observer** role name.
+NodeRuntime passes the bound provider to the constructor using the **distance_observer** role name.
 
 ## Provided capability
 

@@ -172,6 +172,10 @@
         },
         "status": {
           "type": "string"
+        },
+        "calibrate": {
+          "type": "string",
+          "description": "Optional explicit calibration hook; never called by init/start."
         }
       },
       "additionalProperties": false

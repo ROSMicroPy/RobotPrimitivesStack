@@ -36,19 +36,13 @@ The driver performs direct **writeto** and **readfrom** operations and does not 
 ## Capability API
 
 ~~~python
-sample = sensor.distance()
+sample = await sensor.distance()
 
 print(sample.value)            # metres
 print(sample.unit)             # "m"
 print(sample.reference_frame)
 print(sample.valid)
 print(sample.quality)
-~~~
-
-The millimetre convenience API is:
-
-~~~python
-distance_mm = sensor.read_distance_mm()
 ~~~
 
 ## Lifecycle
@@ -62,33 +56,27 @@ The service supports:
 - reset
 - status
 
-**initialize()** combines configuration, initialization, and startup for direct use.
-
 ## Direct construction
 
 ~~~python
-from rpstack.distance_sensor import DistanceSensorController
+from rpstack.distance_sensor import DistanceSensor
+from rpstack.distance_sensor.distance_drivers.vl53l4cd import VL53L4CDDriver
 
-sensors = DistanceSensorController()
-
-tof = sensors.create_sensor(
-    "lift_tof",
-    "vl53l4cd",
-    i2c=i2c,
-    address=0x29,
-    timing_budget=50,
-    reference_frame="lift.sensor",
-)
-
-sample = tof.distance()
-sensors.shutdown()
+sensor = DistanceSensor("lift_tof", VL53L4CDDriver(), reference_frame="lift.sensor")
+sensor.configure(dict(i2c=i2c, address=0x29, timing_budget=50))
+await sensor.init()
+sensor.start()
+try:
+    sample = await sensor.distance()
+finally:
+    sensor.shutdown()
 ~~~
 
-**DistanceSensorController** is a convenient factory for direct applications. PrimitiveRuntime applications can supply a factory that constructs the same service and lets the supervisor own its lifecycle.
+Run this inside an async function. Manifest deployments let the node runtime construct the service and own its lifecycle.
 
 ## Polling and alerts
 
-A sensor can be initialized with **poll_frequency_hz** on systems with thread support. Polling updates the most recent reading and evaluates registered alerts.
+Configure **poll_frequency_hz** to enable cooperative polling in the service’s async `run()` task. Polling updates the most recent reading and evaluates registered alerts.
 
 ~~~python
 sensor.add_alert(
@@ -100,14 +88,13 @@ sensor.add_alert(
 
 An alert is removed after firing unless its callback returns **True**.
 
-On constrained targets without background threads, poll from the device event loop or an RPStack behavior.
+A zero polling frequency selects on-demand readings through `await sensor.distance()`.
 
 ## Manifest operations
 
 The canonical **component.yaml** declares:
 
 - observe_distance
-- read_distance_mm
 - set_active
 - status
 

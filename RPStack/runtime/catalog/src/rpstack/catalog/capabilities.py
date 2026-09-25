@@ -1,10 +1,9 @@
 """
 MicroPython-friendly capability reconciliation for modular robot components.
 
-The model is intentionally small:
-- short advertisements still use compact service ids
-- long profiles carry capability details inside `meta`
-- matching works on dictionaries/lists to avoid heavy dependencies
+These physical composition models build optional public composition metadata.
+They are separate from the catalog signal protocol and runtime service binding.
+Matching uses dictionaries and lists to avoid heavyweight dependencies.
 """
 
 try:
@@ -53,9 +52,11 @@ def _stable_text_hash(text):
     return "%08x" % value
 
 
-class ComponentNode:
+class PhysicalComponent:
     """Describe a single hardware or sensing component in a composite unit."""
 
+    # Describe one physical component's mounts, capabilities, subcomponents, and diagnostic
+    # confidence.
     def __init__(
         self,
         node_id,
@@ -120,6 +121,7 @@ class ComponentNode:
 class CompositeUnit:
     """Group a set of component nodes into one advertised assembly."""
 
+    # Group subunits under a shared identity and mounting point.
     def __init__(self, unit_id, mount_point=None, subunits=None):
         self.unit_id = str(unit_id)
         self.mount_point = mount_point
@@ -222,6 +224,7 @@ class CompositeUnit:
 class RobotRequirements:
     """Define the desired roles, behaviors, and profiles for a robot."""
 
+    # Collect the roles, behaviors, and constraints used to assess a robot's composition.
     def __init__(
         self,
         required_roles=None,
@@ -242,6 +245,7 @@ class RobotRequirements:
 class CapabilityMatcher:
     """Match a composite unit against a `RobotRequirements` definition."""
 
+    # Retain the requirements against which candidate capabilities will be evaluated.
     def __init__(self, requirements):
         self.requirements = requirements
 
@@ -643,81 +647,3 @@ def build_mount_claim(component, location_id=None, parent_location_id=None, sour
         ),
         "state": component_to_state(component),
     }
-
-
-def example_requirements():
-    """Return a small sample requirement set for demos and tests."""
-    return RobotRequirements(
-        required_roles=[
-            {"role": "shoulder", "dof": 2, "interfaces": ["position"]},
-            {"role": "elbow", "dof": 1, "interfaces": ["position"]},
-            {"role": "gripper", "dof": 1, "interfaces": ["position"]},
-        ],
-        optional_roles=[
-            {"role": "upper_arm_orientation", "sensor": "imu"},
-            {"role": "lower_arm_orientation", "sensor": "imu"},
-        ],
-        behavior_definitions={
-            "gesture": {"requires": ["shoulder"]},
-            "can_reach": {"requires": ["shoulder", "elbow"]},
-            "can_pick": {"requires": ["shoulder", "elbow", "gripper"]},
-            "pose_estimation_partial": {
-                "requires_any": ["upper_arm_orientation", "lower_arm_orientation"],
-            },
-        },
-        personality_profiles=[
-            {
-                "name": "full_manipulator",
-                "priority": 100,
-                "required_behaviors": ["can_reach", "can_pick"],
-            },
-            {
-                "name": "gestural_arm",
-                "priority": 50,
-                "requires_roles": ["shoulder"],
-                "excluded_behaviors": ["can_pick"],
-            },
-            {
-                "name": "sensor_only",
-                "priority": 10,
-                "requires_any_role": ["upper_arm_orientation", "lower_arm_orientation"],
-            },
-        ],
-    )
-
-
-def example_partial_arm():
-    """Construct a sample partial arm assembly used in the demo."""
-    shoulder = ComponentNode(
-        node_id="shoulder_joint",
-        node_type="joint_controller",
-        mount_point="left_shoulder",
-        provided_roles=["shoulder"],
-        control_interfaces=["position", "stop"],
-        joints=[{"dof": 2, "axis": ["pitch", "yaw"], "limits": [-90, 90]}],
-        calibration_state="ready",
-        confidence=95,
-    )
-    upper_imu = ComponentNode(
-        node_id="upper_arm_imu",
-        node_type="sensor",
-        mount_point="upper_arm",
-        provided_roles=["upper_arm_orientation"],
-        sensors=[{"type": "imu", "rate_hz": 50}],
-        calibration_state="ready",
-        confidence=88,
-    )
-    lower_imu = ComponentNode(
-        node_id="lower_arm_imu",
-        node_type="sensor",
-        mount_point="lower_arm",
-        provided_roles=["lower_arm_orientation"],
-        sensors=[{"type": "imu", "rate_hz": 50}],
-        calibration_state="ready",
-        confidence=82,
-    )
-    return CompositeUnit(
-        unit_id="left_arm",
-        mount_point="left_shoulder_root",
-        subunits=[shoulder, upper_imu, lower_imu],
-    )

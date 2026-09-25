@@ -1,29 +1,14 @@
 """Small, versioned signal envelopes shared by every transport."""
-try:
-    import ujson as json
-except ImportError:
-    import json
-try:
-    import asyncio
-except ImportError:
-    import uasyncio as asyncio
+from rpstack.support import json
 import os
-import time
 
 
-def now_ms():
-    return time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
-
-
-def elapsed(start):
-    now = now_ms()
-    return time.ticks_diff(now, start) if hasattr(time, "ticks_diff") else now - start
-
-
+# Generate a random hexadecimal identity for a boot, run, or correlation.
 def nonce():
     return "".join("{:02x}".format(byte) for byte in os.urandom(8))
 
 
+# Convert supported objects recursively into finite JSON-compatible values.
 def plain(value):
     if hasattr(value, "as_dict"):
         return plain(value.as_dict())
@@ -43,6 +28,7 @@ FIELDS = {"v": "version", "e": "entity", "n": "source", "b": "boot",
           "t": "target", "h": "hops", "l": "ttl_ms"}
 
 
+# Enforce signal identity, envelope, routing, lifetime, and payload constraints.
 def validate(signal):
     if not isinstance(signal, dict) or type(signal.get("version")) is not int or signal.get("version") != 1:
         raise ValueError("expected rp.signal/v1")
@@ -61,10 +47,12 @@ def validate(signal):
     return signal
 
 
+# Build the source/boot/sequence identity used to distinguish individual signals.
 def identity(signal):
     return "{}/{}/{}".format(signal["source"], signal["boot"], signal["sequence"])
 
 
+# Validate a signal, shorten its envelope keys, and enforce the encoded byte limit.
 def encode(signal, limit=2048):
     validate(signal)
     wire = {short: plain(signal.get(long)) for short, long in FIELDS.items()}
@@ -74,6 +62,7 @@ def encode(signal, limit=2048):
     return data
 
 
+# Decode the compact wire envelope and validate the reconstructed signal.
 def decode(data, limit=2048):
     if isinstance(data, str):
         data = data.encode("utf-8")

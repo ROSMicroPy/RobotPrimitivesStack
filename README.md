@@ -2,13 +2,19 @@
 
 Robot Primitives Software Stack, or **RPStack**, is a framework for building modular robotic devices from small, reusable capabilities.
 
-A device is assembled from services such as a motor controller, distance sensor, position observer, camera, gripper, or linear actuator. Each service describes itself through a manifest. The Primitive Runtime reads those manifests, connects compatible services, starts them in dependency order, exposes their supported operations, and manages their lifecycle.
+A device is assembled from services such as a motor controller, distance sensor, position observer, camera, gripper, or linear actuator. Each service describes itself through a manifest. The Node Runtime reads those manifests, connects compatible services, starts them in dependency order, exposes their supported operations, and manages their lifecycle.
 
 RPStack is designed for constrained embedded systems, especially MicroPython targets, while keeping the same architectural model usable in host simulations, test tools, ROS 2 bridges, and web interfaces.
 
+## Documentation
+
+The [documentation site](pages/README.md) covers getting started, nodes, signals, apps, runtime and services, deployment, and the linear-slide APIs. Source pages live in `pages/content/`; build and preview instructions are in `pages/README.md`.
+
+The [architecture guide](RPStack/ARCHITECTURE.md) describes package responsibilities, dependency boundaries, and terminology.
+
 ## Run the manifest-driven test node
 
-The [linear slide test app](TestApps/linear_slide/README.md) now boots from one
+The [linear slide test app](examples/linear_slide/README.md) boots from one
 `rp.node/v1` manifest. It declares hardware resources, service instances, driver
 choices, runtime listeners, and optional signal-driven workflows. The generic
 boot entry only calls `run_manifest(path)`.
@@ -22,42 +28,44 @@ below use `await` inside an async application entry point.
 ## Robot-wide signals
 
 [Entity-scoped signals](RPStack/runtime/signals/README.md) connect local tasks,
-[ESP-NOW mesh](RPStack/runtime/meshnet/README.md), and
-[ROS messaging](RPStack/runtime/ros_bridge/README.md). Manifest workflows can
+[ESP-NOW mesh](RPStack/transports/espnow/README.md), and
+[ROS messaging](RPStack/transports/ros_signals/README.md). Manifest workflows can
 coordinate actions across nodes of one robot. Run the three-node
-[Robie1 simulation](TestApps/robie1/README.md) without hardware to explore it.
+[Robie1 simulation](examples/robie1/README.md) without hardware to explore it.
 
 ## The basic idea
 
-A robotic device is divided into four layers:
+A robotic device is described through four conceptual layers. These explain responsibilities; they are not strict Python import tiers:
 
-1. **Device Platform** supplies the firmware and low-level hardware environment.
-2. **Primitive Runtime** discovers, connects, starts, monitors, and stops services.
-3. **Primitive Services** expose reusable hardware-independent capabilities.
-4. **Behavior Graph** coordinates those capabilities into useful robot behavior.
+1. **Platform** supplies the firmware and low-level hardware environment.
+2. **Node Runtime** discovers, connects, starts, monitors, and stops services.
+3. **Services** expose reusable hardware-independent capabilities.
+4. **Applications and workflows** coordinate those capabilities into useful robot behavior.
 
-Bridges connect the internal RPStack model to external systems such as ROS 2, Lighthouse Mesh, REST, WebSocket, or MQTT.
+Bridges connect the internal RPStack model to external systems such as ROS 2 and ESP-NOW; HTTP and the shell expose node controls.
 
 ~~~mermaid
 flowchart TB
-    BG["Behavior Graph"]
-    PS["Primitive Services"]
-    PR["Primitive Runtime"]
-    DP["Device Platform"]
+    BG["Applications and workflows"]
+    PS["Services"]
+    PR["Node Runtime"]
+    DP["Platform"]
 
     BG --> PS
     PS --> PR
     PR --> DP
 ~~~
 
+The repository groups separate these responsibilities further so transports, control interfaces, platform helpers, and telemetry remain independently installable. See the [architecture guide](RPStack/ARCHITECTURE.md) for package boundaries and terminology.
+
 A helpful way to think about these layers is:
 
 | Layer | Question it answers |
 |---|---|
 | Device Platform | What can this hardware run? |
-| Primitive Runtime | How are services assembled and managed? |
+| Node Runtime | How are services assembled and managed? |
 | Primitive Services | What can this device do? |
-| Behavior Graph | What should the device do next? |
+| Applications and workflows | What should the device do next? |
 | Bridges | How does the device communicate with other systems? |
 
 ## A first example
@@ -97,30 +105,22 @@ All stack components live under the **RPStack** directory.
 
 ~~~text
 RPStack/
-├── runtime/
-│   ├── primitive_runtime/
-│   ├── execution_engine/
-│   ├── micropyserver/
-│   ├── bootmgr/
-│   ├── env/
-│   ├── opentelemetry/
-│   └── shell/
-├── services/
-│   ├── interfaces/
-│   ├── distance_sensor/
-│   ├── distance_to_position/
-│   ├── motor_control/
-│   └── linear_slide/
+├── foundation/{interfaces,support}/
+├── runtime/{node_runtime,execution_engine,signals,catalog}/
+├── transports/{espnow,ros_signals}/
+├── control/{http,shell}/
+├── platform/{bootmgr,env}/
+├── observability/opentelemetry/
+├── services/{distance_sensor,distance_to_position,motor_control,linear_slide}/
+├── apps/{robot_gateway,slide_commands}/
 └── spec/
-    ├── SERVICE_MANIFEST.md
-    └── service-manifest.schema.json
-
-RPStack_WebTester/
+examples/                  # Device deployments and host simulations
+RPStack_WebTester/         # Web client submodule
 ~~~
 
 The top-level **RPStack_WebTester** entry is a Git submodule containing a dynamic web-form client. It demonstrates form rendering for service interaction. Operation and test descriptions in each service manifest provide the data model for manifest-driven interfaces.
 
-## Layer 1: Device Platform
+## Layer 1: Platform
 
 The Device Platform is the compiled firmware environment installed on a board. It provides the facilities required by the runtime and services.
 
@@ -131,7 +131,7 @@ Typical platform contents include:
 - native C or C++ drivers
 - an RTOS or hardware abstraction layer
 - ROSMicroPy
-- Lighthouse Mesh
+- ESP-NOW networking
 - observability support
 - networking, storage, and device-specific extensions
 
@@ -145,12 +145,12 @@ rp-platform-nrf9151-v1.4.0.bin
 
 The platform provides the execution environment. Installed services and device configuration determine the capabilities of a particular node.
 
-## Layer 2: Primitive Runtime
+## Layer 2: Runtime
 
-The Primitive Runtime is the common service-management layer. Its core implementation is under:
+The Node Runtime is the common service-management layer. Its core implementation is under:
 
 ~~~text
-RPStack/runtime/primitive_runtime/
+RPStack/runtime/node_runtime/
 ~~~
 
 The runtime provides:
@@ -203,7 +203,7 @@ If startup fails after some services are running, the supervisor stops the servi
 The following example shows the shape of a device assembly:
 
 ~~~python
-from rpstack.primitive_runtime import ServiceManifest, ServiceSupervisor
+from rpstack.node_runtime import ServiceManifest, ServiceSupervisor
 
 runtime = ServiceSupervisor()
 
@@ -291,7 +291,7 @@ bindings={
 
 The runtime reports an error if no provider matches, a binding is incompatible, multiple providers are ambiguous, or the dependency graph contains a cycle.
 
-## Layer 3: Primitive Services
+## Layer 3: Services
 
 A Primitive Service is the unit managed by the runtime. Every service has:
 
@@ -371,7 +371,7 @@ A capability interface describes what a service can do without naming a hardware
 Capability contracts are defined in:
 
 ~~~text
-RPStack/services/interfaces/
+RPStack/foundation/interfaces/
 ~~~
 
 The initial interface set includes:
@@ -439,7 +439,7 @@ Capability boundaries use SI units:
 - linear velocity: metres per second
 - angular velocity: radians per second
 
-Drivers may use native units internally. Conversion occurs before data crosses the capability interface. Convenience operations such as **read_distance_mm** and **goto_position_mm** can be exposed when they are useful, but other services bind to the canonical interface.
+Drivers may use native units internally. Conversion occurs before data crosses the capability interface; services exchange canonical measurement samples.
 
 ## Service lifecycle
 
@@ -470,7 +470,7 @@ Every service package contains a **component.yaml** file. This file is the canon
 
 The manifest is a generic specification used by:
 
-- the Primitive Runtime;
+- the Node Runtime;
 - host-side validation;
 - device assembly tools;
 - CLI and debugging tools;
@@ -704,7 +704,7 @@ move_to_target:
 The test runner refuses to execute manual or hardware tests unless approval is supplied. Test steps can assert an exact return value or selected fields in a returned object or measurement sample.
 
 ~~~python
-from rpstack.primitive_runtime import ManifestTestRunner
+from rpstack.node_runtime import ManifestTestRunner
 
 runner = ManifestTestRunner(runtime)
 
@@ -748,7 +748,7 @@ Stock MicroPython includes JSON support but generally does not include a YAML pa
 Generate a device JSON manifest with:
 
 ~~~bash
-python RPStack/runtime/primitive_runtime/tools/compile_manifest.py     RPStack/services/linear_slide/component.yaml     linear_slide.component.json
+python RPStack/runtime/node_runtime/tools/compile_manifest.py     RPStack/services/linear_slide/component.yaml     linear_slide.component.json
 ~~~
 
 The compiler loads and validates the YAML through the same manifest model used by the runtime before writing compact JSON.
@@ -807,7 +807,7 @@ A bridge adapts RPStack capabilities, operations, and signals to an external tra
 Possible bridges include:
 
 - ROS 2
-- Lighthouse Mesh
+- ESP-NOW networking
 - REST
 - WebSocket
 - MQTT
@@ -815,7 +815,7 @@ Possible bridges include:
 ~~~mermaid
 flowchart LR
     SERVICE["Primitive Service"]
-    RUNTIME["Primitive Runtime"]
+    RUNTIME["Node Runtime"]
     BRIDGE["Bridge"]
     EXTERNAL["External system"]
 
@@ -826,9 +826,11 @@ flowchart LR
 
 A bridge owns transport-specific concepts such as ROS messages, HTTP routes, or mesh packets. Primitive Services remain focused on their capabilities and do not require transport-specific code.
 
-## Layer 4: Behavior Graph
+## Layer 4: Applications and workflows
 
-A Behavior Graph coordinates service operations and signals into a robot task.
+Applications and workflows coordinate service operations and signals into robot behavior.
+
+The following list describes the broader behavior model. The current workflow engine supports operation/signal steps and success/error transitions; general parallel branches and retry policies remain design goals.
 
 A behavior can describe:
 
@@ -867,7 +869,7 @@ A deployed node consists of:
 
 ~~~text
 Device Platform
-+ Primitive Runtime
++ Node Runtime
 + Primitive Service packages
 + device-specific service registration and configuration
 + optional Behavior Definitions
@@ -888,7 +890,7 @@ A device assembly normally identifies:
 
 ## Component directory layout
 
-Every immediate component under `RPStack/runtime` and `RPStack/services` uses this package-oriented structure:
+Each independently installable package in the responsibility groups above uses this structure:
 
 ~~~text
 component/
@@ -906,7 +908,7 @@ Use the following workflow when adding an individual driver, adapter, or composi
 
 1. Create a directory under **RPStack/services**.
 2. Implement the service lifecycle.
-3. Implement or consume capability interfaces from **services/interfaces**.
+3. Implement or consume capability interfaces from **foundation/interfaces**.
 4. Keep hardware-model code under the service package implementation directory.
 5. Add a canonical **component.yaml** manifest.
 6. Declare configuration, capabilities, operations, signals, and tests.
@@ -929,10 +931,10 @@ A service manifest should be complete enough that a reader or tool can answer:
 
 ## Testing the stack
 
-Run the Primitive Runtime tests from the repository root:
+Run the Node Runtime tests from the repository root:
 
 ~~~bash
-python -m unittest discover     -s RPStack/runtime/primitive_runtime/test     -v
+python -m unittest discover     -s RPStack/runtime/node_runtime/test     -v
 ~~~
 
 Run the linear-slide service tests:
@@ -944,13 +946,13 @@ python -m unittest discover     -s RPStack/services/linear_slide/test     -v
 Compile Python sources:
 
 ~~~bash
-python -m compileall -q     RPStack/runtime/primitive_runtime/src     RPStack/services
+python -m compileall -q     RPStack/runtime/node_runtime/src     RPStack/services
 ~~~
 
 Validate and compile an individual manifest:
 
 ~~~bash
-python RPStack/runtime/primitive_runtime/tools/compile_manifest.py     RPStack/services/distance_sensor/component.yaml     distance_sensor.component.json
+python RPStack/runtime/node_runtime/tools/compile_manifest.py     RPStack/services/distance_sensor/component.yaml     distance_sensor.component.json
 ~~~
 
 Host tests use fake hardware and capability implementations. Tests that require physical motion remain declared in the manifest and must be run with explicit operator approval.
@@ -1034,21 +1036,17 @@ RPStack follows these principles:
 
 - **Manifest guide:** RPStack/spec/SERVICE_MANIFEST.md
 - **Manifest JSON Schema:** RPStack/spec/service-manifest.schema.json
-- **Primitive Runtime:** RPStack/runtime/primitive_runtime/
-- **Capability interfaces:** RPStack/services/interfaces/
+- **Node Runtime:** RPStack/runtime/node_runtime/
+- **Capability interfaces:** RPStack/foundation/interfaces/
 - **Linear-slide example:** RPStack/services/linear_slide/
 
 ## Node applications and robot discovery
 
-Reusable node apps now live in [RPStack/apps](RPStack/apps/README.md), above
-primitive services and shared runtime infrastructure. Multiple apps can run
-concurrently on one node. LighthouseMesh's distributed catalog and REST gateway
-are integrated as [catalog](RPStack/runtime/catalog/README.md) and
-[meshnet_gtwy](RPStack/apps/meshnet_gtwy/README.md). RobotArchitect has a new
-**System** view for live nodes, apps, capabilities, status and recent signals.
+[Node apps](RPStack/apps/README.md) orchestrate services through the runtime.
+Multiple apps can run concurrently on one node. The
+[catalog](RPStack/runtime/catalog/README.md) discovers robot-wide node profiles,
+and the [robot gateway](RPStack/apps/robot_gateway/README.md) exposes them over HTTP.
 
 The linear-slide deployment includes the gateway; a standalone
-[gateway node](TestApps/mesh_gateway/README.md) is also provided. Enable catalog
-and network signal routes on every participating node. The LighthouseMesh
-submodule is replaced by first-party packages. The original sources are available
-in Git history; no legacy checkout or source archive is required.
+[gateway node](examples/mesh_gateway/README.md) is also provided. Enable catalog
+and network signal routes on every participating node.

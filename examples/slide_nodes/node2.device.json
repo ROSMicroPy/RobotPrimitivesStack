@@ -1,0 +1,43 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "move-once",
+  "identity": {
+    "entity": "SlideDemo",
+    "node": "node2"
+  },
+  "components": {},
+  "services": {},
+  "signals": {
+    "routes": [
+      "local",
+      "link"
+    ],
+    "transports": [
+      {
+        "id": "link",
+        "entry_point": "rpstack.espnow.shared:SharedEspNowTransport",
+        "config": {
+          "channel": 6
+        }
+      }
+    ]
+  },
+  "apps": [
+    {
+      "id": "move",
+      "entry_point": "rpstack.apps.slide_commands:MoveOnceApp",
+      "mode": "oneshot",
+      "config": {
+        "target_node": "node1",
+        "position_mm": 100,
+        "timeout_s": 30
+      }
+    }
+  ],
+  "runtime": [
+    {
+      "id": "catalog",
+      "entry_point": "rpstack.catalog:Catalog"
+    }
+  ]
+}

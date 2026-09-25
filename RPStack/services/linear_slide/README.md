@@ -20,12 +20,19 @@ slide = LinearSlide(
 
 ## Control behavior
 
-`await slide.init()` moves 1,000 steps with direction True, measures the
-position change, then moves 1,000 steps with direction False and measures
-again. It infers `positive_direction` and `steps_per_mm` from these observations.
-Both moves must produce valid, nonzero changes in opposite directions.
-Initialization moves the hardware; provide clearance for both calibration
-moves. Target limits cannot bound this initial travel before scale is known.
+`slide.init()` is stationary. Call `await slide.calibrate(steps=1000)` explicitly
+to move that many steps in each direction and
+measure before/between/after the runs. The runtime calls this through its optional
+`lifecycle.calibrate` phase and reserves the slide and its dependencies.
+It infers `positive_direction` and `steps_per_mm`, and returns a report with the
+three positions and signed displacements. Too little motion, inconsistent return
+travel, invalid readings, or same-direction responses fail calibration. A failed
+calibration leaves target moves disabled.
+
+Calibration moves hardware. Choose a step count with clearance in both directions;
+position limits cannot bound this test before the scale is known. `max_steps`
+bounds each calibration leg. Calibration is in-memory and must be repeated after
+service reset, restart, or changing mechanics/microstep settings.
 
 `await slide.move_to(target)` requires successful calibration and:
 
@@ -51,7 +58,8 @@ The returned value is the final PositionSample in metres. `status()` includes
 `calibrated`, `positive_direction`, and `steps_per_mm`.
 
 ~~~python
-await slide.init()
+slide.init()
+await slide.calibrate(steps=1000)
 final_sample = await slide.move_to(0.100)
 print(final_sample.value)
 ~~~
@@ -63,7 +71,6 @@ print(final_sample.value)
 | positive_direction | Initial direction setting; replaced by calibration |
 | tolerance_m | Allowed target error |
 | max_steps | Maximum increments attempted by one target move |
-| steps_per_sample | Legacy setting accepted for compatibility; calibrated batch sizes take precedence |
 | no_motion_sample_limit | Consecutive batches without observed motion before failure |
 | min_position_m | Optional lower travel limit |
 | max_position_m | Optional upper travel limit |
@@ -72,9 +79,9 @@ Travel limits and max_steps are independent safeguards.
 
 ## Lifecycle and ownership
 
-The composite supports configure, init, start, stop, reset, and status.
+The composite supports configure, init, calibrate, start, stop, reset, and status.
 
-Dependencies injected by PrimitiveRuntime remain owned by the supervisor. **shutdown()** stops motion but does not shut down injected services. This allows a sensor or motor capability to be shared safely.
+Dependencies injected by NodeRuntime remain owned by the supervisor. **shutdown()** stops motion but does not shut down injected services. This allows a sensor or motor capability to be shared safely.
 
 ## Operations
 
@@ -82,11 +89,10 @@ The canonical **component.yaml** declares:
 
 | Operation | Purpose |
 |---|---|
+| calibrate | Explicit forward/reverse distance calibration |
 | observe_position | Return the current PositionSample |
 | move_to | Move to an absolute target in metres |
 | stop | Cancel and stop motion |
-| get_position_mm | Return integer millimetres |
-| goto_position_mm | Move using an integer millimetre target |
 
 Applications and bridges should use the SI-based operations for capability interoperability. Millimetre operations are convenient at device and user-interface boundaries.
 
@@ -122,7 +128,7 @@ The hardware test requires explicit approval and verification of physical cleara
 ## Hardware test application
 
 The combined stepper and VL53L4CD device application is stored at
-`TestApps/linear_slide/main.py`. It uses step GPIO 17, direction GPIO 3,
+`examples/linear_slide/main.py`. It uses step GPIO 17, direction GPIO 3,
 enable GPIO 21, I2C SCL GPIO 4, and I2C SDA GPIO 5.
 
 ## Tests

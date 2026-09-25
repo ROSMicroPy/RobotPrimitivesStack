@@ -1,0 +1,32 @@
+{
+  "name": "rp-mesh-gateway-node",
+  "version": "0.1.1",
+  "urls": [
+    [
+      "main.py",
+      "main.py"
+    ],
+    [
+      "mesh_gateway_manifest.json",
+      "manifest.json"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/node_runtime",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/transports/espnow",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/platform/env",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/apps/robot_gateway",
+      "archdef"
+    ]
+  ]
+}

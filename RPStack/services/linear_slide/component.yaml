@@ -31,18 +31,42 @@ service:
     positive_direction: {type: boolean, default: true}
     tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
     max_steps: {type: integer, minimum: 1, default: 10000}
-    steps_per_sample: {type: integer, minimum: 1, default: 1}
     no_motion_sample_limit: {type: integer, minimum: 1, default: 10}
     min_position_m: {type: number, required: false, unit: m}
     max_position_m: {type: number, required: false, unit: m}
   lifecycle:
     configure: configure
     init: init
+    calibrate: calibrate
     start: start
     stop: stop
     reset: reset
     status: status
   operations:
+    set_range:
+      method: set_range
+      description: Set absolute target bounds until restart, without moving.
+      arguments:
+        min_mm: {type: number, required: true, unit: mm}
+        max_mm: {type: number, required: true, unit: mm}
+      returns: {type: object}
+      concurrency: exclusive
+      rest: {method: POST, path: /api/linear-slide/range}
+    get_range:
+      method: get_range
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+      rest: {method: GET, path: /api/linear-slide/range}
+    calibrate:
+      method: calibrate
+      description: Explicit distance calibration with uninterrupted forward/reverse runs and stationary samples.
+      arguments:
+        steps: {type: integer, minimum: 1, default: 1000}
+      returns: {type: object}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
     observe_position:
       method: position
       description: Read current linear position in metres.
@@ -84,23 +108,6 @@ service:
       returns: {type: object}
       concurrency: exclusive
       rest: {method: POST, path: /api/linear-slide/jog}
-    get_position_mm:
-      method: get_position
-      description: Compatibility operation returning integer millimetres.
-      arguments: {}
-      returns: {type: integer, unit: mm}
-      concurrency: read_only
-      rest: {method: GET, path: /api/linear-slide/position-mm}
-    goto_position_mm:
-      method: goto_position
-      description: Compatibility operation accepting integer millimetres.
-      arguments:
-        position_mm: {type: integer, required: true, default: 100, unit: mm}
-      returns: {type: integer, unit: mm}
-      concurrency: exclusive
-      cancellable: true
-      safe_state: stop
-      rest: {method: POST, path: /api/linear-slide/goto-position-mm}
   signals:
     provides:
       motion.started: {payload: object}
