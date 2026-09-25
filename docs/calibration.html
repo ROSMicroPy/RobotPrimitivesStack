@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calibration · RPStack</title><meta name="description" content="RPStack documentation: Calibration">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html" aria-current="page">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Guides</div><article><h1 id="calibration">Calibration<a class="headerlink" href="#calibration" title="Permanent link">¶</a></h1>
+<p>Calibration determines a service's installation-specific parameters. It is an explicit lifecycle phase, distinct from initialization. The slide needs a measured scale and electrical direction before accepting absolute moves.</p>
+<h2 id="slide-distance-test">Slide distance test<a class="headerlink" href="#slide-distance-test" title="Permanent link">¶</a></h2>
+<p>Use <code>slide_nodes.calibrate(steps=1000)</code> to calibrate the slide. The service performs:</p>
+<ol>
+<li>Read the starting position.</li>
+<li>Run the requested pulse count in electrical direction <code>True</code>, then read position.</li>
+<li>Run the same count in direction <code>False</code>, then read position.</li>
+<li>Check displacement size, opposite signs, and forward/reverse agreement.</li>
+<li>Compute <code>steps_per_mm</code> and which electrical direction increases position.</li>
+</ol>
+<pre class="mermaid">flowchart LR
+    P0[Starting observation] --&gt; F[Forward pulse batch]
+    F --&gt; P1[Middle observation]
+    P1 --&gt; R[Reverse pulse batch]
+    R --&gt; P2[Final observation]
+    P2 --&gt; Check{Checks pass?}
+    Check --&gt;|Yes| Ready[Store scale and direction]
+    Check --&gt;|No| Failed[Leave target moves disabled]
+</pre>
+<p>The provider prints start/end positions for each leg in mm. A successful report contains <code>positions_mm</code>, <code>forward_mm</code>, <code>reverse_mm</code>, <code>steps_each_direction</code>, <code>steps_per_mm</code>, and <code>positive_direction</code>. A failed attempt clears the previous calibration. No automatic motion retry is performed.</p>
+<h2 id="noise-and-measurement-scale">Noise and measurement scale<a class="headerlink" href="#noise-and-measurement-scale" title="Permanent link">¶</a></h2>
+<p>The current algorithm takes one reading at each boundary. At the far end of the tested slide, stationary readings varied by several millimetres while a calibration leg moved only a few millimetres. This can produce disagreement or a misleading scale even when the mechanism visibly moves.</p>
+<p>Measure repeatability before increasing travel:</p>
+<pre><code class="language-python">for _ in range(10):
+    print(slide_nodes.position()['value'] * 1000)
+</code></pre>
+<p>Keep the carriage stationary during the set. Compare readings near and far from the sensor. Check that the target remains in view throughout travel. More calibration steps increase displacement but also physical travel; the current target range does not limit these legs.</p>
+<p>Multi-sample stationary averaging and noise-aware acceptance are potential improvements, not current behavior. Do not interpret a successful small-displacement calibration as a precise encoder measurement.</p>
+<h2 id="other-services">Other services<a class="headerlink" href="#other-services" title="Permanent link">¶</a></h2>
+<p>Declare a lifecycle calibration hook and an operation contract for its arguments. Node-wide calibration runs dependency hooks first. A service-specific call invokes only that service's hook. Track state with <code>node.calibration_status()</code> or the node status HTTP endpoint.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="linear-slide.html"><small>Previous</small>Linear Slide</a><a href="api.html"><small>Next</small>API Reference</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#calibration">Calibration</a><ul>
+<li><a href="#slide-distance-test">Slide distance test</a></li>
+<li><a href="#noise-and-measurement-scale">Noise and measurement scale</a></li>
+<li><a href="#other-services">Other services</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

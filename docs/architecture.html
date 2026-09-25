@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Package structure · RPStack</title><meta name="description" content="RPStack documentation: Package structure">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="rpstack-architecture">RPStack architecture<a class="headerlink" href="#rpstack-architecture" title="Permanent link">¶</a></h1>
+<p>RPStack assembles logical nodes from independently installed packages. Hardware drivers implement device access, services expose capabilities, adapters transform measurements, composites coordinate providers, and applications orchestrate robot behavior.</p>
+<h2 id="repository-groups">Repository groups<a class="headerlink" href="#repository-groups" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Packages and responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>foundation</code></td>
+<td><code>interfaces</code> defines capability contracts and measurement types; <code>support</code> provides lightweight asyncio, JSON, invocation, and clock helpers.</td>
+</tr>
+<tr>
+<td><code>runtime</code></td>
+<td><code>node_runtime</code> constructs and supervises nodes; <code>execution_engine</code> manages operations and workflows; <code>signals</code> handles envelopes and subscriptions; <code>catalog</code> provides discovery and composition models.</td>
+</tr>
+<tr>
+<td><code>transports</code></td>
+<td><code>espnow</code> and <code>ros_signals</code> carry signal envelopes.</td>
+</tr>
+<tr>
+<td><code>control</code></td>
+<td><code>http</code> and <code>shell</code> expose node controls.</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td><code>bootmgr</code> and <code>env</code> provide startup and configuration storage.</td>
+</tr>
+<tr>
+<td><code>observability</code></td>
+<td><code>opentelemetry</code> provides tracing, metrics, and logs.</td>
+</tr>
+<tr>
+<td><code>services</code></td>
+<td>Distance and motor providers, a distance-to-position adapter, and the linear-slide composite.</td>
+</tr>
+<tr>
+<td><code>apps</code></td>
+<td><code>robot_gateway</code> exposes robot discovery over HTTP; <code>slide_commands</code> provides slide command and client applications.</td>
+</tr>
+<tr>
+<td><code>spec</code></td>
+<td>Node and service manifest schemas.</td>
+</tr>
+<tr>
+<td><code>examples</code> (repository root)</td>
+<td>Device deployments and host simulations.</td>
+</tr>
+</tbody>
+</table>
+<p>Each package has one source tree under <code>src/rpstack</code>, a MIP source map, documentation, and relevant host tests. Service implementations live in <code>service.py</code>; package initializers expose their public classes. Drivers remain inside their owning service package.</p>
+<h2 id="dependency-boundaries">Dependency boundaries<a class="headerlink" href="#dependency-boundaries" title="Permanent link">¶</a></h2>
+<p>Foundation packages import no runtime, service, or application packages. Services use contracts and portable support directly. Composites consume capability interfaces. The node runtime constructs providers and binds consumers to them. Applications submit operations through nodes. Transports carry signals; control interfaces expose node actions.</p>
+<p>A slide client can install <code>rpstack.apps.slide_commands</code> without installing the slide hardware service. The slide service itself has no dependency on its orchestration applications.</p>
+<h2 id="vocabulary">Vocabulary<a class="headerlink" href="#vocabulary" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Device</td>
+<td>Physical board or host environment.</td>
+</tr>
+<tr>
+<td>Node</td>
+<td>Logical runtime identity; <code>NodeHost</code> can host several nodes on one device.</td>
+</tr>
+<tr>
+<td>Service type</td>
+<td>Reusable implementation and contract definition in a manifest's <code>components</code> map.</td>
+</tr>
+<tr>
+<td>Service instance</td>
+<td>Configured capability provider constructed on a node.</td>
+</tr>
+<tr>
+<td>Driver</td>
+<td>Hardware-specific backend owned by a service.</td>
+</tr>
+<tr>
+<td>Capability</td>
+<td>Versioned service interface and provider constraints.</td>
+</tr>
+<tr>
+<td>Operation</td>
+<td>Declared callable exposed by a service.</td>
+</tr>
+<tr>
+<td>App</td>
+<td>Orchestration code with a resident or one-shot lifecycle.</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>Declarative operation/signal graph in <code>flows</code>; its <code>nodes</code> entries are workflow steps.</td>
+</tr>
+<tr>
+<td>Task</td>
+<td>Managed execution instance tracked by <code>TaskRegistry</code>.</td>
+</tr>
+<tr>
+<td>Signal</td>
+<td>Event envelope carried by <code>SignalBus</code>.</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Node manifests, resources, apps, and installed packages for a scenario.</td>
+</tr>
+</tbody>
+</table>
+<p><code>ServiceRegistry</code> resolves service dependencies. <code>Catalog</code> describes discovered nodes. <code>PhysicalComponent</code> and <code>CompositionRegistry</code> model physical assemblies and mount claims.</p>
+<h2 id="proposed-provisioning-and-software-discovery">Proposed provisioning and software discovery<a class="headerlink" href="#proposed-provisioning-and-software-discovery" title="Permanent link">¶</a></h2>
+<p>The <a href="bootstrap.html">provisioning and bootstrap design</a> separates USB identity
+provisioning, Architect-managed software delivery, device inventory checks, and
+onboard permission to operate. The <a href="registries.html">service and app registry design</a>
+defines versioned descriptors, dependency resolution, and multiple public or private
+sources. These are proposals, not implemented runtime guarantees. The proposed
+software registry is distinct from both the in-process <code>ServiceRegistry</code> and the
+runtime discovery <code>Catalog</code>.</p>
+<h2 id="lifecycle">Lifecycle<a class="headerlink" href="#lifecycle" title="Permanent link">¶</a></h2>
+<p>Providers start before consumers and stop in reverse dependency order. Service stop/reset keeps control facilities reachable. Full shutdown releases applications, transports, and runtime resources as well. Work runs through managed tasks on the node's cooperative event loop, with dedicated pulse workers for blocking motor batches.</p>
+<h2 id="installation-and-validation">Installation and validation<a class="headerlink" href="#installation-and-validation" title="Permanent link">¶</a></h2>
+<p>Use package manifests at their canonical locations. Remote <code>package.json</code> files declare dependencies; <code>package.local.json</code> files describe local source maps. Example manifests list the full local installation set.</p>
+<p>Run <code>python3 tools/check_architecture.py</code> to validate package maps and isolated installations. Run <code>python3 tools/run_tests.py</code> for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="apps.html"><small>Previous</small>Apps &amp; behaviors</a><a href="runtime.html"><small>Next</small>Runtime level</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#rpstack-architecture">RPStack architecture</a><ul>
+<li><a href="#repository-groups">Repository groups</a></li>
+<li><a href="#dependency-boundaries">Dependency boundaries</a></li>
+<li><a href="#vocabulary">Vocabulary</a></li>
+<li><a href="#proposed-provisioning-and-software-discovery">Proposed provisioning and software discovery</a></li>
+<li><a href="#lifecycle">Lifecycle</a></li>
+<li><a href="#installation-and-validation">Installation and validation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

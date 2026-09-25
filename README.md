@@ -8,7 +8,7 @@ RPStack is designed for constrained embedded systems, especially MicroPython tar
 
 ## Documentation
 
-The [documentation site](pages/README.md) covers getting started, nodes, signals, apps, runtime and services, deployment, and the linear-slide APIs. Source pages live in `pages/content/`; build and preview instructions are in `pages/README.md`.
+The [documentation site](docs/README.md) covers getting started, nodes, signals, apps, runtime and services, deployment, and the linear-slide APIs. Source pages live in `docs/content/`; build and preview instructions are in `docs/README.md`.
 
 The [architecture guide](RPStack/ARCHITECTURE.md) describes package responsibilities, dependency boundaries, and terminology.
 

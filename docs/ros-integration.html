@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROS 2 integration · RPStack</title><meta name="description" content="RPStack documentation: ROS 2 integration">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html" aria-current="page">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="ros-2-integration">ROS 2 integration<a class="headerlink" href="#ros-2-integration" title="Permanent link">¶</a></h1>
+<p>RPStack manages device capabilities and their execution. ROS 2 applications can
+use those capabilities through typed interfaces, while controllers retain their
+MicroPython service runtime and manifest-driven hardware bindings.</p>
+<h2 id="device-and-desktop-responsibilities">Device and desktop responsibilities<a class="headerlink" href="#device-and-desktop-responsibilities" title="Permanent link">¶</a></h2>
+<p>ROSMicroPy already includes an <code>rclpy</code> implementation on top of micro-ROS. It
+supports typed publishers and subscribers. Its current action-server, executor,
+and future support is incomplete, so the optional desktop <code>SlideRosGateway</code>
+provides the linear-slide action facade using full CPython rclpy.</p>
+<pre class="mermaid">flowchart LR
+    Device[RPStack slide on ROSMicroPy] &lt;--&gt;|micro-ROS| Agent[micro-ROS agent]
+    Agent &lt;--&gt;|RPStack signal envelopes| Gateway[Typed ROS gateway]
+    Gateway &lt;--&gt;|Move action and feedback| Apps[ROS 2 applications]
+    Agent --&gt;|Direct typed joint states| Apps
+    Gateway --&gt;|Position and diagnostics| Apps
+</pre>
+<p>The controller's ROS transport owns one native worker. Optional typed publishers
+are registered before that worker starts. The desktop gateway is independent of
+Robot Architect and can run on an onboard Linux computer.</p>
+<h2 id="linear-slide-interfaces">Linear-slide interfaces<a class="headerlink" href="#linear-slide-interfaces" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensor_msgs/msg/JointState</code> from the controller</td>
+<td>Actual linear measurement for a configured prismatic joint</td>
+</tr>
+<tr>
+<td><code>rpstack_interfaces/msg/LinearPosition</code> from the gateway</td>
+<td>Measured position in metres, validity, quality, frame, and source timestamp</td>
+</tr>
+<tr>
+<td><code>rpstack_interfaces/action/MoveLinear</code></td>
+<td>Absolute target, measured feedback, and explicit confirmed/unconfirmed outcome</td>
+</tr>
+<tr>
+<td><code>diagnostic_msgs/msg/DiagnosticArray</code></td>
+<td>Gateway view of slide readiness, connectivity, and faults</td>
+</tr>
+</tbody>
+</table>
+<p>The default gateway namespace is <code>/rpstack/slide</code>, with endpoints <code>position</code>,
+<code>move</code>, and <code>diagnostics</code>. The example publishes direct firmware joint states on
+<code>/rpstack/slide_device/joint_states</code>. This is a linear-slide adapter, not a claim
+that every RPStack operation automatically becomes a ROS interface.</p>
+<h2 id="admission-and-cancellation">Admission and cancellation<a class="headerlink" href="#admission-and-cancellation" title="Permanent link">¶</a></h2>
+<p>The gateway checks fresh worker health, calibration, valid position, and travel
+bounds before admitting one goal. The device supervisor still validates commands
+and arbitrates resources against local workflows and other clients. Calibration
+is explicit and never triggered by starting the gateway.</p>
+<p>Measured feedback is emitted by the slide during its existing observation steps.
+The gateway does not compete for sensors while motion owns them. Feedback can be
+sparse during a blocking motor batch; no interpolated positions are invented.</p>
+<p>A ROS cancel request propagates through the leased remote-operation protocol.
+The action reports cancellation only after worker cleanup is confirmed, or when
+dispatch never occurred. If cancellation is lost, renewal stops and the receiver
+lease provides the cooperative fallback. If completion wins the race, the action
+can still succeed.</p>
+<p>Disconnects, worker resets, and lost results never cause an automatic move retry.
+Uncertain outcomes abort and block further goals until the operator checks the
+device and restarts the gateway. Software leases are not hardware emergency stops.</p>
+<h2 id="time-frames-and-delivery">Time, frames, and delivery<a class="headerlink" href="#time-frames-and-delivery" title="Permanent link">¶</a></h2>
+<p>The gateway stamps positions with ROS receipt time and preserves the original
+device timestamp separately. The direct firmware joint-state publisher uses an
+unspecified zero stamp because the current shim exposes no synchronized ROS clock.
+Neither path treats device monotonic time as ROS time or performs coordinate
+transforms. Frame labels must describe the actual measurement coordinates.</p>
+<p>Desktop position uses sensor-data QoS; diagnostics are volatile periodic reports.
+Consumers must detect missing diagnostics rather than retaining readiness forever.
+The firmware shim's QoS arguments currently do not configure native QoS. ROS
+delivery guarantees also do not extend automatically across a lossy mesh segment.</p>
+<h2 id="deployment-and-validation">Deployment and validation<a class="headerlink" href="#deployment-and-validation" title="Permanent link">¶</a></h2>
+<p>The repository's <code>examples/ros_slide/README.md</code> contains the complete USB install,
+agent configuration, colcon build, calibration, and ROS CLI workflow. The gateway
+app is under <code>RPStack/apps/ros_gateway</code>; generated ROS interfaces are under
+<code>ros2/rpstack_interfaces</code>.</p>
+<p>Host tests exercise managed execution, resource exclusion, cancellation, lease
+expiry, and packet loss. Firmware tests load the actual ROSMicroPy Python shim
+with its native module substituted. A ROS 2 Jazzy workflow builds the interfaces
+and runs real action/topic tests. These tests do not establish physical stop
+timing, native serialization correctness on the board, or radio reliability.</p>
+<h2 id="further-integration">Further integration<a class="headerlink" href="#further-integration" title="Permanent link">¶</a></h2>
+<p>Additional adapters can expose sensors as standard ROS messages and long-running
+operations as actions. Reuse standard types only when their semantics fit; the
+slide does not advertise trajectory execution that it does not implement.
+Generic registry-driven adapter generation and Architect UI configuration remain
+future work. See <a href="registries.html">Service and app registries</a> and
+<a href="bootstrap.html">Device provisioning and bootstrap</a> for those proposals.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="services.html"><small>Previous</small>Services level</a><a href="bootstrap.html"><small>Next</small>Provisioning &amp; bootstrap</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#ros-2-integration">ROS 2 integration</a><ul>
+<li><a href="#device-and-desktop-responsibilities">Device and desktop responsibilities</a></li>
+<li><a href="#linear-slide-interfaces">Linear-slide interfaces</a></li>
+<li><a href="#admission-and-cancellation">Admission and cancellation</a></li>
+<li><a href="#time-frames-and-delivery">Time, frames, and delivery</a></li>
+<li><a href="#deployment-and-validation">Deployment and validation</a></li>
+<li><a href="#further-integration">Further integration</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nodes &amp; manifests · RPStack</title><meta name="description" content="RPStack documentation: Nodes &amp; manifests">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html" aria-current="page">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="nodes-and-manifests">Nodes and Manifests<a class="headerlink" href="#nodes-and-manifests" title="Permanent link">¶</a></h1>
+<p>A node manifest (<code>rp.node/v1</code>) describes a complete deployment. Service manifests (<code>rp.service/v1</code>) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.</p>
+<h2 id="node-manifest-fields">Node manifest fields<a class="headerlink" href="#node-manifest-fields" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>identity</code></td>
+<td>Entity and unique node name</td>
+</tr>
+<tr>
+<td><code>resources</code></td>
+<td>Platform resources such as an I2C bus</td>
+</tr>
+<tr>
+<td><code>components</code></td>
+<td>Embedded reusable service contracts</td>
+</tr>
+<tr>
+<td><code>services</code></td>
+<td>Instances, implementations, constructor arguments, configuration and bindings</td>
+</tr>
+<tr>
+<td><code>runtime</code></td>
+<td>Shared listeners and infrastructure</td>
+</tr>
+<tr>
+<td><code>signals</code></td>
+<td>Routes, transport adapters and optional bridges</td>
+</tr>
+<tr>
+<td><code>apps</code></td>
+<td>Resident or one-off application factories</td>
+</tr>
+<tr>
+<td><code>flows</code></td>
+<td>Declarative behavior graphs</td>
+</tr>
+<tr>
+<td><code>execution</code></td>
+<td>Distributed peers, exposed operations and leases</td>
+</tr>
+</tbody>
+</table>
+<p>The following is a <strong>fragment</strong>, not a complete bootable manifest:</p>
+<pre><code class="language-json">{
+  &quot;identity&quot;: {&quot;entity&quot;: &quot;SlideDemo&quot;, &quot;node&quot;: &quot;node1&quot;},
+  &quot;services&quot;: {
+    &quot;slide&quot;: {
+      &quot;component&quot;: &quot;linear_slide&quot;,
+      &quot;bindings&quot;: {&quot;motor&quot;: &quot;motor&quot;, &quot;position&quot;: &quot;position&quot;},
+      &quot;config&quot;: {
+        &quot;min_position_m&quot;: 0.03,
+        &quot;max_position_m&quot;: 0.3,
+        &quot;max_steps&quot;: 100000
+      }
+    }
+  }
+}
+</code></pre>
+<p>Use <code>examples/slide_nodes/node1.device.json</code> as a complete device example. Its companion <code>node2.device.json</code> describes the client.</p>
+<h2 id="load-a-node">Load a node<a class="headerlink" href="#load-a-node" title="Permanent link">¶</a></h2>
+<p>Inside an existing async entry point:</p>
+<pre><code class="language-python">from rpstack.node_runtime import NodeRuntime
+
+node = NodeRuntime.load('/lib/slide_node1.json')
+await node.boot()
+try:
+    await node.wait()
+finally:
+    await node.shutdown()
+</code></pre>
+<p>For an application that owns the event loop, <code>run_manifest(path)</code> is the blocking boot entry. <code>run_manifests([path1, path2])</code> hosts multiple manifests on one loop. Do not run these alongside the background <code>slide_nodes</code> launcher.</p>
+<h2 id="bindings-and-ownership">Bindings and ownership<a class="headerlink" href="#bindings-and-ownership" title="Permanent link">¶</a></h2>
+<p>A required capability can be bound automatically when exactly one compatible provider matches. Explicit bindings select a specific service instance. Missing, ambiguous, incompatible, or cyclic dependencies are rejected. Shared resources use references such as <code>{"$resource": "carriage_bus"}</code>.</p>
+<p>Each entity/node pair must be unique. A node's service ID, such as <code>slide</code>, is local to that node. <code>NodeHost</code> can host multiple logical nodes in one process, but it does not make conflicting peripheral ownership safe.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="concepts.html"><small>Previous</small>The mental model</a><a href="signals.html"><small>Next</small>Signals</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#nodes-and-manifests">Nodes and Manifests</a><ul>
+<li><a href="#node-manifest-fields">Node manifest fields</a></li>
+<li><a href="#load-a-node">Load a node</a></li>
+<li><a href="#bindings-and-ownership">Bindings and ownership</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

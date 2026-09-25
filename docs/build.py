@@ -1,18 +1,17 @@
-"""Build the static documentation site: python3 pages/build.py."""
+"""Build the static documentation site: python3 docs/build.py."""
 import html
 import json
 import re
-import shutil
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit, unquote
 import markdown
 
 ROOT = Path(__file__).resolve().parent
-OUT = ROOT / '_site'
+# Commit generated files here so GitHub Pages can publish main:/docs directly.
+OUT = ROOT
 nav = json.loads((ROOT / 'navigation.json').read_text())
 OUT.mkdir(exist_ok=True)
-shutil.copytree(ROOT / 'assets', OUT / 'assets', dirs_exist_ok=True)
 search = []
 for index, page in enumerate(nav):
     source = (ROOT / 'content' / (page['slug'] + '.md')).read_text()

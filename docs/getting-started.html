@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Getting Started · RPStack</title><meta name="description" content="RPStack documentation: Getting Started">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html" aria-current="page">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Start here</div><article><h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">¶</a></h1>
+<h2 id="run-without-hardware">Run without hardware<a class="headerlink" href="#run-without-hardware" title="Permanent link">¶</a></h2>
+<p>Clone the repository and run these commands from its root using Python 3:</p>
+<pre><code class="language-sh">python3 examples/slide_nodes/demo.py
+python3 examples/robie1/main.py
+</code></pre>
+<p>The first assembles the real slide controller with simulated hardware. The second coordinates a workflow across three simulated nodes and transport links. Neither requires a connected board or a ROS installation.</p>
+<h2 id="prepare-an-esp32-slide-device">Prepare an ESP32 slide device<a class="headerlink" href="#prepare-an-esp32-slide-device" title="Permanent link">¶</a></h2>
+<p>The slide demo expects MicroPython with <code>_thread</code>, <code>asyncio</code>, <code>machine</code>, <code>network</code>, and <code>espnow</code>. Install <code>mpremote</code> on your workstation. Choose firmware appropriate to your exact board and flash layout.</p>
+<p>Review <code>examples/slide_nodes/node1.device.json</code> before connecting hardware:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Demo default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I2C bus / SDA / SCL</td>
+<td>0 / 5 / 4</td>
+</tr>
+<tr>
+<td>TOF address</td>
+<td>41 (<code>0x29</code>)</td>
+</tr>
+<tr>
+<td>STEP / DIR / ENABLE</td>
+<td>17 / 3 / 21</td>
+</tr>
+<tr>
+<td>Pulse delay</td>
+<td>100 µs HIGH + 100 µs LOW</td>
+</tr>
+<tr>
+<td>Absolute target range</td>
+<td>30–300 mm</td>
+</tr>
+<tr>
+<td>Maximum commanded steps per target move</td>
+<td>100,000</td>
+</tr>
+<tr>
+<td>ESP-NOW channel / entity</td>
+<td>6 / <code>SlideDemo</code></td>
+</tr>
+</tbody>
+</table>
+<p>These are deployment choices, not universal board pin assignments. Calibration moves in both electrical directions; provide clearance for both legs.</p>
+<h2 id="install-the-complete-package">Install the complete package<a class="headerlink" href="#install-the-complete-package" title="Permanent link">¶</a></h2>
+<pre><code class="language-sh">cd examples/slide_nodes
+mpremote mip install package.json
+mpremote repl
+</code></pre>
+<p>For a specific connected board, use <code>mpremote connect /dev/ttyACM0 mip install package.json</code>. The package installs the launcher, both node manifests, and its local dependencies. It does not replace <code>main.py</code>. Reset after installation so imported modules are refreshed. Preserve custom manifest settings before reinstalling.</p>
+<h2 id="configure-gateway-networking">Configure gateway networking<a class="headerlink" href="#configure-gateway-networking" title="Permanent link">¶</a></h2>
+<p>Before startup, configure the board's Wi-Fi credentials:</p>
+<pre><code class="language-python">from rpstack.env import setEnv
+setEnv('WIFI_SSID', 'your-network', True)
+setEnv('WIFI_PASSWORD', 'your-password', True)
+</code></pre>
+<p>The access point channel must match the ESP-NOW channel (default 6) in all three
+installed manifests. Startup prints the HTTP gateway URL for RobotArchitect.</p>
+<h2 id="start-and-observe">Start and observe<a class="headerlink" href="#start-and-observe" title="Permanent link">¶</a></h2>
+<p>At the device's native prompt:</p>
+<pre><code class="language-python">import slide_nodes
+slide_nodes.start()
+print(slide_nodes.position())
+</code></pre>
+<p>Startup returns to the REPL and does not move the slide. Position samples use metres: <code>value=0.1</code> means 100 mm. Check that observations change when the target distance changes.</p>
+<h2 id="calibrate-and-move">Calibrate and move<a class="headerlink" href="#calibrate-and-move" title="Permanent link">¶</a></h2>
+<pre><code class="language-python">slide_nodes.calibrate(steps=1000)
+slide_nodes.set_range(30, 300)
+slide_nodes.demo(100)
+slide_nodes.stop()
+</code></pre>
+<p>Only proceed to the target move after calibration succeeds. See <a href="linear-slide.html">Linear Slide</a> for the calibration method and <a href="troubleshooting.html">Troubleshooting</a> for noisy readings. To keep the slide service on one device and run commands from another, follow <a href="deployment.html">Multiple Devices</a>.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="index.html"><small>Previous</small>Overview</a><a href="concepts.html"><small>Next</small>The mental model</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#getting-started">Getting Started</a><ul>
+<li><a href="#run-without-hardware">Run without hardware</a></li>
+<li><a href="#prepare-an-esp32-slide-device">Prepare an ESP32 slide device</a></li>
+<li><a href="#install-the-complete-package">Install the complete package</a></li>
+<li><a href="#configure-gateway-networking">Configure gateway networking</a></li>
+<li><a href="#start-and-observe">Start and observe</a></li>
+<li><a href="#calibrate-and-move">Calibrate and move</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

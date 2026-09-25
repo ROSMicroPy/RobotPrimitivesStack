@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Troubleshooting · RPStack</title><meta name="description" content="RPStack documentation: Troubleshooting">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html" aria-current="page">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Reference</div><article><h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h1>
+<h2 id="calibration-fails-near-the-far-end">Calibration fails near the far end<a class="headerlink" href="#calibration-fails-near-the-far-end" title="Permanent link">¶</a></h2>
+<p>Compare repeated stationary position readings. If their spread is comparable to calibration displacement, single samples cannot provide a dependable scale. Check target visibility and alignment across travel. Mechanical backlash or missed steps are also possible; the log alone cannot distinguish them. See <a href="calibration.html">Calibration</a>.</p>
+<h2 id="target-moves-say-calibration-is-required">Target moves say calibration is required<a class="headerlink" href="#target-moves-say-calibration-is-required" title="Permanent link">¶</a></h2>
+<p>A failed calibration clears the scale, even if an earlier attempt succeeded. Target moves remain disabled until the next successful calibration. Startup and reset also require a new calibration.</p>
+<h2 id="maximum-steps-exceeded">Maximum steps exceeded<a class="headerlink" href="#maximum-steps-exceeded" title="Permanent link">¶</a></h2>
+<p>Estimate distance × steps/mm. A 100 mm move at about 222 steps/mm requires about 22,200 steps. Slide-node manifests use a 100,000-step cap. Preserve a finite cap and inspect calibration quality rather than increasing it indefinitely.</p>
+<h2 id="target-is-outside-the-configured-range">Target is outside the configured range<a class="headerlink" href="#target-is-outside-the-configured-range" title="Permanent link">¶</a></h2>
+<p>The demo defaults to 30–300 mm in the adapter's coordinate frame. <code>slide_nodes.set_range(30, 300)</code> changes the running provider; manifest edits set startup defaults. Position samples use metres while helper targets use millimetres.</p>
+<h2 id="tof-timeout-or-invalid-range-status">TOF timeout or invalid range status<a class="headerlink" href="#tof-timeout-or-invalid-range-status" title="Permanent link">¶</a></h2>
+<p>Use <code>position()</code> without motion first. Verify the wiring, I2C address and target. Reinstall the full package and reset to ensure both driver files are current. A fresh-measurement timeout raises <code>RuntimeError</code> with a sensor-specific message.</p>
+<h2 id="client-times-out">Client times out<a class="headerlink" href="#client-times-out" title="Permanent link">¶</a></h2>
+<p>Check entity, node identities, channel, provider startup, and radio reachability. A timeout may be a lost command, a lost reply, or a long-running operation. Do not automatically resend a move. Stop/inspect the provider first; stopping the client device does not stop the provider.</p>
+<h2 id="native-crash-during-startup">Native crash during startup<a class="headerlink" href="#native-crash-during-startup" title="Permanent link">¶</a></h2>
+<p>Retain the full dump and last startup message. The slide launcher preloads imports on the foreground stack and allocates explicit worker stacks; use the complete current package. CPython or Unix MicroPython tests do not reproduce every ESP32 firmware failure.</p>
+<h2 id="useful-diagnostic-record">Useful diagnostic record<a class="headerlink" href="#useful-diagnostic-record" title="Permanent link">¶</a></h2>
+<p>Record the firmware/board variant, installed manifest configuration, startup log, calibration report, stationary readings, target command, terminal event, and whether the carriage physically moved. Distinguish measured position from the target you requested.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="api.html"><small>Previous</small>API Reference</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#troubleshooting">Troubleshooting</a><ul>
+<li><a href="#calibration-fails-near-the-far-end">Calibration fails near the far end</a></li>
+<li><a href="#target-moves-say-calibration-is-required">Target moves say calibration is required</a></li>
+<li><a href="#maximum-steps-exceeded">Maximum steps exceeded</a></li>
+<li><a href="#target-is-outside-the-configured-range">Target is outside the configured range</a></li>
+<li><a href="#tof-timeout-or-invalid-range-status">TOF timeout or invalid range status</a></li>
+<li><a href="#client-times-out">Client times out</a></li>
+<li><a href="#native-crash-during-startup">Native crash during startup</a></li>
+<li><a href="#useful-diagnostic-record">Useful diagnostic record</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>
