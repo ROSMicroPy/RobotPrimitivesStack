@@ -1,0 +1,82 @@
+[
+  {
+    "group": "Start here",
+    "slug": "index",
+    "title": "Overview"
+  },
+  {
+    "group": "Start here",
+    "slug": "getting-started",
+    "title": "Getting Started"
+  },
+  {
+    "group": "Basic concepts",
+    "slug": "concepts",
+    "title": "The mental model"
+  },
+  {
+    "group": "Basic concepts",
+    "slug": "nodes",
+    "title": "Nodes & manifests"
+  },
+  {
+    "group": "Basic concepts",
+    "slug": "signals",
+    "title": "Signals"
+  },
+  {
+    "group": "Basic concepts",
+    "slug": "apps",
+    "title": "Apps & behaviors"
+  },
+  {
+    "group": "Architecture",
+    "slug": "architecture",
+    "title": "Package structure"
+  },
+  {
+    "group": "Architecture",
+    "slug": "runtime",
+    "title": "Runtime level"
+  },
+  {
+    "group": "Architecture",
+    "slug": "services",
+    "title": "Services level"
+  },
+  {
+    "group": "Architecture",
+    "slug": "bootstrap",
+    "title": "Provisioning & bootstrap"
+  },
+  {
+    "group": "Architecture",
+    "slug": "registries",
+    "title": "Service & app registries"
+  },
+  {
+    "group": "Guides",
+    "slug": "deployment",
+    "title": "Multiple Devices"
+  },
+  {
+    "group": "Guides",
+    "slug": "linear-slide",
+    "title": "Linear Slide"
+  },
+  {
+    "group": "Guides",
+    "slug": "calibration",
+    "title": "Calibration"
+  },
+  {
+    "group": "Reference",
+    "slug": "api",
+    "title": "API Reference"
+  },
+  {
+    "group": "Reference",
+    "slug": "troubleshooting",
+    "title": "Troubleshooting"
+  }
+]

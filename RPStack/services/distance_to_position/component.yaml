@@ -1,0 +1,65 @@
+manifest: rp.service/v1
+package:
+  name: distance-to-position
+  version: 0.1.0
+  import: rpstack.distance_to_position
+
+service:
+  name: distance-to-position
+  version: 0.1.0
+  kind: adapter
+  type: adapter.distance_to_position
+  description: Convert a ray distance into installed linear position.
+  entry_point: rpstack.distance_to_position:DistanceToPositionAdapter
+  capabilities:
+    provides:
+      - interface: motion.position_observer
+        version: 1
+        quantity: linear
+        dimensions: 1
+        canonical_unit: m
+    requires:
+      distance_observer:
+        interface: sensing.distance_observer
+        version: 1
+  configuration:
+    zero_offset_m: {type: number, default: 0.0, unit: m}
+    direction: {type: integer, enum: [-1, 1], default: 1}
+    reference_frame: {type: string, required: true}
+    min_position_m: {type: number, required: false, unit: m}
+    max_position_m: {type: number, required: false, unit: m}
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  operations:
+    observe_position:
+      method: position
+      description: Read transformed linear position.
+      arguments: {}
+      returns: {type: PositionSample, quantity: linear, unit: m}
+      concurrency: read_only
+    status:
+      method: status
+      description: Return adapter state and reference frame.
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+  signals:
+    provides:
+      motion.position.updated: {payload: PositionSample}
+    consumes:
+      range.distance.updated: {payload: DistanceSample}
+  implementations: {}
+  tests:
+    transform_once:
+      description: Read one transformed position sample.
+      mode: automatic
+      steps:
+        - operation: observe_position
+          arguments: {}
+          expect:
+            fields: {kind: linear, unit: m}

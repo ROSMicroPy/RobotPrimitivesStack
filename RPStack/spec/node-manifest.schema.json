@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robot-primitives.dev/schema/node-manifest-v1.json",
+  "title": "RPStack node manifest",
+  "type": "object",
+  "required": [
+    "manifest",
+    "name",
+    "components",
+    "services"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "manifest": {
+      "const": "rp.node/v1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://robot-primitives.dev/schema/service-manifest-v1.json"
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "services": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "component"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "implementation": {
+            "type": "string"
+          },
+          "constructor": {
+            "type": "object"
+          },
+          "config": {
+            "type": "object"
+          },
+          "bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "inject_signals": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_point"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry_point": {
+            "type": "string",
+            "pattern": "^[^:]+:[^:]+$"
+          },
+          "config": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "flows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "start",
+          "nodes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "string"
+          },
+          "autostart": {
+            "type": "boolean"
+          },
+          "nodes": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "operation": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "object"
+                },
+                "wait_for": {
+                  "type": "string"
+                },
+                "timeout_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "emit": {
+                  "type": "string"
+                },
+                "next": {
+                  "type": "string"
+                },
+                "on_error": {
+                  "type": "string"
+                },
+                "node": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "correlated": {
+                  "type": "boolean"
+                },
+                "signal_source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "routes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "dependentRequired": {
+                "operation": [
+                  "service"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "entity",
+        "node"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "node": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        }
+      }
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "routes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bridges": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "queue_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seen_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 128
+        },
+        "transports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "entry_point"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "entry_point": {
+                "type": "string",
+                "minLength": 1
+              },
+              "relay": {
+                "type": "boolean"
+              },
+              "config": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "peers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expose": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lease_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        }
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_point"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry_point": {
+            "type": "string",
+            "pattern": "^[^:]+:[^:]+$"
+          },
+          "config": {
+            "type": "object"
+          },
+          "requires": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "mode": {
+            "enum": [
+              "resident",
+              "oneshot"
+            ],
+            "default": "resident",
+            "description": "A successful oneshot exit is expected. Nodes containing only oneshot apps exit after all apps finish."
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "description": "Public physical composition metadata, advertised by catalog; never put secrets here."
+    }
+  }
+}

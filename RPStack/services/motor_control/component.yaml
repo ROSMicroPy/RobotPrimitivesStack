@@ -1,0 +1,122 @@
+manifest: rp.service/v1
+package:
+  name: motor-control
+  version: 0.4.0
+  import: rpstack.motor_control
+
+service:
+  name: motor-control
+  version: 0.4.0
+  kind: individual_driver
+  type: actuator.motor
+  description: A runtime-managed motor with a selectable concrete driver.
+  entry_point: rpstack.motor_control:Motor
+  capabilities: {provides: [], requires: {}}
+  configuration:
+    name: {type: string, required: true}
+    motor_type: {type: string, enum: [stepper, servo, bldc], required: true}
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  operations:
+    command:
+      method: command
+      description: Command relative incremental motion.
+      implementations: [step_dir]
+      arguments:
+        direction: {type: boolean, required: true}
+        amount: {type: integer, minimum: 0, default: 1}
+      returns: {type: boolean}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
+    stop:
+      method: stop
+      description: Put the motor driver in its safe stopped state.
+      arguments: {}
+      returns: {type: boolean}
+      idempotent: true
+    set_position:
+      method: set_position
+      description: Set servo angular position in driver-native units.
+      implementations: [pwm_servo]
+      arguments:
+        position: {type: number, required: true}
+      returns: {type: boolean}
+      concurrency: exclusive
+    set_speed:
+      method: set_speed
+      description: Set stepper or BLDC speed in revolutions per minute.
+      implementations: [step_dir, pwm_bldc]
+      arguments:
+        rpm: {type: number, required: true, unit: rpm}
+      returns: {type: boolean}
+      concurrency: exclusive
+    status:
+      method: status
+      description: Return driver and lifecycle status.
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+  signals:
+    provides:
+      motion.started: {payload: object}
+      motion.stopped: {payload: object}
+      device.health.changed: {payload: object}
+    consumes: {}
+  implementations:
+    step_dir:
+      entry_point: rpstack.motor_control.motor_drivers.step_dir:StepDirDriver
+      description: Incremental STEP/DIR motor controller.
+      capabilities:
+        provides:
+          - interface: motion.motion_actuator
+            version: 1
+            mode: incremental
+        requires: {}
+      configuration:
+        step_pin: {type: pin_ref, required: true}
+        dir_pin: {type: pin_ref, required: true}
+        enable_pin: {type: pin_ref, required: false}
+        enable_active_low: {type: boolean, default: true}
+        step_delay_us: {type: integer, minimum: 1, default: 500, unit: us}
+        direction_settle_us: {type: integer, minimum: 0, default: 10, unit: us}
+        steps_per_revolution: {type: integer, minimum: 1, default: 200}
+        microsteps: {type: integer, minimum: 1, default: 1}
+      safe_state: stop
+    pwm_servo:
+      entry_point: rpstack.motor_control.motor_drivers.pwm_servo:PWMServoDriver
+      description: Hobby servo PWM driver.
+      configuration: {}
+      safe_state: shutdown
+    pwm_bldc:
+      entry_point: rpstack.motor_control.motor_drivers.pwm_bldc:PWMBLDCDriver
+      description: Open-loop PWM/ESC BLDC driver.
+      configuration: {}
+      safe_state: stop
+  tests:
+    report_status:
+      description: Read motor status without commanding motion.
+      mode: automatic
+      steps:
+        - operation: status
+          arguments: {}
+    one_increment_each_direction:
+      description: Move one increment in each direction, then stop.
+      mode: hardware
+      preconditions:
+        - The mechanism has clearance in both directions.
+        - An operator can remove power if motion is incorrect.
+      steps:
+        - operation: command
+          arguments: {direction: true, amount: 1}
+          expect: {equals: true}
+        - operation: command
+          arguments: {direction: false, amount: 1}
+          expect: {equals: true}
+        - operation: stop
+          arguments: {}

@@ -1,0 +1,32 @@
+{
+  "name": "rp-slide-commands",
+  "version": "0.1.0",
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/support",
+      "archdef"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/signals",
+      "archdef"
+    ]
+  ],
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/apps/__init__.py",
+      "src/rpstack/apps/__init__.py"
+    ],
+    [
+      "rpstack/apps/slide_commands/__init__.py",
+      "src/rpstack/apps/slide_commands/__init__.py"
+    ],
+    [
+      "rpstack/apps/slide_commands/apps.py",
+      "src/rpstack/apps/slide_commands/apps.py"
+    ]
+  ]
+}

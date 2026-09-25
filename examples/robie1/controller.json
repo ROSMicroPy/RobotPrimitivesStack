@@ -1,0 +1,117 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "Robie1-controller",
+  "identity": {
+    "entity": "Robie1",
+    "node": "controller"
+  },
+  "components": {
+    "joint": {
+      "manifest": "rp.service/v1",
+      "service": {
+        "name": "simulated-joint",
+        "version": "1.0.0",
+        "kind": "individual_driver",
+        "type": "actuator.simulated_joint",
+        "entry_point": "simulation:SimulatedJoint",
+        "operations": {
+          "move": {
+            "method": "move",
+            "arguments": {
+              "position": {
+                "type": "number",
+                "required": true
+              },
+              "duration_s": {
+                "type": "number",
+                "default": 0.02,
+                "minimum": 0
+              }
+            },
+            "returns": {
+              "type": "object"
+            }
+          },
+          "status": {
+            "method": "status",
+            "concurrency": "read_only",
+            "arguments": {}
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "joint": {
+      "component": "joint",
+      "inject_signals": true
+    }
+  },
+  "signals": {
+    "routes": [
+      "local",
+      "mesh",
+      "ros"
+    ],
+    "transports": [
+      {
+        "id": "mesh",
+        "entry_point": "simulation:MemoryTransport",
+        "config": {
+          "segment": "mesh",
+          "duplicate": true
+        }
+      },
+      {
+        "id": "ros",
+        "entry_point": "simulation:MemoryTransport",
+        "config": {
+          "segment": "ros"
+        }
+      }
+    ],
+    "bridges": {
+      "mesh": [
+        "ros"
+      ],
+      "ros": [
+        "mesh"
+      ]
+    }
+  },
+  "execution": {
+    "peers": [
+      "arm",
+      "base"
+    ],
+    "expose": [
+      "joint"
+    ]
+  },
+  "flows": {
+    "reach": {
+      "start": "drive",
+      "nodes": {
+        "drive": {
+          "node": "base",
+          "service": "joint",
+          "operation": "move",
+          "arguments": {
+            "position": 1
+          },
+          "next": "reach"
+        },
+        "reach": {
+          "node": "arm",
+          "service": "joint",
+          "operation": "move",
+          "arguments": {
+            "position": 0.25
+          },
+          "emit": "robot.reached"
+        }
+      },
+      "autostart": true
+    }
+  }
+}

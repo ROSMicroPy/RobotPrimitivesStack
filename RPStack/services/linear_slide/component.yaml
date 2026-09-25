@@ -1,0 +1,145 @@
+manifest: rp.service/v1
+package:
+  name: rube-goldberg-linear-slide
+  version: 0.4.0
+  import: rpstack.linear_slide
+
+service:
+  name: observed-linear-actuator
+  version: 0.4.0
+  kind: composite_driver
+  type: motion.linear_actuator
+  description: Closed-loop linear slide composed from motion and position capabilities.
+  entry_point: rpstack.linear_slide:LinearSlide
+  capabilities:
+    provides:
+      - interface: motion.position_actuator
+        version: 1
+        quantity: linear
+        dimensions: 1
+        canonical_unit: m
+    requires:
+      motor:
+        interface: motion.motion_actuator
+        version: 1
+        constraints: {mode: incremental}
+      position:
+        interface: motion.position_observer
+        version: 1
+        constraints: {quantity: linear, dimensions: 1, canonical_unit: m}
+  configuration:
+    positive_direction: {type: boolean, default: true}
+    tolerance_m: {type: number, minimum: 0, default: 0.001, unit: m}
+    max_steps: {type: integer, minimum: 1, default: 10000}
+    no_motion_sample_limit: {type: integer, minimum: 1, default: 10}
+    min_position_m: {type: number, required: false, unit: m}
+    max_position_m: {type: number, required: false, unit: m}
+  lifecycle:
+    configure: configure
+    init: init
+    calibrate: calibrate
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  operations:
+    set_range:
+      method: set_range
+      description: Set absolute target bounds until restart, without moving.
+      arguments:
+        min_mm: {type: number, required: true, unit: mm}
+        max_mm: {type: number, required: true, unit: mm}
+      returns: {type: object}
+      concurrency: exclusive
+      rest: {method: POST, path: /api/linear-slide/range}
+    get_range:
+      method: get_range
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+      rest: {method: GET, path: /api/linear-slide/range}
+    calibrate:
+      method: calibrate
+      description: Explicit distance calibration with uninterrupted forward/reverse runs and stationary samples.
+      arguments:
+        steps: {type: integer, minimum: 1, default: 1000}
+      returns: {type: object}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
+    observe_position:
+      method: position
+      description: Read current linear position in metres.
+      arguments: {}
+      returns: {type: PositionSample, quantity: linear, unit: m}
+      concurrency: read_only
+      rest: {method: GET, path: /api/linear-slide/position}
+    move_to:
+      method: move_to
+      description: Move the carriage to an absolute linear position.
+      arguments:
+        target: {type: number, required: true, unit: m}
+      returns: {type: PositionSample, quantity: linear, unit: m}
+      concurrency: exclusive
+      cancellable: true
+      safe_state: stop
+      errors: [target_out_of_range, maximum_steps_exceeded, observer_invalid, move_cancelled, wrong_direction, no_motion]
+      rest: {method: POST, path: /api/linear-slide/move-to}
+    stop:
+      method: stop
+      description: Cancel motion and stop the bound motion actuator.
+      arguments: {}
+      returns: {type: boolean}
+      idempotent: true
+      rest: {method: POST, path: /api/linear-slide/stop}
+    status:
+      method: status
+      description: Return slide state and current position.
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+      rest: {method: GET, path: /api/linear-slide/status}
+    jog_steps:
+      method: jog_steps
+      description: Jog a fixed number of steps without closed-loop targeting.
+      arguments:
+        steps: {type: integer, required: true, minimum: 1, default: 200}
+        direction: {type: boolean, required: false, default: true}
+      returns: {type: object}
+      concurrency: exclusive
+      rest: {method: POST, path: /api/linear-slide/jog}
+  signals:
+    provides:
+      motion.started: {payload: object}
+      motion.position.updated: {payload: PositionSample}
+      motion.target.reached: {payload: PositionSample}
+      motion.target.failed: {payload: object}
+    consumes: {}
+  implementations: {}
+  tests:
+    observe_position:
+      description: Read the current carriage position without moving it.
+      mode: automatic
+      steps:
+        - operation: observe_position
+          arguments: {}
+          expect:
+            fields: {kind: linear, unit: m, valid: true}
+    stop_motion:
+      description: Exercise the safe-state operation.
+      mode: automatic
+      steps:
+        - operation: stop
+          arguments: {}
+    move_to_target:
+      description: Move to an operator-selected target using the move_to operation.
+      mode: hardware
+      preconditions:
+        - Replace target with a safe value inside the configured travel range.
+        - Verify physical clearance and emergency power removal.
+      parameters:
+        target: {type: number, required: true, unit: m}
+      steps:
+        - operation: move_to
+          arguments:
+            target: {$parameter: target}

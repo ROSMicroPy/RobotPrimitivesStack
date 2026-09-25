@@ -1,0 +1,90 @@
+manifest: rp.service/v1
+package:
+  name: distance-sensor
+  version: 0.3.1
+  import: rpstack.distance_sensor
+
+service:
+  name: distance-sensor
+  version: 0.3.1
+  kind: individual_driver
+  type: sensor.distance
+  description: A runtime-managed scalar distance sensor with selectable hardware driver.
+  entry_point: rpstack.distance_sensor:DistanceSensor
+  capabilities:
+    provides:
+      - interface: sensing.distance_observer
+        version: 1
+        dimensions: 1
+        quantity: distance
+        canonical_unit: m
+    requires: {}
+  configuration:
+    name: {type: string, required: true}
+    reference_frame: {type: string, required: false}
+    poll_frequency_hz: {type: number, minimum: 0, default: 0, unit: Hz}
+  lifecycle:
+    configure: configure
+    init: init
+    start: start
+    stop: stop
+    reset: reset
+    status: status
+  operations:
+    observe_distance:
+      method: distance
+      description: Read one canonical distance sample.
+      arguments: {}
+      returns: {type: DistanceSample, unit: m}
+      concurrency: read_only
+      rest: {method: GET, path: /api/distance/observe}
+    set_active:
+      method: set_active
+      description: Enable or disable sensor acquisition.
+      arguments:
+        active: {type: boolean, required: true}
+      returns: {type: boolean}
+      idempotent: true
+      safe_state: inactive
+      rest: {method: POST, path: /api/distance/active}
+    status:
+      method: status
+      description: Return current health and most recent observation.
+      arguments: {}
+      returns: {type: object}
+      concurrency: read_only
+      rest: {method: GET, path: /api/distance/status}
+  signals:
+    provides:
+      range.distance.updated: {payload: DistanceSample}
+      device.health.changed: {payload: object}
+    consumes: {}
+  implementations:
+    hcsr04:
+      entry_point: rpstack.distance_sensor.distance_drivers.hcsr04:HCSR04Driver
+      description: Trigger/echo ultrasonic range sensor.
+      configuration:
+        trigger_pin: {type: pin_ref, required: true}
+        echo_pin: {type: pin_ref, required: true}
+        timeout_us: {type: integer, minimum: 1, default: 30000, unit: us}
+        temperature_c: {type: number, default: 20, unit: C}
+      safe_state: shutdown
+    vl53l4cd:
+      entry_point: rpstack.distance_sensor.distance_drivers.vl53l4cd:VL53L4CDDriver
+      description: ST VL53L4CD time-of-flight distance sensor.
+      configuration:
+        i2c: {type: i2c_ref, required: true}
+        address: {type: integer, minimum: 8, maximum: 119, default: 41}
+        timing_budget: {type: integer, minimum: 10, maximum: 200, default: 50, unit: ms}
+        inter_measurement: {type: integer, minimum: 0, default: 0, unit: ms}
+        read_timeout_ms: {type: integer, minimum: 1, default: 1000, unit: ms}
+      safe_state: shutdown
+  tests:
+    observe_once:
+      description: Acquire one sample and verify its canonical representation.
+      mode: automatic
+      steps:
+        - operation: observe_distance
+          arguments: {}
+          expect:
+            fields: {unit: m, valid: true}

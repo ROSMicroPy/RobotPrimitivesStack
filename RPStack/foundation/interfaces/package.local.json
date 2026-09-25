@@ -1,0 +1,15 @@
+{
+  "name": "rp-interfaces",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/interfaces/__init__.py",
+      "src/rpstack/interfaces/__init__.py"
+    ]
+  ],
+  "deps": []
+}

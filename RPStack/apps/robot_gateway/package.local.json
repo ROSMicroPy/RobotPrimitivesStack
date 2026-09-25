@@ -1,0 +1,23 @@
+{
+  "name": "rp-robot-gateway",
+  "version": "0.1.1",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/apps/__init__.py",
+      "src/rpstack/apps/__init__.py"
+    ],
+    [
+      "rpstack/apps/robot_gateway/__init__.py",
+      "src/rpstack/apps/robot_gateway/__init__.py"
+    ],
+    [
+      "rpstack/apps/robot_gateway/gateway.py",
+      "src/rpstack/apps/robot_gateway/gateway.py"
+    ]
+  ],
+  "deps": []
+}

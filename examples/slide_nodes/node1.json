@@ -1,0 +1,998 @@
+{
+  "manifest": "rp.node/v1",
+  "name": "slide-provider",
+  "resources": {
+    "carriage_bus": {
+      "type": "i2c",
+      "bus": 0,
+      "sda": 5,
+      "scl": 4,
+      "frequency": 400000
+    }
+  },
+  "components": {
+    "motor_control": {
+      "manifest": "rp.service/v1",
+      "package": {
+        "name": "motor-control",
+        "version": "0.4.0",
+        "import": "rpstack.motor_control"
+      },
+      "service": {
+        "name": "motor-control",
+        "version": "0.4.0",
+        "kind": "individual_driver",
+        "type": "actuator.motor",
+        "description": "A runtime-managed motor with a selectable concrete driver.",
+        "entry_point": "rpstack.motor_control:Motor",
+        "capabilities": {
+          "provides": [],
+          "requires": {}
+        },
+        "configuration": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "motor_type": {
+            "type": "string",
+            "enum": [
+              "stepper",
+              "servo",
+              "bldc"
+            ],
+            "required": true
+          }
+        },
+        "lifecycle": {
+          "configure": "configure",
+          "init": "init",
+          "start": "start",
+          "stop": "stop",
+          "reset": "reset",
+          "status": "status"
+        },
+        "operations": {
+          "command": {
+            "method": "command",
+            "description": "Command relative incremental motion.",
+            "implementations": [
+              "step_dir"
+            ],
+            "arguments": {
+              "direction": {
+                "type": "boolean",
+                "required": true
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 1
+              }
+            },
+            "returns": {
+              "type": "boolean"
+            },
+            "concurrency": "exclusive",
+            "cancellable": true,
+            "safe_state": "stop"
+          },
+          "stop": {
+            "method": "stop",
+            "description": "Put the motor driver in its safe stopped state.",
+            "arguments": {},
+            "returns": {
+              "type": "boolean"
+            },
+            "idempotent": true,
+            "control": "stop"
+          },
+          "set_position": {
+            "method": "set_position",
+            "description": "Set servo angular position in driver-native units.",
+            "implementations": [
+              "pwm_servo"
+            ],
+            "arguments": {
+              "position": {
+                "type": "number",
+                "required": true
+              }
+            },
+            "returns": {
+              "type": "boolean"
+            },
+            "concurrency": "exclusive"
+          },
+          "set_speed": {
+            "method": "set_speed",
+            "description": "Set stepper or BLDC speed in revolutions per minute.",
+            "implementations": [
+              "step_dir",
+              "pwm_bldc"
+            ],
+            "arguments": {
+              "rpm": {
+                "type": "number",
+                "required": true,
+                "unit": "rpm"
+              }
+            },
+            "returns": {
+              "type": "boolean"
+            },
+            "concurrency": "exclusive"
+          },
+          "status": {
+            "method": "status",
+            "description": "Return driver and lifecycle status.",
+            "arguments": {},
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "read_only",
+            "snapshot": true
+          }
+        },
+        "signals": {
+          "provides": {
+            "motion.started": {
+              "payload": "object"
+            },
+            "motion.stopped": {
+              "payload": "object"
+            },
+            "device.health.changed": {
+              "payload": "object"
+            }
+          },
+          "consumes": {}
+        },
+        "implementations": {
+          "step_dir": {
+            "entry_point": "rpstack.motor_control.motor_drivers.step_dir:StepDirDriver",
+            "description": "Incremental STEP/DIR motor controller.",
+            "capabilities": {
+              "provides": [
+                {
+                  "interface": "motion.motion_actuator",
+                  "version": 1,
+                  "mode": "incremental"
+                }
+              ],
+              "requires": {}
+            },
+            "configuration": {
+              "step_pin": {
+                "type": "pin_ref",
+                "required": true
+              },
+              "dir_pin": {
+                "type": "pin_ref",
+                "required": true
+              },
+              "enable_pin": {
+                "type": "pin_ref",
+                "required": false
+              },
+              "enable_active_low": {
+                "type": "boolean",
+                "default": true
+              },
+              "step_delay_us": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 500,
+                "unit": "us"
+              },
+              "direction_settle_us": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 10,
+                "unit": "us"
+              },
+              "steps_per_revolution": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 200
+              },
+              "microsteps": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            "safe_state": "stop"
+          },
+          "pwm_servo": {
+            "entry_point": "rpstack.motor_control.motor_drivers.pwm_servo:PWMServoDriver",
+            "description": "Hobby servo PWM driver.",
+            "configuration": {},
+            "safe_state": "shutdown"
+          },
+          "pwm_bldc": {
+            "entry_point": "rpstack.motor_control.motor_drivers.pwm_bldc:PWMBLDCDriver",
+            "description": "Open-loop PWM/ESC BLDC driver.",
+            "configuration": {},
+            "safe_state": "stop"
+          }
+        },
+        "tests": {
+          "report_status": {
+            "description": "Read motor status without commanding motion.",
+            "mode": "automatic",
+            "steps": [
+              {
+                "operation": "status",
+                "arguments": {}
+              }
+            ]
+          },
+          "one_increment_each_direction": {
+            "description": "Move one increment in each direction, then stop.",
+            "mode": "hardware",
+            "preconditions": [
+              "The mechanism has clearance in both directions.",
+              "An operator can remove power if motion is incorrect."
+            ],
+            "steps": [
+              {
+                "operation": "command",
+                "arguments": {
+                  "direction": true,
+                  "amount": 1
+                },
+                "expect": {
+                  "equals": true
+                }
+              },
+              {
+                "operation": "command",
+                "arguments": {
+                  "direction": false,
+                  "amount": 1
+                },
+                "expect": {
+                  "equals": true
+                }
+              },
+              {
+                "operation": "stop",
+                "arguments": {}
+              }
+            ]
+          }
+        }
+      }
+    },
+    "distance_sensor": {
+      "manifest": "rp.service/v1",
+      "package": {
+        "name": "distance-sensor",
+        "version": "0.3.1",
+        "import": "rpstack.distance_sensor"
+      },
+      "service": {
+        "name": "distance-sensor",
+        "version": "0.3.1",
+        "kind": "individual_driver",
+        "type": "sensor.distance",
+        "description": "A runtime-managed scalar distance sensor with selectable hardware driver.",
+        "entry_point": "rpstack.distance_sensor:DistanceSensor",
+        "capabilities": {
+          "provides": [
+            {
+              "interface": "sensing.distance_observer",
+              "version": 1,
+              "dimensions": 1,
+              "quantity": "distance",
+              "canonical_unit": "m"
+            }
+          ],
+          "requires": {}
+        },
+        "configuration": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "reference_frame": {
+            "type": "string",
+            "required": false
+          },
+          "poll_frequency_hz": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "unit": "Hz"
+          }
+        },
+        "lifecycle": {
+          "configure": "configure",
+          "init": "init",
+          "start": "start",
+          "stop": "stop",
+          "reset": "reset",
+          "status": "status"
+        },
+        "operations": {
+          "observe_distance": {
+            "method": "distance",
+            "description": "Read one canonical distance sample.",
+            "arguments": {},
+            "returns": {
+              "type": "DistanceSample",
+              "unit": "m"
+            },
+            "concurrency": "read_only",
+            "rest": {
+              "method": "GET",
+              "path": "/api/distance/observe"
+            }
+          },
+          "set_active": {
+            "method": "set_active",
+            "description": "Enable or disable sensor acquisition.",
+            "arguments": {
+              "active": {
+                "type": "boolean",
+                "required": true
+              }
+            },
+            "returns": {
+              "type": "boolean"
+            },
+            "idempotent": true,
+            "safe_state": "inactive",
+            "rest": {
+              "method": "POST",
+              "path": "/api/distance/active"
+            }
+          },
+          "status": {
+            "method": "status",
+            "description": "Return current health and most recent observation.",
+            "arguments": {},
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "read_only",
+            "rest": {
+              "method": "GET",
+              "path": "/api/distance/status"
+            },
+            "snapshot": true
+          }
+        },
+        "signals": {
+          "provides": {
+            "range.distance.updated": {
+              "payload": "DistanceSample"
+            },
+            "device.health.changed": {
+              "payload": "object"
+            }
+          },
+          "consumes": {}
+        },
+        "implementations": {
+          "hcsr04": {
+            "entry_point": "rpstack.distance_sensor.distance_drivers.hcsr04:HCSR04Driver",
+            "description": "Trigger/echo ultrasonic range sensor.",
+            "configuration": {
+              "trigger_pin": {
+                "type": "pin_ref",
+                "required": true
+              },
+              "echo_pin": {
+                "type": "pin_ref",
+                "required": true
+              },
+              "timeout_us": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 30000,
+                "unit": "us"
+              },
+              "temperature_c": {
+                "type": "number",
+                "default": 20,
+                "unit": "C"
+              }
+            },
+            "safe_state": "shutdown"
+          },
+          "vl53l4cd": {
+            "entry_point": "rpstack.distance_sensor.distance_drivers.vl53l4cd:VL53L4CDDriver",
+            "description": "ST VL53L4CD time-of-flight distance sensor.",
+            "configuration": {
+              "i2c": {
+                "type": "i2c_ref",
+                "required": true
+              },
+              "address": {
+                "type": "integer",
+                "minimum": 8,
+                "maximum": 119,
+                "default": 41
+              },
+              "timing_budget": {
+                "type": "integer",
+                "minimum": 10,
+                "maximum": 200,
+                "default": 50,
+                "unit": "ms"
+              },
+              "inter_measurement": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0,
+                "unit": "ms"
+              },
+              "read_timeout_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1000,
+                "unit": "ms"
+              }
+            },
+            "safe_state": "shutdown"
+          }
+        },
+        "tests": {
+          "observe_once": {
+            "description": "Acquire one sample and verify its canonical representation.",
+            "mode": "automatic",
+            "steps": [
+              {
+                "operation": "observe_distance",
+                "arguments": {},
+                "expect": {
+                  "fields": {
+                    "unit": "m",
+                    "valid": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "distance_to_position": {
+      "manifest": "rp.service/v1",
+      "package": {
+        "name": "distance-to-position",
+        "version": "0.1.0",
+        "import": "rpstack.distance_to_position"
+      },
+      "service": {
+        "name": "distance-to-position",
+        "version": "0.1.0",
+        "kind": "adapter",
+        "type": "adapter.distance_to_position",
+        "description": "Convert a ray distance into installed linear position.",
+        "entry_point": "rpstack.distance_to_position:DistanceToPositionAdapter",
+        "capabilities": {
+          "provides": [
+            {
+              "interface": "motion.position_observer",
+              "version": 1,
+              "quantity": "linear",
+              "dimensions": 1,
+              "canonical_unit": "m"
+            }
+          ],
+          "requires": {
+            "distance_observer": {
+              "interface": "sensing.distance_observer",
+              "version": 1
+            }
+          }
+        },
+        "configuration": {
+          "zero_offset_m": {
+            "type": "number",
+            "default": 0.0,
+            "unit": "m"
+          },
+          "direction": {
+            "type": "integer",
+            "enum": [
+              -1,
+              1
+            ],
+            "default": 1
+          },
+          "reference_frame": {
+            "type": "string",
+            "required": true
+          },
+          "min_position_m": {
+            "type": "number",
+            "required": false,
+            "unit": "m"
+          },
+          "max_position_m": {
+            "type": "number",
+            "required": false,
+            "unit": "m"
+          }
+        },
+        "lifecycle": {
+          "configure": "configure",
+          "init": "init",
+          "start": "start",
+          "stop": "stop",
+          "reset": "reset",
+          "status": "status"
+        },
+        "operations": {
+          "observe_position": {
+            "method": "position",
+            "description": "Read transformed linear position.",
+            "arguments": {},
+            "returns": {
+              "type": "PositionSample",
+              "quantity": "linear",
+              "unit": "m"
+            },
+            "concurrency": "read_only"
+          },
+          "status": {
+            "method": "status",
+            "description": "Return adapter state and reference frame.",
+            "arguments": {},
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "read_only",
+            "snapshot": true
+          }
+        },
+        "signals": {
+          "provides": {
+            "motion.position.updated": {
+              "payload": "PositionSample"
+            }
+          },
+          "consumes": {
+            "range.distance.updated": {
+              "payload": "DistanceSample"
+            }
+          }
+        },
+        "implementations": {},
+        "tests": {
+          "transform_once": {
+            "description": "Read one transformed position sample.",
+            "mode": "automatic",
+            "steps": [
+              {
+                "operation": "observe_position",
+                "arguments": {},
+                "expect": {
+                  "fields": {
+                    "kind": "linear",
+                    "unit": "m"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "linear_slide": {
+      "manifest": "rp.service/v1",
+      "package": {
+        "name": "rube-goldberg-linear-slide",
+        "version": "0.4.0",
+        "import": "rpstack.linear_slide"
+      },
+      "service": {
+        "name": "observed-linear-actuator",
+        "version": "0.4.0",
+        "kind": "composite_driver",
+        "type": "motion.linear_actuator",
+        "description": "Closed-loop linear slide composed from motion and position capabilities.",
+        "entry_point": "rpstack.linear_slide:LinearSlide",
+        "capabilities": {
+          "provides": [
+            {
+              "interface": "motion.position_actuator",
+              "version": 1,
+              "quantity": "linear",
+              "dimensions": 1,
+              "canonical_unit": "m"
+            }
+          ],
+          "requires": {
+            "motor": {
+              "interface": "motion.motion_actuator",
+              "version": 1,
+              "constraints": {
+                "mode": "incremental"
+              }
+            },
+            "position": {
+              "interface": "motion.position_observer",
+              "version": 1,
+              "constraints": {
+                "quantity": "linear",
+                "dimensions": 1,
+                "canonical_unit": "m"
+              }
+            }
+          }
+        },
+        "configuration": {
+          "positive_direction": {
+            "type": "boolean",
+            "default": true
+          },
+          "tolerance_m": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0.001,
+            "unit": "m"
+          },
+          "max_steps": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 10000
+          },
+          "no_motion_sample_limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 10
+          },
+          "min_position_m": {
+            "type": "number",
+            "required": false,
+            "unit": "m"
+          },
+          "max_position_m": {
+            "type": "number",
+            "required": false,
+            "unit": "m"
+          }
+        },
+        "lifecycle": {
+          "configure": "configure",
+          "init": "init",
+          "start": "start",
+          "stop": "stop",
+          "reset": "reset",
+          "status": "status",
+          "calibrate": "calibrate"
+        },
+        "operations": {
+          "observe_position": {
+            "method": "position",
+            "description": "Read current linear position in metres.",
+            "arguments": {},
+            "returns": {
+              "type": "PositionSample",
+              "quantity": "linear",
+              "unit": "m"
+            },
+            "concurrency": "read_only",
+            "rest": {
+              "method": "GET",
+              "path": "/api/linear-slide/position"
+            }
+          },
+          "move_to": {
+            "method": "move_to",
+            "description": "Move the carriage to an absolute linear position.",
+            "arguments": {
+              "target": {
+                "type": "number",
+                "required": true,
+                "unit": "m"
+              }
+            },
+            "returns": {
+              "type": "PositionSample",
+              "quantity": "linear",
+              "unit": "m"
+            },
+            "concurrency": "exclusive",
+            "cancellable": true,
+            "safe_state": "stop",
+            "errors": [
+              "target_out_of_range",
+              "maximum_steps_exceeded",
+              "observer_invalid",
+              "move_cancelled",
+              "wrong_direction",
+              "no_motion"
+            ],
+            "rest": {
+              "method": "POST",
+              "path": "/api/linear-slide/move-to"
+            }
+          },
+          "stop": {
+            "method": "stop",
+            "description": "Cancel motion and stop the bound motion actuator.",
+            "arguments": {},
+            "returns": {
+              "type": "boolean"
+            },
+            "idempotent": true,
+            "rest": {
+              "method": "POST",
+              "path": "/api/linear-slide/stop"
+            },
+            "control": "stop"
+          },
+          "status": {
+            "method": "status",
+            "description": "Return slide state and current position.",
+            "arguments": {},
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "read_only",
+            "rest": {
+              "method": "GET",
+              "path": "/api/linear-slide/status"
+            },
+            "snapshot": true
+          },
+          "jog_steps": {
+            "method": "jog_steps",
+            "description": "Jog a fixed number of steps without closed-loop targeting.",
+            "arguments": {
+              "steps": {
+                "type": "integer",
+                "required": true,
+                "minimum": 1,
+                "default": 200
+              },
+              "direction": {
+                "type": "boolean",
+                "required": false,
+                "default": true
+              }
+            },
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "exclusive",
+            "rest": {
+              "method": "POST",
+              "path": "/api/linear-slide/jog"
+            }
+          },
+          "calibrate": {
+            "method": "calibrate",
+            "description": "Explicit distance calibration: uninterrupted forward/reverse runs, measured only while stationary.",
+            "arguments": {
+              "steps": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1000
+              }
+            },
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "exclusive",
+            "cancellable": true,
+            "safe_state": "stop"
+          },
+          "set_range": {
+            "method": "set_range",
+            "description": "Set absolute target bounds in millimetres until restart; does not move.",
+            "arguments": {
+              "min_mm": {
+                "type": "number",
+                "required": true,
+                "unit": "mm"
+              },
+              "max_mm": {
+                "type": "number",
+                "required": true,
+                "unit": "mm"
+              }
+            },
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "exclusive",
+            "rest": {
+              "method": "POST",
+              "path": "/api/linear-slide/range"
+            }
+          },
+          "get_range": {
+            "method": "get_range",
+            "arguments": {},
+            "returns": {
+              "type": "object"
+            },
+            "concurrency": "read_only",
+            "rest": {
+              "method": "GET",
+              "path": "/api/linear-slide/range"
+            }
+          }
+        },
+        "signals": {
+          "provides": {
+            "motion.started": {
+              "payload": "object"
+            },
+            "motion.position.updated": {
+              "payload": "PositionSample"
+            },
+            "motion.target.reached": {
+              "payload": "PositionSample"
+            },
+            "motion.target.failed": {
+              "payload": "object"
+            }
+          },
+          "consumes": {}
+        },
+        "implementations": {},
+        "tests": {
+          "observe_position": {
+            "description": "Read the current carriage position without moving it.",
+            "mode": "automatic",
+            "steps": [
+              {
+                "operation": "observe_position",
+                "arguments": {},
+                "expect": {
+                  "fields": {
+                    "kind": "linear",
+                    "unit": "m",
+                    "valid": true
+                  }
+                }
+              }
+            ]
+          },
+          "stop_motion": {
+            "description": "Exercise the safe-state operation.",
+            "mode": "automatic",
+            "steps": [
+              {
+                "operation": "stop",
+                "arguments": {}
+              }
+            ]
+          },
+          "move_to_target": {
+            "description": "Move to an operator-selected target using the move_to operation.",
+            "mode": "hardware",
+            "preconditions": [
+              "Replace target with a safe value inside the configured travel range.",
+              "Verify physical clearance and emergency power removal."
+            ],
+            "parameters": {
+              "target": {
+                "type": "number",
+                "required": true,
+                "unit": "m"
+              }
+            },
+            "steps": [
+              {
+                "operation": "move_to",
+                "arguments": {
+                  "target": {
+                    "$parameter": "target"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "motor": {
+      "component": "motor_control",
+      "implementation": "step_dir",
+      "constructor": {
+        "name": "slide_motor",
+        "motor_type": "stepper"
+      },
+      "config": {
+        "step_pin": 17,
+        "dir_pin": 3,
+        "enable_pin": 21,
+        "step_delay_us": 100
+      }
+    },
+    "distance": {
+      "component": "distance_sensor",
+      "implementation": "vl53l4cd",
+      "constructor": {
+        "name": "slide_distance"
+      },
+      "config": {
+        "i2c": {
+          "$resource": "carriage_bus"
+        },
+        "address": 41,
+        "timing_budget": 50,
+        "inter_measurement": 0
+      }
+    },
+    "position": {
+      "component": "distance_to_position",
+      "bindings": {
+        "distance_observer": "distance"
+      },
+      "config": {
+        "reference_frame": "linear_slide.carriage"
+      }
+    },
+    "slide": {
+      "component": "linear_slide",
+      "bindings": {
+        "motor": "motor",
+        "position": "position"
+      },
+      "config": {
+        "positive_direction": true,
+        "tolerance_m": 0.001,
+        "max_steps": 100000,
+        "no_motion_sample_limit": 10,
+        "min_position_m": 0.03,
+        "max_position_m": 0.3
+      }
+    }
+  },
+  "runtime": [
+    {
+      "id": "http",
+      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "config": {
+        "port": 8080
+      }
+    },
+    {
+      "id": "catalog",
+      "entry_point": "rpstack.catalog:Catalog"
+    }
+  ],
+  "flows": {},
+  "identity": {
+    "entity": "SlideDemo",
+    "node": "node1"
+  },
+  "signals": {
+    "routes": [
+      "local",
+      "link"
+    ],
+    "transports": [
+      {
+        "id": "link",
+        "entry_point": "rpstack.signals.inprocess:InProcessTransport"
+      }
+    ]
+  },
+  "apps": [
+    {
+      "id": "commands",
+      "entry_point": "rpstack.apps.slide_commands:SlideCommandApp"
+    },
+    {
+      "id": "gateway",
+      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
+      "requires": [
+        "http",
+        "catalog"
+      ]
+    }
+  ]
+}

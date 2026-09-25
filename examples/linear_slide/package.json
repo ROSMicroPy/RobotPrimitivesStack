@@ -1,0 +1,76 @@
+{
+  "name": "rp-test-linear-slide",
+  "version": "1.0.1",
+  "urls": [
+    [
+      "main.py",
+      "main.py"
+    ],
+    [
+      "linear_slide_manifest.json",
+      "manifest.json"
+    ]
+  ],
+  "deps": [
+    [
+      "../../RPStack/runtime/signals/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/foundation/interfaces/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/services/motor_control/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/services/distance_sensor/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/services/distance_to_position/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/services/linear_slide/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/control/http/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/execution_engine/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/node_runtime/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/control/shell/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/platform/env/package.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/apps/robot_gateway/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/runtime/catalog/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/foundation/support/package.local.json",
+      "latest"
+    ],
+    [
+      "../../RPStack/apps/slide_commands/package.local.json",
+      "latest"
+    ]
+  ]
+}

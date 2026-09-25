@@ -1,0 +1,27 @@
+{
+  "name": "rp-execution-engine",
+  "version": "1.0.0",
+  "urls": [
+    [
+      "rpstack/__init__.py",
+      "src/rpstack/__init__.py"
+    ],
+    [
+      "rpstack/execution_engine/__init__.py",
+      "src/rpstack/execution_engine/__init__.py"
+    ],
+    [
+      "rpstack/execution_engine/distributed.py",
+      "src/rpstack/execution_engine/distributed.py"
+    ],
+    [
+      "rpstack/execution_engine/engine.py",
+      "src/rpstack/execution_engine/engine.py"
+    ],
+    [
+      "rpstack/execution_engine/tasks.py",
+      "src/rpstack/execution_engine/tasks.py"
+    ]
+  ],
+  "deps": []
+}
