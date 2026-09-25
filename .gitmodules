@@ -7,3 +7,6 @@
 [submodule "ROSMicroPy"]
 	path = ROSMicroPy
 	url = https://github.com/ROSMicroPy/ROSMicroPy.git
+[submodule "RPStack/control/http"]
+	path = RPStack/control/http
+	url = https://github.com/ROSMicroPy/rmp_pylib-micropyserver.git
