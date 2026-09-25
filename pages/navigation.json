@@ -45,6 +45,16 @@
     "title": "Services level"
   },
   {
+    "group": "Architecture",
+    "slug": "bootstrap",
+    "title": "Provisioning & bootstrap"
+  },
+  {
+    "group": "Architecture",
+    "slug": "registries",
+    "title": "Service & app registries"
+  },
+  {
     "group": "Guides",
     "slug": "deployment",
     "title": "Multiple Devices"

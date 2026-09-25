@@ -8,6 +8,8 @@ Start with a host simulation, then install the linear-slide example on an ESP32.
 
 - [Getting Started](getting-started.html): run a simulation and install your first device.
 - [Basic Concepts](concepts.html): understand entities, nodes, apps, services, and signals.
+- [Provisioning & Bootstrap](bootstrap.html): proposed identity provisioning, Architect-managed updates, and coordinated startup.
+- [Service & App Registries](registries.html): proposed versioned descriptors, dependency resolution, and private registry sources.
 - [Linear Slide](linear-slide.html): calibrate, set a range, and issue a move from the REPL.
 - [API Reference](api.html): invoke operations, track tasks, and change configuration.
 
@@ -48,4 +50,4 @@ See [package structure and terminology](architecture.html) for dependency bounda
 
 ## Implementation status
 
-This documentation describes the current repository implementation. Host simulations do not establish physical motor timing, radio reliability, or sensor accuracy. Current slide calibration uses single readings at the boundaries of each leg; averaging and noise-aware calibration are not yet implemented.
+Unless explicitly marked as a design proposal, this documentation describes the current repository implementation. The provisioning/bootstrap and service/app registry pages describe planned behavior, not currently available features. Host simulations do not establish physical motor timing, radio reliability, or sensor accuracy. Current slide calibration uses single readings at the boundaries of each leg; averaging and noise-aware calibration are not yet implemented.

@@ -1,5 +1,10 @@
 # Multiple Devices
 
+This guide describes the current manual installation workflow. See the
+[provisioning and bootstrap proposal](bootstrap.html) for planned USB identity
+assignment, wireless software maintenance through Robot Architect, and robot-wide
+readiness checks.
+
 Install the **same** `examples/slide_nodes/package.json` on both boards. The device manifests use a shared ESP-NOW transport that delivers between local logical nodes and broadcasts over the radio.
 
 ## RobotArchitect discovery

@@ -2,6 +2,10 @@
 
 Services expose hardware-independent capabilities. A component contract describes configuration, lifecycle hooks, operations, required/provided interfaces, implementation choices, and tests.
 
+For planned publishing and discovery in Robot Architect, see
+[Service and app registries](registries.html). That design adds immutable version
+records and explicit dependency resolution across public and private sources.
+
 ## Drivers, adapters, composites
 
 ```mermaid

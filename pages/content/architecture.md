@@ -44,6 +44,16 @@ A slide client can install `rpstack.apps.slide_commands` without installing the 
 
 `ServiceRegistry` resolves service dependencies. `Catalog` describes discovered nodes. `PhysicalComponent` and `CompositionRegistry` model physical assemblies and mount claims.
 
+## Proposed provisioning and software discovery
+
+The [provisioning and bootstrap design](bootstrap.html) separates USB identity
+provisioning, Architect-managed software delivery, device inventory checks, and
+onboard permission to operate. The [service and app registry design](registries.html)
+defines versioned descriptors, dependency resolution, and multiple public or private
+sources. These are proposals, not implemented runtime guarantees. The proposed
+software registry is distinct from both the in-process `ServiceRegistry` and the
+runtime discovery `Catalog`.
+
 ## Lifecycle
 
 Providers start before consumers and stop in reverse dependency order. Service stop/reset keeps control facilities reachable. Full shutdown releases applications, transports, and runtime resources as well. Work runs through managed tasks on the node's cooperative event loop, with dedicated pulse workers for blocking motor batches.
