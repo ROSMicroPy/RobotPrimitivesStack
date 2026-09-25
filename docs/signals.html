@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signals · RPStack</title><meta name="description" content="RPStack documentation: Signals">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html" aria-current="page">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">¶</a></h1>
+<p>Signals connect publishers and subscribers within an entity. Applications use the same envelope through local delivery, in-process transports, ESP-NOW, or ROS adapters.</p>
+<p>See <a href="ros-integration.html">ROS 2 integration</a> for direct typed ROSMicroPy
+telemetry and the optional desktop action/diagnostics gateway. The generic ROS
+signal envelope remains available alongside those native interfaces.</p>
+<h2 id="publish-and-subscribe">Publish and subscribe<a class="headerlink" href="#publish-and-subscribe" title="Permanent link">¶</a></h2>
+<p>Inside an app with a node reference:</p>
+<pre><code class="language-python">subscription = node.signals.subscribe(
+    'motion.target.reached', source='node1', correlation=run_id)
+try:
+    node.publish_signal('slide.move', {'position_mm': 100},
+                        target='node1', correlation=run_id)
+    result = await subscription.get(timeout=30)
+finally:
+    subscription.close()
+</code></pre>
+<p>Create a unique <code>run_id</code> for each request. Subscribe before sending so a quick reply cannot be missed. The complete slide client also probes readiness and handles failure signals; use it for device operation.</p>
+<h2 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">¶</a></h2>
+<p><code>signals.routes</code> selects the destinations of locally published messages. Omitted routes default to local delivery. Transport IDs identify configured adapters; bridge rules explicitly forward between transports. Incoming messages addressed to this node or <code>*</code> are delivered locally. Identity and correlation filters keep unrelated responses separate.</p>
+<pre class="mermaid">flowchart LR
+    App[Publishing app] --&gt; Bus[Entity signal bus]
+    Bus --&gt; Local[Local subscribers]
+    Bus --&gt; Transport[Configured transport]
+    Transport --&gt; Peer[Peer node bus]
+    Peer --&gt; Subscriber[Matching subscriber]
+</pre>
+<h2 id="delivery-semantics">Delivery semantics<a class="headerlink" href="#delivery-semantics" title="Permanent link">¶</a></h2>
+<p>Publishing enqueues a bounded message; transport tasks perform network I/O. Signals are not a persistent event log. Late subscribers do not receive earlier publications. Queue overflow and listener failures are explicit failure conditions.</p>
+<p>Duplicate suppression and bounded relaying do not make physical commands exactly-once across arbitrary failures. The slide demo retries readiness probes but sends each move command once. A lost reply produces a timeout, which does not prove that motion stopped.</p>
+<p>Names beginning <code>_rp.</code> are reserved for runtime protocols. Application names such as <code>slide.move</code> and <code>motion.target.reached</code> belong to application contracts.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="nodes.html"><small>Previous</small>Nodes &amp; manifests</a><a href="apps.html"><small>Next</small>Apps &amp; behaviors</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#signals">Signals</a><ul>
+<li><a href="#publish-and-subscribe">Publish and subscribe</a></li>
+<li><a href="#routing">Routing</a></li>
+<li><a href="#delivery-semantics">Delivery semantics</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

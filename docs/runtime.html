@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Runtime level · RPStack</title><meta name="description" content="RPStack documentation: Runtime level">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html" aria-current="page">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="runtime-level">Runtime Level<a class="headerlink" href="#runtime-level" title="Permanent link">¶</a></h1>
+<p>The runtime handles assembly and execution rather than implementing the mechanics of a particular robot.</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node_runtime</code></td>
+<td>Manifest loading, capability resolution, lifecycle, node hosting</td>
+</tr>
+<tr>
+<td><code>execution_engine</code></td>
+<td>Tracked tasks, operations, behavior graphs and remote actions</td>
+</tr>
+<tr>
+<td><code>signals</code></td>
+<td>Entity-scoped publication, subscriptions and routing</td>
+</tr>
+<tr>
+<td><code>espnow</code>, <code>ros_signals</code></td>
+<td>Network transport adapters</td>
+</tr>
+<tr>
+<td><code>micropyserver</code>, <code>shell</code></td>
+<td>HTTP and interactive controls</td>
+</tr>
+<tr>
+<td><code>catalog</code></td>
+<td>Discovery infrastructure used by gateway applications</td>
+</tr>
+<tr>
+<td><code>bootmgr</code>, <code>env</code>, <code>opentelemetry</code></td>
+<td>Boot, environment and observability facilities</td>
+</tr>
+</tbody>
+</table>
+<h2 id="startup-and-shutdown">Startup and shutdown<a class="headerlink" href="#startup-and-shutdown" title="Permanent link">¶</a></h2>
+<pre class="mermaid">flowchart TD
+    Load[Load manifest and validate] --&gt; Resolve[Resolve capabilities and dependencies]
+    Resolve --&gt; Init[Construct, configure and initialize services]
+    Init --&gt; Start[Start providers before consumers]
+    Start --&gt; Infra[Start runtime listeners and signal transports]
+    Infra --&gt; Apps[Start apps and autostart flows]
+    Apps --&gt; Work[Accept managed operations]
+    Work --&gt; Stop[Stop admission and cancel managed work]
+    Stop --&gt; Cleanup[Stop consumers before providers]
+    Cleanup --&gt; Shutdown[Shutdown closes apps, listeners and resources]
+</pre>
+<p><code>stop()</code> stops application services and flows while controls remain available. <code>reset()</code> rebuilds service instances. <code>shutdown()</code> also closes runtime listeners, apps, and platform resources. Failed partial startup cleans up initialized instances.</p>
+<h2 id="managed-operations">Managed operations<a class="headerlink" href="#managed-operations" title="Permanent link">¶</a></h2>
+<pre><code class="language-python">result = await node.invoke('slide', 'get_range', {})
+job_id = node.submit('slide', 'move_to', {'target': 0.1})
+result = await node.tasks.wait(job_id)
+</code></pre>
+<p><code>submit</code> reserves claims immediately and returns a task ID. Exclusive operations also claim transitive dependencies: a slide move claims the motor and position chain. Conflicting work fails instead of accumulating an unbounded motion queue. Operations must be declared in the manifest.</p>
+<p>The task registry tracks services, listeners, operations, flows, and requests, retaining a bounded history of completed work. The shell and HTTP task API expose this state.</p>
+<h2 id="concurrency">Concurrency<a class="headerlink" href="#concurrency" title="Permanent link">¶</a></h2>
+<p>The execution engine uses cooperative asyncio. Blocking code does not become cooperative simply because it runs in a task. The slide deployment specifically uses a background runtime thread to keep the native REPL free, plus a pulse worker for uninterrupted batches. That is a deployment/driver arrangement, not a general thread-per-service runtime.</p>
+<h2 id="calibration-phase">Calibration phase<a class="headerlink" href="#calibration-phase" title="Permanent link">¶</a></h2>
+<p>Calibration is explicit and optional. A service opts in through <code>service.lifecycle.calibrate</code>. No calibration runs automatically during startup or reset.</p>
+<pre><code class="language-python">await node.calibrate('slide', {'steps': 1000})
+await node.calibrate(arguments={'slide': {'steps': 1000}})
+print(node.calibration_status())
+</code></pre>
+<p>Node-wide calibration runs declared hooks in dependency order. Services without hooks are <code>not_required</code>. Selected services and their dependencies are claimed for the phase; failures and cancellation are tracked. See <a href="calibration.html">Calibration</a>.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="architecture.html"><small>Previous</small>Package structure</a><a href="services.html"><small>Next</small>Services level</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#runtime-level">Runtime Level</a><ul>
+<li><a href="#startup-and-shutdown">Startup and shutdown</a></li>
+<li><a href="#managed-operations">Managed operations</a></li>
+<li><a href="#concurrency">Concurrency</a></li>
+<li><a href="#calibration-phase">Calibration phase</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

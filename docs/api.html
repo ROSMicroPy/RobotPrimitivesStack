@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API Reference · RPStack</title><meta name="description" content="RPStack documentation: API Reference">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html" aria-current="page">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Reference</div><article><h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">¶</a></h1>
+<h2 id="native-repl-helpers">Native REPL helpers<a class="headerlink" href="#native-repl-helpers" title="Permanent link">¶</a></h2>
+<p>These functions are installed by the slide demo package, not by every RPStack node.</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start()</code></td>
+<td>Start the local slide provider and return to the prompt</td>
+</tr>
+<tr>
+<td><code>start('client')</code></td>
+<td>Start a client host without local hardware</td>
+</tr>
+<tr>
+<td><code>position(timeout_s=5)</code></td>
+<td>Request a canonical position sample without motion</td>
+</tr>
+<tr>
+<td><code>calibrate(steps=1000, timeout_s=30)</code></td>
+<td>Explicit forward/reverse distance test</td>
+</tr>
+<tr>
+<td><code>set_range(min_mm, max_mm, timeout_s=5)</code></td>
+<td>Update provider target bounds until restart</td>
+</tr>
+<tr>
+<td><code>demo(position_mm=100, timeout_s=30)</code></td>
+<td>Run one correlated absolute move request</td>
+</tr>
+<tr>
+<td><code>status()</code></td>
+<td>Return the local host snapshot</td>
+</tr>
+<tr>
+<td><code>stop()</code></td>
+<td>Shut down the local host and its owned work</td>
+</tr>
+</tbody>
+</table>
+<p>Remote commands use the same helpers. A timeout describes the missing outcome, not proof of remote cancellation.</p>
+<h2 id="service-operations">Service operations<a class="headerlink" href="#service-operations" title="Permanent link">¶</a></h2>
+<p>From inside an async app:</p>
+<pre><code class="language-python">await node.invoke('slide', 'set_range', {'min_mm': 30, 'max_mm': 300})
+bounds = await node.invoke('slide', 'get_range', {})
+position = await node.invoke('slide', 'move_to', {'target': 0.1})
+</code></pre>
+<p><code>move_to</code> uses metres. <code>set_range</code> uses explicitly named millimetre arguments. Other slide operations include <code>observe_position</code>, <code>status</code>, <code>calibrate</code>, <code>jog_steps</code>.</p>
+<h2 id="http-task-api">HTTP task API<a class="headerlink" href="#http-task-api" title="Permanent link">¶</a></h2>
+<p>HTTP is available only when the node manifest enables <code>rpstack.micropyserver:NodeRestApi</code> and suitable networking. The slide-node demo includes HTTP, catalog and gateway runtimes on the provider and persistent client host. Configure Wi-Fi before starting; use the printed gateway URL.</p>
+<table>
+<thead>
+<tr>
+<th>Method and path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /manifest</code></td>
+<td>Public service/operation discovery</td>
+</tr>
+<tr>
+<td><code>POST /api/services/{service}/{operation}</code></td>
+<td>Submit declared service operation</td>
+</tr>
+<tr>
+<td><code>GET /api/tasks</code></td>
+<td>Task list and retained outcomes</td>
+</tr>
+<tr>
+<td><code>GET /api/task?id=ID</code></td>
+<td>Inspect a task result or error</td>
+</tr>
+<tr>
+<td><code>POST /api/task/cancel</code></td>
+<td>Cancel operation/flow: <code>{"id": ID}</code></td>
+</tr>
+<tr>
+<td><code>GET /api/node/status</code></td>
+<td>Node state, including calibration</td>
+</tr>
+<tr>
+<td><code>POST /api/node/calibrate</code></td>
+<td>Calibrate all services or one selected service</td>
+</tr>
+<tr>
+<td><code>POST /api/node/stop</code></td>
+<td>Stop managed application work</td>
+</tr>
+<tr>
+<td><code>POST /api/node/reset</code></td>
+<td>Rebuild application services</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-sh">curl -X POST http://DEVICE/api/services/slide/set_range   -H 'Content-Type: application/json'   -d '{&quot;min_mm&quot;:30,&quot;max_mm&quot;:300}'
+</code></pre>
+<p>Ordinary operations return HTTP 202 with <code>task_id</code> and <code>status_url</code>. Follow that URL for completion; acceptance alone is not success. Runtime discovery generates these service paths from service IDs and operation names.</p>
+<h2 id="slide-signal-protocol">Slide signal protocol<a class="headerlink" href="#slide-signal-protocol" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Request</th>
+<th>Arguments</th>
+<th>Successful terminal reply</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>slide.ping</code></td>
+<td>Empty</td>
+<td><code>slide.ready</code></td>
+</tr>
+<tr>
+<td><code>slide.observe</code></td>
+<td>Empty</td>
+<td><code>slide.position</code></td>
+</tr>
+<tr>
+<td><code>slide.calibrate</code></td>
+<td><code>steps</code></td>
+<td><code>slide.calibrated</code></td>
+</tr>
+<tr>
+<td><code>slide.set_range</code></td>
+<td><code>min_mm</code>, <code>max_mm</code></td>
+<td><code>slide.range.updated</code></td>
+</tr>
+<tr>
+<td><code>slide.move</code></td>
+<td><code>position_mm</code></td>
+<td><code>motion.target.reached</code></td>
+</tr>
+</tbody>
+</table>
+<p>Commands require an explicit target and nonempty correlation ID. Failures use <code>motion.target.failed</code>, including observation and configuration errors. Only motion/calibration requests emit <code>motion.started</code>. The ready reply identifies the command protocol version.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="calibration.html"><small>Previous</small>Calibration</a><a href="troubleshooting.html"><small>Next</small>Troubleshooting</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#api-reference">API Reference</a><ul>
+<li><a href="#native-repl-helpers">Native REPL helpers</a></li>
+<li><a href="#service-operations">Service operations</a></li>
+<li><a href="#http-task-api">HTTP task API</a></li>
+<li><a href="#slide-signal-protocol">Slide signal protocol</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

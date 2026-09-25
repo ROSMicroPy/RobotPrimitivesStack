@@ -45,7 +45,7 @@ See [package structure and terminology](architecture.html) for dependency bounda
 | `RPStack/apps/` | Reusable node applications, including the robot gateway and slide command apps |
 | `examples/` | Runnable assemblies, simulations and hardware deployments |
 | `RPStack/spec/` | Manifest schemas and contract documentation |
-| `pages/` | This documentation site |
+| `docs/` | This documentation site |
 | `ROSMicroPy/` | Firmware and ROS integration project |
 | `RPStack_WebTester/`, `RobotArchitect/` | Related tools; inspect their own READMEs for setup |
 

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Linear Slide · RPStack</title><meta name="description" content="RPStack documentation: Linear Slide">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html" aria-current="page">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Guides</div><article><h1 id="linear-slide">Linear Slide<a class="headerlink" href="#linear-slide" title="Permanent link">¶</a></h1>
+<p>The slide deployment combines a motor, TOF distance sensor, position adapter, composite controller, resident command app, and one-off client app.</p>
+<h2 id="command-lifecycle">Command lifecycle<a class="headerlink" href="#command-lifecycle" title="Permanent link">¶</a></h2>
+<pre class="mermaid">sequenceDiagram
+    participant Client as MoveOnceApp
+    participant App as SlideCommandApp
+    participant Runtime as Supervisor
+    participant Slide as LinearSlide
+    Client-&gt;&gt;App: slide.ping
+    App--&gt;&gt;Client: slide.ready
+    Client-&gt;&gt;App: slide.move (position_mm, correlation)
+    App-&gt;&gt;Runtime: submit move_to(target in metres)
+    App--&gt;&gt;Client: motion.started
+    Runtime-&gt;&gt;Slide: Execute managed move
+    Slide--&gt;&gt;Runtime: PositionSample or error
+    Runtime--&gt;&gt;App: Task outcome
+    App--&gt;&gt;Client: motion.target.reached / motion.target.failed
+</pre>
+<p><code>motion.started</code> announces operation execution; it is not sensor confirmation that the carriage moved. The client subscribes before sending, filters by source and correlation, prints replies, and exits after the terminal result.</p>
+<h2 id="repl-workflow">REPL workflow<a class="headerlink" href="#repl-workflow" title="Permanent link">¶</a></h2>
+<pre><code class="language-python">import slide_nodes
+slide_nodes.start()
+print(slide_nodes.position())
+report = slide_nodes.calibrate(steps=1000)
+slide_nodes.set_range(30, 300)
+slide_nodes.demo(100)
+slide_nodes.demo(200, timeout_s=60)
+slide_nodes.status()
+slide_nodes.stop()
+</code></pre>
+<h2 id="range-and-step-budget">Range and step budget<a class="headerlink" href="#range-and-step-budget" title="Permanent link">¶</a></h2>
+<p>The node1 manifests configure <code>min_position_m: 0.03</code>, <code>max_position_m: 0.3</code>, and <code>max_steps: 100000</code>. Target bounds are inclusive and interpreted in the position adapter's coordinate frame. <code>set_range(min_mm, max_mm)</code> changes bounds in memory until restart; update the manifest for persistence. Bounds must be finite and strictly ordered. Changes during active movement are rejected.</p>
+<p>These bounds reject out-of-range <strong>targets</strong>. They are not physical end stops, and do not constrain the calibration legs or fixed-step jogs. Feedback and scale error can also produce overshoot within a pulse batch.</p>
+<p>A move of 100 mm at 222 steps/mm needs roughly 22,200 steps. The separate step budget remains fixed when you change range; it bounds total commanded steps rather than describing travel geometry.</p>
+<h2 id="motion-and-observations">Motion and observations<a class="headerlink" href="#motion-and-observations" title="Permanent link">¶</a></h2>
+<p>After calibration, the controller estimates a pulse batch covering about 96% of the observed target error. It runs that batch uninterrupted, then takes a fresh position reading and adjusts the remaining motion. Pauses at these observation boundaries are expected; sensor reads are not interleaved with individual pulses.</p>
+<p>The configured 100 µs delay is applied to both HIGH and LOW portions of a pulse. Python and GPIO overhead add time. There is no acceleration profile or guaranteed pulse frequency.</p>
+<p>The current VL53L4CD adapter stops/clears and restarts ranging for each observation, waits at least a configured measurement interval plus margin, checks data-ready, reads the range, and stops again. This avoids requiring the host to observe a brief ready-low transition.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="deployment.html"><small>Previous</small>Multiple Devices</a><a href="calibration.html"><small>Next</small>Calibration</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#linear-slide">Linear Slide</a><ul>
+<li><a href="#command-lifecycle">Command lifecycle</a></li>
+<li><a href="#repl-workflow">REPL workflow</a></li>
+<li><a href="#range-and-step-budget">Range and step budget</a></li>
+<li><a href="#motion-and-observations">Motion and observations</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

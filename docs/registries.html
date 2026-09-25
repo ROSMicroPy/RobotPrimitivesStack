@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service &amp; app registries · RPStack</title><meta name="description" content="RPStack documentation: Service &amp; app registries">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html" aria-current="page">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="service-and-app-registries">Service and app registries<a class="headerlink" href="#service-and-app-registries" title="Permanent link">¶</a></h1>
+<p><strong>Design proposal.</strong> This page defines the intended Robot Architect registry
+model. Registry schemas, publishing automation, multi-registry discovery, and
+deployment locking described here are not yet implemented. JSON examples are
+proposed formats, not inputs supported by the current runtime.</p>
+<h2 id="available-software-and-observed-devices">Available software and observed devices<a class="headerlink" href="#available-software-and-observed-devices" title="Permanent link">¶</a></h2>
+<p>A software registry lists services and apps available to install. The runtime
+catalog lists nodes and capabilities actually observed on the robot. Architect
+uses both to display desired configuration alongside installed state.</p>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Question it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registry index</td>
+<td>Which services and apps are available?</td>
+</tr>
+<tr>
+<td>Versioned service/app descriptor</td>
+<td>What does this version do, require, and support?</td>
+</tr>
+<tr>
+<td>Package manifest (<code>package.json</code>)</td>
+<td>Which files and package dependencies install it?</td>
+</tr>
+<tr>
+<td>Node manifest</td>
+<td>Which configured instances and bindings should this logical node have?</td>
+</tr>
+<tr>
+<td>Deployment lock</td>
+<td>Exactly which sources, versions, files, and manifests belong on this robot?</td>
+</tr>
+</tbody>
+</table>
+<p>One package may expose several selectable services or apps. Registry entries
+represent those components and reference their installation packages. Each app
+needs metadata for its entry point, configuration, and required capabilities,
+just as services need their component contracts.</p>
+<h2 id="one-descriptor-per-component-and-published-version">One descriptor per component and published version<a class="headerlink" href="#one-descriptor-per-component-and-published-version" title="Permanent link">¶</a></h2>
+<p>Maintain the current descriptor alongside each component's source. Git retains
+historical source versions. Publishing creates an immutable descriptor for each
+released component version; authors do not maintain one growing central list.</p>
+<pre><code class="language-text">Source repository:
+  RPStack/services/motor_control/
+    component.yaml
+    package.json
+    src/...
+
+Published registry:
+  index.json
+  services/motor_control/
+    index.json
+    0.4.0.json
+    0.5.0.json
+  apps/slide_commands/
+    index.json
+    0.1.0.json
+</code></pre>
+<p>The top-level index holds stable component IDs, names, summaries, kinds, and links
+to version indexes. Each component index lists available versions and links to
+their descriptors. Architect fetches detailed metadata as needed. Both index
+levels are generated, not edited manually. Published versions cannot be replaced
+with different contents; fixes require a new version.</p>
+<h2 id="dependencies-and-versions">Dependencies and versions<a class="headerlink" href="#dependencies-and-versions" title="Permanent link">¶</a></h2>
+<p>Descriptors declare dependency versions, but distinguish software installation
+from runtime service binding:</p>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td>Install compatible code on the device</td>
+</tr>
+<tr>
+<td>Service instance</td>
+<td>Bind a configured provider for a required role</td>
+</tr>
+<tr>
+<td>Capability/interface</td>
+<td>Select a provider implementing a compatible contract and constraints</td>
+</tr>
+</tbody>
+</table>
+<p>Prefer capability requirements where providers are interchangeable. Require a
+specific service implementation only when the consumer depends on it. Keep
+implementation versions separate from interface versions: service <code>0.4.0</code> may
+implement interface version <code>1</code>.</p>
+<p>Illustrative version descriptor fragment; the IDs and compatibility range below
+are examples, not a claim about the current linear-slide contract:</p>
+<pre><code class="language-json">{
+  &quot;schema&quot;: &quot;rp.registry.service/v1&quot;,
+  &quot;id&quot;: &quot;rp.linear_slide&quot;,
+  &quot;version&quot;: &quot;0.3.0&quot;,
+  &quot;source&quot;: {
+    &quot;repository&quot;: &quot;ROSMicroPy/RobotPrimitivesStack&quot;,
+    &quot;commit&quot;: &quot;&lt;full-source-commit-sha&gt;&quot;,
+    &quot;package&quot;: &quot;RPStack/services/linear_slide/package.json&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;services&quot;: [
+      {
+        &quot;role&quot;: &quot;motor&quot;,
+        &quot;service&quot;: &quot;rp.motor_control&quot;,
+        &quot;version&quot;: &quot;&gt;=0.4.0 &lt;0.5.0&quot;,
+        &quot;interface&quot;: &quot;motion.motion_actuator&quot;,
+        &quot;interface_version&quot;: 1,
+        &quot;placement&quot;: &quot;same_device&quot;
+      }
+    ]
+  }
+}
+</code></pre>
+<p>Define one version-range syntax for the registry. Architect resolves compatible
+ranges into exact versions, source commits, and file hashes in the deployment
+lock. Resolve the full transitive graph across all logical nodes on each device;
+reject missing dependencies, incompatible versions, and lifecycle dependency
+cycles before installation.</p>
+<p>Package requirements have one authoritative declaration, currently <code>package.json</code>.
+Generate their registry representation from it. Service requirements should extend
+the existing capability contracts and binding model rather than create a competing
+runtime dependency system. CI should reject inconsistent representations.</p>
+<p>Selecting a service may suggest required providers, but must not silently assign
+hardware pins or assume that a remote provider is supported. Validate placement,
+driver compatibility, resource ownership, and explicit bindings before deployment.</p>
+<h2 id="publishing-and-testing-branches">Publishing and testing branches<a class="headerlink" href="#publishing-and-testing-branches" title="Permanent link">¶</a></h2>
+<p>A proposed GitHub Action runs on relevant pushes and validates descriptors,
+unique component IDs, package references, and dependency declarations. It generates
+deterministically ordered indexes and publishes only validated results.</p>
+<p>Publish registry snapshots keyed by source commit, with a pointer for each branch
+to its latest successfully validated snapshot. A dedicated registry branch can
+hold these generated documents without adding generated commits to every source
+branch. Released version descriptors remain available when branch pointers advance.
+The registry index and every referenced source file must agree on the source
+snapshot. A failed publication leaves the previous valid pointer intact.</p>
+<p>Architect supports selecting a branch, tag, or commit for Git-backed sources.
+Browsing may follow a branch; deployments retain the resolved immutable commit.
+Testing builds need commit-qualified identities because several commits may share
+the same development version. Show the selected branch and resolved commit in
+Architect so users can distinguish a moving source from an installed build.</p>
+<p>Same-repository dependencies resolve consistently to the selected snapshot unless
+explicitly overridden. Existing package references to <code>archdef</code> must be accounted
+for by the resolver; selecting a testing branch must not silently mix its code
+with dependency code from another branch.</p>
+<h2 id="multiple-registries-and-private-sources">Multiple registries and private sources<a class="headerlink" href="#multiple-registries-and-private-sources" title="Permanent link">¶</a></h2>
+<p>Architect supports several enabled sources and presents their apps and services
+in one searchable palette, with their origin visible. Each source has a stable
+registry identity, display name, index URL, optional Git ref, optional credential
+reference, and enabled state. Arbitrary HTTP registries need not expose Git refs.</p>
+<p>Illustrative configuration using placeholder URLs:</p>
+<pre><code class="language-json">{
+  &quot;registries&quot;: [
+    {
+      &quot;id&quot;: &quot;rpstack&quot;,
+      &quot;name&quot;: &quot;RPStack&quot;,
+      &quot;url&quot;: &quot;https://registry.example.org/rpstack/index.json&quot;,
+      &quot;enabled&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;company&quot;,
+      &quot;name&quot;: &quot;Company Robotics&quot;,
+      &quot;url&quot;: &quot;https://robotics.example.com/registry/index.json&quot;,
+      &quot;credential_ref&quot;: &quot;company-registry&quot;,
+      &quot;enabled&quot;: true
+    }
+  ]
+}
+</code></pre>
+<p>Store credentials in the desktop credential store, not project files, manifests,
+or devices. Scope credentials to their configured hosts; do not forward them to
+arbitrary artifact URLs or redirects referenced by registry metadata.</p>
+<p>Resolution follows these rules:</p>
+<ul>
+<li>A component is identified by registry identity, component ID, and version/build.
+  Matching names from two registries remain distinct choices.</li>
+<li>Dependencies default to their originating registry. Cross-registry dependencies
+  explicitly identify the other source, which the project maps to a configured URL.</li>
+<li>Never silently override a duplicate or use registry ordering to select code.</li>
+<li>Never substitute a public package for an unavailable private dependency.</li>
+<li>Record the selected source identity, URL, immutable revision, and hashes in the
+  deployment lock. Disabling a source does not rewrite existing selections.</li>
+</ul>
+<p>Private registry access is needed only on Architect. Devices receive resolved
+files and their deployment manifest over the management connection.</p>
+<h2 id="refresh-caching-and-offline-use">Refresh, caching, and offline use<a class="headerlink" href="#refresh-caching-and-offline-use" title="Permanent link">¶</a></h2>
+<p>Cache each registry and selected ref independently. Use conditional requests with
+ETags where supported, validate downloaded metadata before replacing the cache,
+and retain the last valid index when a source is unavailable. Expose the last
+successful refresh and errors rather than implying that cached data is current.</p>
+<p>A failed source does not block browsing other sources. Offline deployment is
+possible only when all exact locked artifacts are cached and verified. Refreshing
+the palette does not modify an existing deployment; adopting a new version is a
+separate deployment change, whether manual or governed by an update policy.</p>
+<h2 id="integration-with-robot-architect">Integration with Robot Architect<a class="headerlink" href="#integration-with-robot-architect" title="Permanent link">¶</a></h2>
+<p>Current Architect discovery scans local <code>component.yaml</code> files. Registry discovery
+should become an additional source feeding that component palette. Local metadata
+remains useful during development; identify it explicitly and capture its exact
+contents when creating a deployment rather than presenting uncommitted code as a
+published version.</p>
+<p>See <a href="bootstrap.html">Device provisioning and bootstrap</a> for delivery, inventory,
+and readiness, and <a href="services.html">Services level</a> for current capability contracts.</p>
+<h2 id="external-references">External references<a class="headerlink" href="#external-references" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="https://docs.github.com/en/rest/repos/contents">GitHub repository contents API</a>: selecting a branch, tag, or commit with <code>ref</code>.</li>
+<li><a href="https://docs.github.com/rest/guides/best-practices-for-integrators">GitHub REST API best practices</a>: conditional requests and caching.</li>
+</ul></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="bootstrap.html"><small>Previous</small>Provisioning &amp; bootstrap</a><a href="deployment.html"><small>Next</small>Multiple Devices</a></nav>
+<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#service-and-app-registries">Service and app registries</a><ul>
+<li><a href="#available-software-and-observed-devices">Available software and observed devices</a></li>
+<li><a href="#one-descriptor-per-component-and-published-version">One descriptor per component and published version</a></li>
+<li><a href="#dependencies-and-versions">Dependencies and versions</a></li>
+<li><a href="#publishing-and-testing-branches">Publishing and testing branches</a></li>
+<li><a href="#multiple-registries-and-private-sources">Multiple registries and private sources</a></li>
+<li><a href="#refresh-caching-and-offline-use">Refresh, caching, and offline use</a></li>
+<li><a href="#integration-with-robot-architect">Integration with Robot Architect</a></li>
+<li><a href="#external-references">External references</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>
