@@ -1,8 +1,10 @@
-# Services Level
+# Services and capabilities
+
+In Somatic Mesh, Actors will use capabilities to perform their assigned Behaviors. Services remain the concrete capability providers; a driver, adapter, or composite does not need its own Actor identity. The contracts and examples below are implemented service APIs, independent of the proposed Actor layer.
 
 Services expose hardware-independent capabilities. A component contract describes configuration, lifecycle hooks, operations, required/provided interfaces, implementation choices, and tests.
 
-For planned publishing and discovery in Robot Architect, see
+For planned publishing and discovery through The Loom (currently Robot Architect), see
 [Service and app registries](registries.html). That design adds immutable version
 records and explicit dependency resolution across public and private sources.
 

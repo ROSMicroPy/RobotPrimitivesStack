@@ -1,114 +1,49 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Overview · RPStack</title><meta name="description" content="RPStack documentation: Overview">
+<title>Overview · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Overview">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Start here</div><article><h1 id="build-robots-from-reusable-capabilities">Build robots from reusable capabilities<a class="headerlink" href="#build-robots-from-reusable-capabilities" title="Permanent link">¶</a></h1>
-<p>RPStack assembles small hardware services into applications that can run on one device or cooperate across devices. A manifest describes each logical node; the runtime constructs services, connects capabilities, and manages their work.</p>
-<p>Start with a host simulation, then install the linear-slide example on an ESP32. The same signal-driven client can run beside the slide service or on a second device.</p>
-<h2 id="choose-a-path">Choose a path<a class="headerlink" href="#choose-a-path" title="Permanent link">¶</a></h2>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Start here</div><article><h1 id="somatic-mesh">Somatic Mesh<a class="headerlink" href="#somatic-mesh" title="Permanent link">¶</a></h1>
+<p><strong>A distributed compute framework and management system for small devices.</strong></p>
+<p><em>Design in The Loom. Bring Actors and Behaviors to life across the Fabric.</em></p>
+<p>Somatic Mesh connects small devices into coordinated systems. Its intended model assigns Behaviors to Actors and deploys them across a Fabric of suitable runtime hosts. The framework manages execution, communication, and software deployment, with a roadmap for recovery and resource-aware placement.</p>
+<h2 id="where-the-project-stands">Where the project stands<a class="headerlink" href="#where-the-project-stands" title="Permanent link">¶</a></h2>
+<p>The current implementation is RPStack: manifest-driven logical nodes, reusable capability services, supervised operations, apps, workflows, signals, transports, and discovery. <strong>Actors as a stable runtime abstraction, automatic placement, and recovery on alternative hosts are proposed work.</strong> Current packages, schemas, commands, and examples retain their RPStack names.</p>
+<p>The Loom is the proposed name for the Robot Architect authoring and management environment. ILA (Intelligent Loom Assistant) is its proposed assistant. Deployed operation and permitted recovery should be independent of the desktop and internet.</p>
+<h2 id="understand-the-model">Understand the model<a class="headerlink" href="#understand-the-model" title="Permanent link">¶</a></h2>
 <ul>
-<li><a href="getting-started.html">Getting Started</a>: run a simulation and install your first device.</li>
-<li><a href="concepts.html">Basic Concepts</a>: understand entities, nodes, apps, services, and signals.</li>
-<li><a href="ros-integration.html">ROS 2 Integration</a>: use typed telemetry and the linear-slide action gateway with ROSMicroPy.</li>
-<li><a href="bootstrap.html">Provisioning &amp; Bootstrap</a>: proposed identity provisioning, Architect-managed updates, and coordinated startup.</li>
-<li><a href="registries.html">Service &amp; App Registries</a>: proposed versioned descriptors, dependency resolution, and private registry sources.</li>
-<li><a href="linear-slide.html">Linear Slide</a>: calibrate, set a range, and issue a move from the REPL.</li>
-<li><a href="api.html">API Reference</a>: invoke operations, track tasks, and change configuration.</li>
+<li><a href="concepts.html">Actors, Behaviors, and the Fabric</a>: product concepts and their relationship to current APIs.</li>
+<li><a href="architecture.html">Architecture</a>: existing package boundaries and proposed management responsibilities.</li>
+<li><a href="fabric-management.html">Fabric management and recovery</a>: placement, ownership, recovery limits, and development sequence.</li>
+<li><a href="nodes.html">Nodes and manifests</a>: the supported deployment format and its planned separation into application, hardware, and placement descriptions.</li>
 </ul>
-<h2 id="architecture-at-a-glance">Architecture at a glance<a class="headerlink" href="#architecture-at-a-glance" title="Permanent link">¶</a></h2>
-<pre class="mermaid">flowchart TB
-    App[Applications and workflows] --&gt; Runtime[Node Runtime]
-    Runtime --&gt; Slide[Composite services]
-    Slide --&gt; Motor[Hardware drivers]
-    Slide --&gt; Adapter[Capability adapters]
-    Adapter --&gt; Sensor[Sensor drivers]
-    Motor --&gt; Platform[Device platform / MicroPython]
-    Sensor --&gt; Platform
-    App &lt;--&gt; Signals[Entity-scoped signals]
-    Signals &lt;--&gt; Other[Other logical nodes]
-</pre>
-<p>See <a href="architecture.html">package structure and terminology</a> for dependency boundaries and the service model.</p>
-<h2 id="what-lives-where">What lives where<a class="headerlink" href="#what-lives-where" title="Permanent link">¶</a></h2>
-<table>
-<thead>
-<tr>
-<th>Directory</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>RPStack/foundation/</code></td>
-<td>Capability contracts and portable execution utilities</td>
-</tr>
-<tr>
-<td><code>RPStack/runtime/</code></td>
-<td>Node supervision, tasks, workflows, signals and discovery</td>
-</tr>
-<tr>
-<td><code>RPStack/transports/</code></td>
-<td>ESP-NOW and ROS signal adapters</td>
-</tr>
-<tr>
-<td><code>RPStack/control/</code></td>
-<td>HTTP and shell control interfaces</td>
-</tr>
-<tr>
-<td><code>RPStack/platform/</code></td>
-<td>Boot and environment helpers</td>
-</tr>
-<tr>
-<td><code>RPStack/observability/</code></td>
-<td>Telemetry</td>
-</tr>
-<tr>
-<td><code>RPStack/services/</code></td>
-<td>Hardware drivers, capability providers, adapters and composites</td>
-</tr>
-<tr>
-<td><code>RPStack/apps/</code></td>
-<td>Reusable node applications, including the robot gateway and slide command apps</td>
-</tr>
-<tr>
-<td><code>examples/</code></td>
-<td>Runnable assemblies, simulations and hardware deployments</td>
-</tr>
-<tr>
-<td><code>RPStack/spec/</code></td>
-<td>Manifest schemas and contract documentation</td>
-</tr>
-<tr>
-<td><code>docs/</code></td>
-<td>This documentation site</td>
-</tr>
-<tr>
-<td><code>ROSMicroPy/</code></td>
-<td>Firmware and ROS integration project</td>
-</tr>
-<tr>
-<td><code>RPStack_WebTester/</code>, <code>RobotArchitect/</code></td>
-<td>Related tools; inspect their own READMEs for setup</td>
-</tr>
-</tbody>
-</table>
-<h2 id="implementation-status">Implementation status<a class="headerlink" href="#implementation-status" title="Permanent link">¶</a></h2>
-<p>Unless explicitly marked as a design proposal, this documentation describes the current repository implementation. The provisioning/bootstrap and service/app registry pages describe planned behavior, not currently available features. Host simulations do not establish physical motor timing, radio reliability, or sensor accuracy. Current slide calibration uses single readings at the boundaries of each leg; averaging and noise-aware calibration are not yet implemented.</p></article>
+<h2 id="run-what-exists-today">Run what exists today<a class="headerlink" href="#run-what-exists-today" title="Permanent link">¶</a></h2>
+<p>Start with a host simulation, then install the linear-slide example on an ESP32. Its signal-driven client can run beside the slide service or on a second device. These demonstrate current fixed deployment and capability coordination.</p>
+<ul>
+<li><a href="getting-started.html">Getting started</a>: simulation and first-device installation.</li>
+<li><a href="deployment.html">Multiple devices</a>: explicit placement and transport setup.</li>
+<li><a href="apps.html">Apps and Behaviors</a>: current app and workflow implementation patterns.</li>
+<li><a href="linear-slide.html">Linear slide</a> and <a href="api.html">API reference</a>: calibration, operations, and tracked tasks.</li>
+<li><a href="ros-integration.html">ROS 2 integration</a>: typed telemetry and the slide action gateway.</li>
+</ul>
+<h2 id="plan-the-management-layer">Plan the management layer<a class="headerlink" href="#plan-the-management-layer" title="Permanent link">¶</a></h2>
+<p><a href="bootstrap.html">Provisioning and bootstrap</a> proposes identity provisioning, software delivery through The Loom, readiness, and onboard run permission. <a href="registries.html">Software registries</a> proposes exact version resolution and deployment locks. Both remain designs rather than current installation guarantees.</p>
+<p>Somatic Mesh is independent of a specific board or transport. The related StepperNode / Steppin Cube hardware is a potential building block, not the framework itself.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="getting-started.html"><small>Next</small>Getting Started</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#build-robots-from-reusable-capabilities">Build robots from reusable capabilities</a><ul>
-<li><a href="#choose-a-path">Choose a path</a></li>
-<li><a href="#architecture-at-a-glance">Architecture at a glance</a></li>
-<li><a href="#what-lives-where">What lives where</a></li>
-<li><a href="#implementation-status">Implementation status</a></li>
+<li><a href="#somatic-mesh">Somatic Mesh</a><ul>
+<li><a href="#where-the-project-stands">Where the project stands</a></li>
+<li><a href="#understand-the-model">Understand the model</a></li>
+<li><a href="#run-what-exists-today">Run what exists today</a></li>
+<li><a href="#plan-the-management-layer">Plan the management layer</a></li>
 </ul>
 </li>
 </ul>

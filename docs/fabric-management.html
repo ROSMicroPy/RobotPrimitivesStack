@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fabric management &amp; recovery · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Fabric management &amp; recovery">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html" aria-current="page">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="fabric-management-and-recovery">Fabric management and recovery<a class="headerlink" href="#fabric-management-and-recovery" title="Permanent link">¶</a></h1>
+<p><strong>Design proposal.</strong> This page describes Somatic Mesh's intended management responsibilities and implementation sequence. Stable Actor addressing, automatic placement, Actor ownership, restart on alternative hosts, and stateful handoff are not current runtime guarantees.</p>
+<h2 id="from-node-assembly-to-actor-deployment">From node assembly to Actor deployment<a class="headerlink" href="#from-node-assembly-to-actor-deployment" title="Permanent link">¶</a></h2>
+<p>Today, an application assembles services, apps, and flows on predefined logical nodes. The proposed model defines Actors and their Behaviors independently of placement, then deploys them onto eligible Fabric Nodes. Eligibility depends on required capabilities, compatible code and firmware, available resources, physical access, and application policy.</p>
+<p>The initial implementation should keep placement explicit. Stable Actor identity and addressing must be established before automatic relocation. The current node/service addresses and task IDs remain the supported interfaces until that layer exists.</p>
+<h2 id="desired-state-and-observed-state">Desired state and observed state<a class="headerlink" href="#desired-state-and-observed-state" title="Permanent link">¶</a></h2>
+<p>Fabric management should reconcile an application definition, device profiles, and an exact deployment plan with reported inventory and health. Keep these decisions distinct:</p>
+<ol>
+<li><strong>Discovery:</strong> which participants have been observed?</li>
+<li><strong>Inventory:</strong> which code, configuration, and hardware are installed?</li>
+<li><strong>Readiness:</strong> have required preparation and binding checks succeeded?</li>
+<li><strong>Run permission:</strong> is this instance authorized to operate now?</li>
+<li><strong>Ownership:</strong> which current Actor instance may act on the assigned resources?</li>
+</ol>
+<p>The catalog answers discovery questions. A missing announcement is not proof that a device stopped, and a discovery timeout must not authorize takeover. Existing remote-action leases and correlation support bounded distributed operations; they do not establish exclusive Actor ownership across failures.</p>
+<h2 id="authority-and-hardware-ownership">Authority and hardware ownership<a class="headerlink" href="#authority-and-hardware-ownership" title="Permanent link">¶</a></h2>
+<p>An Actor identity must have an authoritative current owner. Recovery must prevent an old and a replacement instance from simultaneously controlling machinery, including after a network partition or delayed message. The design needs instance generations or equivalent fencing enforced at the resource access boundary, plus expiring permission and explicit transfer rules. The exact protocol remains to be designed and validated.</p>
+<p>Local resource claims remain useful but do not replace cross-host authority. If an old instance cannot be fenced from a physical resource, activating a replacement is not a safe recovery strategy. Reconciliation must be able to leave an Actor inactive and report why.</p>
+<p>Start with one designated onboard coordinator. Its absence should prevent new activation and follow the deployment's permission-expiry policy. Coordinator failover is a separate milestone, not a consequence of Actor restart support. See <a href="bootstrap.html">bootstrap</a> for the proposed preparation and run-permission lifecycle.</p>
+<h2 id="code-delivery-and-offline-operation">Code delivery and offline operation<a class="headerlink" href="#code-delivery-and-offline-operation" title="Permanent link">¶</a></h2>
+<p>The Loom should resolve dependencies and deliver exact packages and deployment records. Preinstall the required Behavior code on eligible fallback hosts so permitted recovery can work without the desktop or internet. Devices report inventory and enforce compatibility; they do not initially need peer-to-peer package distribution or their own registry resolver.</p>
+<p>The Loom observes and changes desired state through management interfaces. ILA should use those same interfaces. Neither should be required to remain connected for a deployed system to operate or perform already permitted recovery. <a href="registries.html">Registries</a> describes the proposed software discovery and locking model.</p>
+<h2 id="recovery-modes">Recovery modes<a class="headerlink" href="#recovery-modes" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Required conditions</th>
+<th>Limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed placement</td>
+<td>Explicit host and capability bindings</td>
+<td>Initial Actor milestone; no relocation</td>
+</tr>
+<tr>
+<td>Stateless restart elsewhere</td>
+<td>Eligible host, installed code, fresh authorization, and safe handling of interrupted work</td>
+<td>Restarting computation does not undo or prove completion of external effects</td>
+</tr>
+<tr>
+<td>Planned stateful handoff</td>
+<td>Quiesce work, checkpoint compatible state, transfer ownership, restore, then activate</td>
+<td>Selected Behaviors must define checkpoint/restore and in-flight message handling</td>
+</tr>
+<tr>
+<td>Crash recovery</td>
+<td>Previously persisted or replicated state and a valid ownership decision</td>
+<td>State held only on a dead device is lost; recovery may resume from an older checkpoint</td>
+</tr>
+<tr>
+<td>Resource-aware placement</td>
+<td>Measured resource conditions and policy, plus all migration prerequisites</td>
+<td>CPU, memory, power, temperature, and communication costs constrain placement</td>
+</tr>
+</tbody>
+</table>
+<p>There is no promise of transparent migration of arbitrary Python execution, exactly-once physical actions, or recovery of a peripheral wired exclusively to a dead controller. Behaviors with external effects need explicit retry, deduplication, or reconciliation rules before restart is enabled.</p>
+<h2 id="development-sequence">Development sequence<a class="headerlink" href="#development-sequence" title="Permanent link">¶</a></h2>
+<ol>
+<li>Define Actor identity, Behavior versions, configuration, state, and lifecycle; retain the distinction from tasks and services.</li>
+<li>Separate application definitions, hardware profiles, and concrete deployment plans.</li>
+<li>Add stable Actor addressing with fixed placement and explicit capability bindings.</li>
+<li>Introduce inventory, preparation, authoritative ownership, and controlled activation with an onboard coordinator.</li>
+<li>Support stateless restart on preprovisioned eligible hosts, including stale-instance fencing and interrupted-operation handling.</li>
+<li>Add checkpoint/restore and planned handoff for selected stateful Behaviors, followed by resource-aware placement.</li>
+</ol>
+<p>Keep capability contracts, transport independence, hardware ownership, managed operations, resource claims, and observability throughout. The current package layers remain foundations for this work; this proposal does not create new packages or supported manifest fields.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="architecture.html"><small>Previous</small>Architecture &amp; layers</a><a href="runtime.html"><small>Next</small>Host runtime</a></nav>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#fabric-management-and-recovery">Fabric management and recovery</a><ul>
+<li><a href="#from-node-assembly-to-actor-deployment">From node assembly to Actor deployment</a></li>
+<li><a href="#desired-state-and-observed-state">Desired state and observed state</a></li>
+<li><a href="#authority-and-hardware-ownership">Authority and hardware ownership</a></li>
+<li><a href="#code-delivery-and-offline-operation">Code delivery and offline operation</a></li>
+<li><a href="#recovery-modes">Recovery modes</a></li>
+<li><a href="#development-sequence">Development sequence</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>

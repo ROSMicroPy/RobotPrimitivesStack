@@ -1,5 +1,7 @@
 # Getting Started
 
+These steps run the current RPStack foundation of Somatic Mesh. Package paths, imports, node manifests, and launcher commands retain their existing names. The examples use explicitly placed services and apps; they do not require or implement the proposed Actor management layer.
+
 ## Run without hardware
 
 Clone the repository and run these commands from its root using Python 3:

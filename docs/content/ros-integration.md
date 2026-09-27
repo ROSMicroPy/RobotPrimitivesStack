@@ -1,6 +1,6 @@
 # ROS 2 integration
 
-RPStack manages device capabilities and their execution. ROS 2 applications can
+Somatic Mesh currently uses the RPStack runtime to manage device capabilities and their execution. ROS 2 applications can
 use those capabilities through typed interfaces, while controllers retain their
 MicroPython service runtime and manifest-driven hardware bindings.
 
@@ -22,7 +22,7 @@ flowchart LR
 
 The controller's ROS transport owns one native worker. Optional typed publishers
 are registered before that worker starts. The desktop gateway is independent of
-Robot Architect and can run on an onboard Linux computer.
+The Loom (currently Robot Architect) and can run on an onboard Linux computer.
 
 ## Linear-slide interfaces
 
@@ -76,7 +76,7 @@ delivery guarantees also do not extend automatically across a lossy mesh segment
 
 The repository's `examples/ros_slide/README.md` contains the complete USB install,
 agent configuration, colcon build, calibration, and ROS CLI workflow. The gateway
-app is under `RPStack/apps/ros_gateway`; generated ROS interfaces are under
+app is under `PrimitiveFabric/apps/ros_gateway`; generated ROS interfaces are under
 `ros2/rpstack_interfaces`.
 
 Host tests exercise managed execution, resource exclusion, cancellation, lease

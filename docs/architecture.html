@@ -1,16 +1,53 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Package structure · RPStack</title><meta name="description" content="RPStack documentation: Package structure">
+<title>Architecture &amp; layers · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Architecture &amp; layers">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="rpstack-architecture">RPStack architecture<a class="headerlink" href="#rpstack-architecture" title="Permanent link">¶</a></h1>
-<p>RPStack assembles logical nodes from independently installed packages. Hardware drivers implement device access, services expose capabilities, adapters transform measurements, composites coordinate providers, and applications orchestrate robot behavior.</p>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="somatic-mesh-architecture">Somatic Mesh architecture<a class="headerlink" href="#somatic-mesh-architecture" title="Permanent link">¶</a></h1>
+<p>Somatic Mesh is a distributed compute framework and management system for small devices. Its target model deploys Actors with assigned Behaviors across the Fabric, authored and observed through The Loom.</p>
+<p>The existing RPStack implementation assembles logical nodes from independently installed packages. Drivers access hardware, services expose capabilities, adapters transform measurements, composites coordinate providers, and apps or flows orchestrate work. These remain the runtime foundation. Product terminology does not rename Python packages, schemas, or current runtime classes.</p>
+<h2 id="architectural-responsibilities">Architectural responsibilities<a class="headerlink" href="#architectural-responsibilities" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Responsibility</th>
+<th>Current foundation and proposed evolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authoring and observation</td>
+<td>Robot Architect is the existing environment; The Loom is its proposed product name, with ILA as a proposed assistant</td>
+</tr>
+<tr>
+<td>Fabric management</td>
+<td>Proposed placement, authoritative ownership, controlled activation, recovery, and deployment reconciliation</td>
+</tr>
+<tr>
+<td>Host execution</td>
+<td>Existing node assembly, lifecycle, managed tasks, operations, workflows, and resource claims; explicit Actor hosting remains proposed</td>
+</tr>
+<tr>
+<td>Capabilities</td>
+<td>Existing services, drivers, adapters, and composites retain their contracts and hardware ownership</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>Firmware, board support, storage, networking, and device resources</td>
+</tr>
+<tr>
+<td>Communication and visibility</td>
+<td>Transports, signals, control interfaces, discovery, and telemetry span the other responsibilities</td>
+</tr>
+</tbody>
+</table>
+<p>Application definitions should express Actors, Behaviors, connections, constraints, and recovery policy. Device profiles should express hardware and resources. Deployment plans should assign hosts, bindings, and exact versions. Today's node manifests combine these concerns; the separation is a design direction, not a supported replacement schema.</p>
 <h2 id="repository-groups">Repository groups<a class="headerlink" href="#repository-groups" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -80,8 +117,24 @@
 <td>Physical board or host environment.</td>
 </tr>
 <tr>
-<td>Node</td>
-<td>Logical runtime identity; <code>NodeHost</code> can host several nodes on one device.</td>
+<td>Fabric Node</td>
+<td>Target runtime-host concept: an execution location for Actors; no separate API exists yet.</td>
+</tr>
+<tr>
+<td>Logical node</td>
+<td>Current manifest-defined assembly and identity; <code>NodeHost</code> can host several on one device.</td>
+</tr>
+<tr>
+<td>Actor</td>
+<td>Proposed stable participant with assigned Behavior, configuration, explicit state, message handling, and lifecycle.</td>
+</tr>
+<tr>
+<td>Behavior</td>
+<td>Implementation or workflow defining an Actor's work and responses; apps and flows are current building blocks.</td>
+</tr>
+<tr>
+<td>Fabric</td>
+<td>Connected runtime and management infrastructure; automatic placement and recovery remain proposed.</td>
 </tr>
 <tr>
 <td>Service type</td>
@@ -126,30 +179,29 @@
 </tbody>
 </table>
 <p><code>ServiceRegistry</code> resolves service dependencies. <code>Catalog</code> describes discovered nodes. <code>PhysicalComponent</code> and <code>CompositionRegistry</code> model physical assemblies and mount claims.</p>
-<h2 id="proposed-provisioning-and-software-discovery">Proposed provisioning and software discovery<a class="headerlink" href="#proposed-provisioning-and-software-discovery" title="Permanent link">¶</a></h2>
-<p>The <a href="bootstrap.html">provisioning and bootstrap design</a> separates USB identity
-provisioning, Architect-managed software delivery, device inventory checks, and
-onboard permission to operate. The <a href="registries.html">service and app registry design</a>
-defines versioned descriptors, dependency resolution, and multiple public or private
-sources. These are proposals, not implemented runtime guarantees. The proposed
-software registry is distinct from both the in-process <code>ServiceRegistry</code> and the
-runtime discovery <code>Catalog</code>.</p>
 <h2 id="lifecycle">Lifecycle<a class="headerlink" href="#lifecycle" title="Permanent link">¶</a></h2>
 <p>Providers start before consumers and stop in reverse dependency order. Service stop/reset keeps control facilities reachable. Full shutdown releases applications, transports, and runtime resources as well. Work runs through managed tasks on the node's cooperative event loop, with dedicated pulse workers for blocking motor batches.</p>
 <h2 id="installation-and-validation">Installation and validation<a class="headerlink" href="#installation-and-validation" title="Permanent link">¶</a></h2>
 <p>Use package manifests at their canonical locations. Remote <code>package.json</code> files declare dependencies; <code>package.local.json</code> files describe local source maps. Example manifests list the full local installation set.</p>
-<p>Run <code>python3 tools/check_architecture.py</code> to validate package maps and isolated installations. Run <code>python3 tools/run_tests.py</code> for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="apps.html"><small>Previous</small>Apps &amp; behaviors</a><a href="runtime.html"><small>Next</small>Runtime level</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<p>Run <code>python3 tools/check_architecture.py</code> to validate package maps and isolated installations. Run <code>python3 tools/run_tests.py</code> for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.</p>
+<h2 id="management-and-recovery-boundaries">Management and recovery boundaries<a class="headerlink" href="#management-and-recovery-boundaries" title="Permanent link">¶</a></h2>
+<p>The Loom should resolve and deliver exact software while onboard management permits operation and recovery without desktop or internet access. Start with one onboard coordinator and preinstall code on eligible fallback hosts. Coordinator failover is separate work.</p>
+<p>Catalog discovery is observational, not authority to execute or take over. Existing action leases do not prevent two Actor instances from controlling the same machinery after a partition. Actor ownership requires explicit transfer and enforcement that rejects stale instances at resource boundaries.</p>
+<p>Start with fixed placement and stable Actor addressing, then stateless restart elsewhere. Add explicit checkpoint/restore and planned handoff only for selected stateful Behaviors. Crash recovery cannot retrieve unsaved state from a dead device. Physical bindings constrain relocation, and moving CPU work does not remove local actuator power demand.</p>
+<p>Multiple logical nodes share an interpreter and filesystem; they are not isolated failure domains. An Actor is not a renamed <code>NodeRuntime</code> or task, and each small driver need not become an Actor.</p>
+<p>See the <a href="fabric-management.html">Fabric management proposal</a>, <a href="bootstrap.html">bootstrap design</a>, and <a href="registries.html">registry design</a> for scope and milestones. These are proposed designs, not implemented guarantees.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="apps.html"><small>Previous</small>Apps &amp; Behaviors</a><a href="fabric-management.html"><small>Next</small>Fabric management &amp; recovery</a></nav>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#rpstack-architecture">RPStack architecture</a><ul>
+<li><a href="#somatic-mesh-architecture">Somatic Mesh architecture</a><ul>
+<li><a href="#architectural-responsibilities">Architectural responsibilities</a></li>
 <li><a href="#repository-groups">Repository groups</a></li>
 <li><a href="#dependency-boundaries">Dependency boundaries</a></li>
 <li><a href="#vocabulary">Vocabulary</a></li>
-<li><a href="#proposed-provisioning-and-software-discovery">Proposed provisioning and software discovery</a></li>
 <li><a href="#lifecycle">Lifecycle</a></li>
 <li><a href="#installation-and-validation">Installation and validation</a></li>
+<li><a href="#management-and-recovery-boundaries">Management and recovery boundaries</a></li>
 </ul>
 </li>
 </ul>

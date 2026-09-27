@@ -1,54 +1,36 @@
-# Build robots from reusable capabilities
+# Somatic Mesh
 
-RPStack assembles small hardware services into applications that can run on one device or cooperate across devices. A manifest describes each logical node; the runtime constructs services, connects capabilities, and manages their work.
+**A distributed compute framework and management system for small devices.**
 
-Start with a host simulation, then install the linear-slide example on an ESP32. The same signal-driven client can run beside the slide service or on a second device.
+*Design in The Loom. Bring Actors and Behaviors to life across the Fabric.*
 
-## Choose a path
+Somatic Mesh connects small devices into coordinated systems. Its intended model assigns Behaviors to Actors and deploys them across a Fabric of suitable runtime hosts. The framework manages execution, communication, and software deployment, with a roadmap for recovery and resource-aware placement.
 
-- [Getting Started](getting-started.html): run a simulation and install your first device.
-- [Basic Concepts](concepts.html): understand entities, nodes, apps, services, and signals.
-- [ROS 2 Integration](ros-integration.html): use typed telemetry and the linear-slide action gateway with ROSMicroPy.
-- [Provisioning & Bootstrap](bootstrap.html): proposed identity provisioning, Architect-managed updates, and coordinated startup.
-- [Service & App Registries](registries.html): proposed versioned descriptors, dependency resolution, and private registry sources.
-- [Linear Slide](linear-slide.html): calibrate, set a range, and issue a move from the REPL.
-- [API Reference](api.html): invoke operations, track tasks, and change configuration.
+## Where the project stands
 
-## Architecture at a glance
+The current implementation is RPStack: manifest-driven logical nodes, reusable capability services, supervised operations, apps, workflows, signals, transports, and discovery. **Actors as a stable runtime abstraction, automatic placement, and recovery on alternative hosts are proposed work.** Current packages, schemas, commands, and examples retain their RPStack names.
 
-```mermaid
-flowchart TB
-    App[Applications and workflows] --> Runtime[Node Runtime]
-    Runtime --> Slide[Composite services]
-    Slide --> Motor[Hardware drivers]
-    Slide --> Adapter[Capability adapters]
-    Adapter --> Sensor[Sensor drivers]
-    Motor --> Platform[Device platform / MicroPython]
-    Sensor --> Platform
-    App <--> Signals[Entity-scoped signals]
-    Signals <--> Other[Other logical nodes]
-```
+The Loom is the proposed name for the Robot Architect authoring and management environment. ILA (Intelligent Loom Assistant) is its proposed assistant. Deployed operation and permitted recovery should be independent of the desktop and internet.
 
-See [package structure and terminology](architecture.html) for dependency boundaries and the service model.
+## Understand the model
 
-## What lives where
+- [Actors, Behaviors, and the Fabric](concepts.html): product concepts and their relationship to current APIs.
+- [Architecture](architecture.html): existing package boundaries and proposed management responsibilities.
+- [Fabric management and recovery](fabric-management.html): placement, ownership, recovery limits, and development sequence.
+- [Nodes and manifests](nodes.html): the supported deployment format and its planned separation into application, hardware, and placement descriptions.
 
-| Directory | Purpose |
-| --- | --- |
-| `RPStack/foundation/` | Capability contracts and portable execution utilities |
-| `RPStack/runtime/` | Node supervision, tasks, workflows, signals and discovery |
-| `RPStack/transports/` | ESP-NOW and ROS signal adapters |
-| `RPStack/control/` | HTTP and shell control interfaces |
-| `RPStack/platform/` | Boot and environment helpers |
-| `RPStack/observability/` | Telemetry |
-| `RPStack/services/` | Hardware drivers, capability providers, adapters and composites |
-| `RPStack/apps/` | Reusable node applications, including the robot gateway and slide command apps |
-| `examples/` | Runnable assemblies, simulations and hardware deployments |
-| `RPStack/spec/` | Manifest schemas and contract documentation |
-| `docs/` | This documentation site |
-| `ROSMicroPy/` | Firmware and ROS integration project |
-| `RPStack_WebTester/`, `RobotArchitect/` | Related tools; inspect their own READMEs for setup |
+## Run what exists today
 
-## Implementation status
+Start with a host simulation, then install the linear-slide example on an ESP32. Its signal-driven client can run beside the slide service or on a second device. These demonstrate current fixed deployment and capability coordination.
 
-Unless explicitly marked as a design proposal, this documentation describes the current repository implementation. The provisioning/bootstrap and service/app registry pages describe planned behavior, not currently available features. Host simulations do not establish physical motor timing, radio reliability, or sensor accuracy. Current slide calibration uses single readings at the boundaries of each leg; averaging and noise-aware calibration are not yet implemented.
+- [Getting started](getting-started.html): simulation and first-device installation.
+- [Multiple devices](deployment.html): explicit placement and transport setup.
+- [Apps and Behaviors](apps.html): current app and workflow implementation patterns.
+- [Linear slide](linear-slide.html) and [API reference](api.html): calibration, operations, and tracked tasks.
+- [ROS 2 integration](ros-integration.html): typed telemetry and the slide action gateway.
+
+## Plan the management layer
+
+[Provisioning and bootstrap](bootstrap.html) proposes identity provisioning, software delivery through The Loom, readiness, and onboard run permission. [Software registries](registries.html) proposes exact version resolution and deployment locks. Both remain designs rather than current installation guarantees.
+
+Somatic Mesh is independent of a specific board or transport. The related StepperNode / Steppin Cube hardware is a potential building block, not the framework itself.

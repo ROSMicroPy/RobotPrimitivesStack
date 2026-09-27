@@ -1,5 +1,7 @@
 # Distributed robot catalog
 
+Somatic Mesh implementation note: this catalog reports observed logical nodes and capabilities. Discovery does not authorize Actor activation or takeover; placement, ownership, and recovery belong to the proposed [Fabric management layer](../../../docs/content/fabric-management.md).
+
 Configure `{"id":"catalog","entry_point":"rpstack.catalog:Catalog"}` in
 `runtime` on every participating node. Each catalog broadcasts its public node
 profile on `_rp.catalog.profile` over the configured signal routes. Include
@@ -41,5 +43,5 @@ metadata. Composition reconciliation and node discovery are separate responsibil
 Run host integration tests:
 
 ```sh
-python3 -m unittest discover -s RPStack/runtime/catalog/test -v
+python3 -m unittest discover -s PrimitiveFabric/runtime/catalog/test -v
 ```

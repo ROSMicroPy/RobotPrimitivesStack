@@ -1,5 +1,7 @@
 # Execution engine
 
+Somatic Mesh implementation note: managed tasks and remote actions are execution building blocks for Behaviors. Task identity and action leases do not establish stable Actor identity, ownership, or automatic failover. See the [Fabric management proposal](../../../docs/content/fabric-management.md).
+
 The engine uses one asyncio event loop on CPython or MicroPython. There are no
 worker threads. `TaskRegistry` owns services, runtime listeners, HTTP requests,
 operations, shell commands, and workflows. It retains 32 completed job records

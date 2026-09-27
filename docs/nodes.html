@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nodes &amp; manifests · RPStack</title><meta name="description" content="RPStack documentation: Nodes &amp; manifests">
+<title>Nodes &amp; manifests · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Nodes &amp; manifests">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html" aria-current="page">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html" aria-current="page">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="nodes-and-manifests">Nodes and Manifests<a class="headerlink" href="#nodes-and-manifests" title="Permanent link">¶</a></h1>
-<p>A node manifest (<code>rp.node/v1</code>) describes a complete deployment. Service manifests (<code>rp.service/v1</code>) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.</p>
+<p>In the Somatic Mesh model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans select placement, bindings, and exact versions. That separation is proposed. The current manifest below combines these concerns and remains the supported format; there are no new Actor or Fabric Node fields yet. A logical node is not synonymous with an Actor. See the <a href="concepts.html">mental model</a>.</p>
+<p>A node manifest (<code>rp.node/v1</code>) describes one current logical-node assembly. Service manifests (<code>rp.service/v1</code>) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.</p>
 <h2 id="node-manifest-fields">Node manifest fields<a class="headerlink" href="#node-manifest-fields" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -91,7 +92,7 @@ finally:
 <p>A required capability can be bound automatically when exactly one compatible provider matches. Explicit bindings select a specific service instance. Missing, ambiguous, incompatible, or cyclic dependencies are rejected. Shared resources use references such as <code>{"$resource": "carriage_bus"}</code>.</p>
 <p>Each entity/node pair must be unique. A node's service ID, such as <code>slide</code>, is local to that node. <code>NodeHost</code> can host multiple logical nodes in one process, but it does not make conflicting peripheral ownership safe.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="concepts.html"><small>Previous</small>The mental model</a><a href="signals.html"><small>Next</small>Signals</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#nodes-and-manifests">Nodes and Manifests</a><ul>

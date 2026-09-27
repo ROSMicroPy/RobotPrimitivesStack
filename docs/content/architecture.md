@@ -1,6 +1,21 @@
-# RPStack architecture
+# Somatic Mesh architecture
 
-RPStack assembles logical nodes from independently installed packages. Hardware drivers implement device access, services expose capabilities, adapters transform measurements, composites coordinate providers, and applications orchestrate robot behavior.
+Somatic Mesh is a distributed compute framework and management system for small devices. Its target model deploys Actors with assigned Behaviors across the Fabric, authored and observed through The Loom.
+
+The existing RPStack implementation assembles logical nodes from independently installed packages. Drivers access hardware, services expose capabilities, adapters transform measurements, composites coordinate providers, and apps or flows orchestrate work. These remain the runtime foundation. Product terminology does not rename Python packages, schemas, or current runtime classes.
+
+## Architectural responsibilities
+
+| Responsibility | Current foundation and proposed evolution |
+| --- | --- |
+| Authoring and observation | Robot Architect is the existing environment; The Loom is its proposed product name, with ILA as a proposed assistant |
+| Fabric management | Proposed placement, authoritative ownership, controlled activation, recovery, and deployment reconciliation |
+| Host execution | Existing node assembly, lifecycle, managed tasks, operations, workflows, and resource claims; explicit Actor hosting remains proposed |
+| Capabilities | Existing services, drivers, adapters, and composites retain their contracts and hardware ownership |
+| Platform | Firmware, board support, storage, networking, and device resources |
+| Communication and visibility | Transports, signals, control interfaces, discovery, and telemetry span the other responsibilities |
+
+Application definitions should express Actors, Behaviors, connections, constraints, and recovery policy. Device profiles should express hardware and resources. Deployment plans should assign hosts, bindings, and exact versions. Today's node manifests combine these concerns; the separation is a design direction, not a supported replacement schema.
 
 ## Repository groups
 
@@ -30,7 +45,11 @@ A slide client can install `rpstack.apps.slide_commands` without installing the 
 | Term | Meaning |
 |---|---|
 | Device | Physical board or host environment. |
-| Node | Logical runtime identity; `NodeHost` can host several nodes on one device. |
+| Fabric Node | Target runtime-host concept: an execution location for Actors; no separate API exists yet. |
+| Logical node | Current manifest-defined assembly and identity; `NodeHost` can host several on one device. |
+| Actor | Proposed stable participant with assigned Behavior, configuration, explicit state, message handling, and lifecycle. |
+| Behavior | Implementation or workflow defining an Actor's work and responses; apps and flows are current building blocks. |
+| Fabric | Connected runtime and management infrastructure; automatic placement and recovery remain proposed. |
 | Service type | Reusable implementation and contract definition in a manifest's `components` map. |
 | Service instance | Configured capability provider constructed on a node. |
 | Driver | Hardware-specific backend owned by a service. |
@@ -44,16 +63,6 @@ A slide client can install `rpstack.apps.slide_commands` without installing the 
 
 `ServiceRegistry` resolves service dependencies. `Catalog` describes discovered nodes. `PhysicalComponent` and `CompositionRegistry` model physical assemblies and mount claims.
 
-## Proposed provisioning and software discovery
-
-The [provisioning and bootstrap design](bootstrap.html) separates USB identity
-provisioning, Architect-managed software delivery, device inventory checks, and
-onboard permission to operate. The [service and app registry design](registries.html)
-defines versioned descriptors, dependency resolution, and multiple public or private
-sources. These are proposals, not implemented runtime guarantees. The proposed
-software registry is distinct from both the in-process `ServiceRegistry` and the
-runtime discovery `Catalog`.
-
 ## Lifecycle
 
 Providers start before consumers and stop in reverse dependency order. Service stop/reset keeps control facilities reachable. Full shutdown releases applications, transports, and runtime resources as well. Work runs through managed tasks on the node's cooperative event loop, with dedicated pulse workers for blocking motor batches.
@@ -63,3 +72,15 @@ Providers start before consumers and stop in reverse dependency order. Service s
 Use package manifests at their canonical locations. Remote `package.json` files declare dependencies; `package.local.json` files describe local source maps. Example manifests list the full local installation set.
 
 Run `python3 tools/check_architecture.py` to validate package maps and isolated installations. Run `python3 tools/run_tests.py` for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.
+
+## Management and recovery boundaries
+
+The Loom should resolve and deliver exact software while onboard management permits operation and recovery without desktop or internet access. Start with one onboard coordinator and preinstall code on eligible fallback hosts. Coordinator failover is separate work.
+
+Catalog discovery is observational, not authority to execute or take over. Existing action leases do not prevent two Actor instances from controlling the same machinery after a partition. Actor ownership requires explicit transfer and enforcement that rejects stale instances at resource boundaries.
+
+Start with fixed placement and stable Actor addressing, then stateless restart elsewhere. Add explicit checkpoint/restore and planned handoff only for selected stateful Behaviors. Crash recovery cannot retrieve unsaved state from a dead device. Physical bindings constrain relocation, and moving CPU work does not remove local actuator power demand.
+
+Multiple logical nodes share an interpreter and filesystem; they are not isolated failure domains. An Actor is not a renamed `NodeRuntime` or task, and each small driver need not become an Actor.
+
+See the [Fabric management proposal](fabric-management.html), [bootstrap design](bootstrap.html), and [registry design](registries.html) for scope and milestones. These are proposed designs, not implemented guarantees.
