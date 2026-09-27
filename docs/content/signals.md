@@ -1,5 +1,7 @@
 # Signals
 
+In the target Somatic Mesh model, signals let Actors respond to events and coordinate Behaviors. Today's envelopes address configured entities and logical nodes; stable Actor addressing across placement changes is proposed work. The examples below retain the existing routing contract.
+
 Signals connect publishers and subscribers within an entity. Applications use the same envelope through local delivery, in-process transports, ESP-NOW, or ROS adapters.
 
 See [ROS 2 integration](ros-integration.html) for direct typed ROSMicroPy

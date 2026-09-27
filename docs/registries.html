@@ -1,22 +1,23 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Service &amp; app registries · RPStack</title><meta name="description" content="RPStack documentation: Service &amp; app registries">
+<title>Service &amp; app registries · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Service &amp; app registries">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html" aria-current="page">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html" aria-current="page">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="service-and-app-registries">Service and app registries<a class="headerlink" href="#service-and-app-registries" title="Permanent link">¶</a></h1>
-<p><strong>Design proposal.</strong> This page defines the intended Robot Architect registry
+<p>The Loom is the proposed name for Robot Architect. Somatic Mesh will also need versioned Behavior definitions and their compatibility requirements. The service/app registry below is the proposed packaging foundation; it does not yet define a Behavior schema or establish Actor placement and recovery.</p>
+<p><strong>Design proposal.</strong> This page defines the intended Somatic Mesh and Loom registry
 model. Registry schemas, publishing automation, multi-registry discovery, and
 deployment locking described here are not yet implemented. JSON examples are
 proposed formats, not inputs supported by the current runtime.</p>
 <h2 id="available-software-and-observed-devices">Available software and observed devices<a class="headerlink" href="#available-software-and-observed-devices" title="Permanent link">¶</a></h2>
 <p>A software registry lists services and apps available to install. The runtime
-catalog lists nodes and capabilities actually observed on the robot. Architect
+catalog lists nodes and capabilities actually observed on the robot. The Loom
 uses both to display desired configuration alongside installed state.</p>
 <table>
 <thead>
@@ -57,7 +58,7 @@ just as services need their component contracts.</p>
 historical source versions. Publishing creates an immutable descriptor for each
 released component version; authors do not maintain one growing central list.</p>
 <pre><code class="language-text">Source repository:
-  RPStack/services/motor_control/
+  PrimitiveFabric/services/motor_control/
     component.yaml
     package.json
     src/...
@@ -74,7 +75,7 @@ Published registry:
 </code></pre>
 <p>The top-level index holds stable component IDs, names, summaries, kinds, and links
 to version indexes. Each component index lists available versions and links to
-their descriptors. Architect fetches detailed metadata as needed. Both index
+their descriptors. The Loom fetches detailed metadata as needed. Both index
 levels are generated, not edited manually. Published versions cannot be replaced
 with different contents; fixes require a new version.</p>
 <h2 id="dependencies-and-versions">Dependencies and versions<a class="headerlink" href="#dependencies-and-versions" title="Permanent link">¶</a></h2>
@@ -115,7 +116,7 @@ are examples, not a claim about the current linear-slide contract:</p>
   &quot;source&quot;: {
     &quot;repository&quot;: &quot;ROSMicroPy/RobotPrimitivesStack&quot;,
     &quot;commit&quot;: &quot;&lt;full-source-commit-sha&gt;&quot;,
-    &quot;package&quot;: &quot;RPStack/services/linear_slide/package.json&quot;
+    &quot;package&quot;: &quot;PrimitiveFabric/services/linear_slide/package.json&quot;
   },
   &quot;dependencies&quot;: {
     &quot;services&quot;: [
@@ -131,7 +132,7 @@ are examples, not a claim about the current linear-slide contract:</p>
   }
 }
 </code></pre>
-<p>Define one version-range syntax for the registry. Architect resolves compatible
+<p>Define one version-range syntax for the registry. The Loom resolves compatible
 ranges into exact versions, source commits, and file hashes in the deployment
 lock. Resolve the full transitive graph across all logical nodes on each device;
 reject missing dependencies, incompatible versions, and lifecycle dependency
@@ -153,17 +154,17 @@ hold these generated documents without adding generated commits to every source
 branch. Released version descriptors remain available when branch pointers advance.
 The registry index and every referenced source file must agree on the source
 snapshot. A failed publication leaves the previous valid pointer intact.</p>
-<p>Architect supports selecting a branch, tag, or commit for Git-backed sources.
+<p>The Loom supports selecting a branch, tag, or commit for Git-backed sources.
 Browsing may follow a branch; deployments retain the resolved immutable commit.
 Testing builds need commit-qualified identities because several commits may share
 the same development version. Show the selected branch and resolved commit in
-Architect so users can distinguish a moving source from an installed build.</p>
+The Loom so users can distinguish a moving source from an installed build.</p>
 <p>Same-repository dependencies resolve consistently to the selected snapshot unless
 explicitly overridden. Existing package references to <code>archdef</code> must be accounted
 for by the resolver; selecting a testing branch must not silently mix its code
 with dependency code from another branch.</p>
 <h2 id="multiple-registries-and-private-sources">Multiple registries and private sources<a class="headerlink" href="#multiple-registries-and-private-sources" title="Permanent link">¶</a></h2>
-<p>Architect supports several enabled sources and presents their apps and services
+<p>The Loom supports several enabled sources and presents their apps and services
 in one searchable palette, with their origin visible. Each source has a stable
 registry identity, display name, index URL, optional Git ref, optional credential
 reference, and enabled state. Arbitrary HTTP registries need not expose Git refs.</p>
@@ -200,7 +201,7 @@ arbitrary artifact URLs or redirects referenced by registry metadata.</p>
 <li>Record the selected source identity, URL, immutable revision, and hashes in the
   deployment lock. Disabling a source does not rewrite existing selections.</li>
 </ul>
-<p>Private registry access is needed only on Architect. Devices receive resolved
+<p>Private registry access is needed only on The Loom. Devices receive resolved
 files and their deployment manifest over the management connection.</p>
 <h2 id="refresh-caching-and-offline-use">Refresh, caching, and offline use<a class="headerlink" href="#refresh-caching-and-offline-use" title="Permanent link">¶</a></h2>
 <p>Cache each registry and selected ref independently. Use conditional requests with
@@ -211,8 +212,8 @@ successful refresh and errors rather than implying that cached data is current.<
 possible only when all exact locked artifacts are cached and verified. Refreshing
 the palette does not modify an existing deployment; adopting a new version is a
 separate deployment change, whether manual or governed by an update policy.</p>
-<h2 id="integration-with-robot-architect">Integration with Robot Architect<a class="headerlink" href="#integration-with-robot-architect" title="Permanent link">¶</a></h2>
-<p>Current Architect discovery scans local <code>component.yaml</code> files. Registry discovery
+<h2 id="integration-with-the-loom">Integration with The Loom<a class="headerlink" href="#integration-with-the-loom" title="Permanent link">¶</a></h2>
+<p>Current Robot Architect discovery scans local <code>component.yaml</code> files. Registry discovery
 should become an additional source feeding that component palette. Local metadata
 remains useful during development; identify it explicitly and capture its exact
 contents when creating a deployment rather than presenting uncommitted code as a
@@ -225,7 +226,7 @@ and readiness, and <a href="services.html">Services level</a> for current capabi
 <li><a href="https://docs.github.com/rest/guides/best-practices-for-integrators">GitHub REST API best practices</a>: conditional requests and caching.</li>
 </ul></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="bootstrap.html"><small>Previous</small>Provisioning &amp; bootstrap</a><a href="deployment.html"><small>Next</small>Multiple Devices</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#service-and-app-registries">Service and app registries</a><ul>
@@ -235,7 +236,7 @@ and readiness, and <a href="services.html">Services level</a> for current capabi
 <li><a href="#publishing-and-testing-branches">Publishing and testing branches</a></li>
 <li><a href="#multiple-registries-and-private-sources">Multiple registries and private sources</a></li>
 <li><a href="#refresh-caching-and-offline-use">Refresh, caching, and offline use</a></li>
-<li><a href="#integration-with-robot-architect">Integration with Robot Architect</a></li>
+<li><a href="#integration-with-the-loom">Integration with The Loom</a></li>
 <li><a href="#external-references">External references</a></li>
 </ul>
 </li>

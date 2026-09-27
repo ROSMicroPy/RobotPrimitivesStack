@@ -1,10 +1,12 @@
-# RPStack documentation site
+# Somatic Mesh documentation site
+
+Product prose uses Somatic Mesh, Actors, Behaviors, the Fabric, and The Loom. Describe Actor placement, recovery, ILA, and the new deployment separation as proposals until implemented. Preserve current `rpstack` imports, `PrimitiveFabric/` paths, schema names, commands, and Robot Architect UI references wherever readers need them to operate the existing system.
 
 The authored documentation is in `content/`; `navigation.json` defines left-menu
 order and groups. CSS/JavaScript live in `assets/`. The Python builder produces
 static HTML directly in `docs/`, per-page contents lists, previous/next links,
 and a search index. Generated HTML, `search.json`, and `.nojekyll` are committed
-so GitHub Pages can serve this folder without running Python.
+so the published site can be reviewed alongside its Markdown sources.
 It checks generated local links and fragments before succeeding.
 
 ## Build and preview

@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Runtime level · RPStack</title><meta name="description" content="RPStack documentation: Runtime level">
+<title>Host runtime · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Host runtime">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html" aria-current="page">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="runtime-level">Runtime Level<a class="headerlink" href="#runtime-level" title="Permanent link">¶</a></h1>
-<p>The runtime handles assembly and execution rather than implementing the mechanics of a particular robot.</p>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html" aria-current="page">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="host-runtime-and-execution">Host runtime and execution<a class="headerlink" href="#host-runtime-and-execution" title="Permanent link">¶</a></h1>
+<p>The current runtime is Somatic Mesh's execution foundation: it assembles logical nodes, binds capabilities, and supervises work. Apps and flows express behavior today. Explicit Actor identity and hosting are proposed extensions; a task remains a tracked execution instance, not an Actor.</p>
+<p>Fabric-wide placement, authoritative ownership, and recovery belong to the proposed <a href="fabric-management.html">management layer</a>. Current remote-action leases and resource claims do not establish automatic Actor failover. The API names and startup sequence below describe the existing implementation.</p>
 <table>
 <thead>
 <tr>
@@ -78,11 +79,11 @@ await node.calibrate(arguments={'slide': {'steps': 1000}})
 print(node.calibration_status())
 </code></pre>
 <p>Node-wide calibration runs declared hooks in dependency order. Services without hooks are <code>not_required</code>. Selected services and their dependencies are claimed for the phase; failures and cancellation are tracked. See <a href="calibration.html">Calibration</a>.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="architecture.html"><small>Previous</small>Package structure</a><a href="services.html"><small>Next</small>Services level</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<nav class="pager" aria-label="Adjacent pages"><a href="fabric-management.html"><small>Previous</small>Fabric management &amp; recovery</a><a href="services.html"><small>Next</small>Services &amp; capabilities</a></nav>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#runtime-level">Runtime Level</a><ul>
+<li><a href="#host-runtime-and-execution">Host runtime and execution</a><ul>
 <li><a href="#startup-and-shutdown">Startup and shutdown</a></li>
 <li><a href="#managed-operations">Managed operations</a></li>
 <li><a href="#concurrency">Concurrency</a></li>

@@ -1,21 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Provisioning &amp; bootstrap · RPStack</title><meta name="description" content="RPStack documentation: Provisioning &amp; bootstrap">
+<title>Provisioning &amp; bootstrap · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Provisioning &amp; bootstrap">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html" aria-current="page">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html" aria-current="page">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="device-provisioning-and-bootstrap">Device provisioning and bootstrap<a class="headerlink" href="#device-provisioning-and-bootstrap" title="Permanent link">¶</a></h1>
-<p><strong>Design proposal.</strong> This page defines the intended Robot Architect provisioning,
+<p><strong>Naming:</strong> The Loom is the proposed product name for Robot Architect. This design extends Somatic Mesh's management layer; existing extension names, schemas, and package paths are unchanged.</p>
+<p><strong>Design proposal.</strong> This page defines the intended Somatic Mesh and Loom provisioning,
 update, and coordinated startup model. The update receiver, deployment inventory,
 and robot-wide startup gate described here are not yet implemented. See
 <a href="deployment.html">Multiple Devices</a> for the current installation workflow.</p>
 <h2 id="responsibilities">Responsibilities<a class="headerlink" href="#responsibilities" title="Permanent link">¶</a></h2>
-<p>Robot Architect resolves and delivers software. Devices verify what is installed
+<p>The Loom resolves and delivers software. Devices verify what is installed
 and report whether they are ready. Devices do not contact registries, resolve
 dependencies, or fetch upgrades themselves.</p>
 <table>
@@ -27,7 +28,7 @@ dependencies, or fetch upgrades themselves.</p>
 </thead>
 <tbody>
 <tr>
-<td>Robot Architect</td>
+<td>The Loom</td>
 <td>Browse registries, configure nodes, resolve dependencies, build exact deployments, compare inventories, and push updates</td>
 </tr>
 <tr>
@@ -50,11 +51,11 @@ or internet access. The catalog describes observed state; it does not itself
 authorize operation. Its existing eventual-consistency timeouts are not a
 substitute for a run-permission protocol.</p>
 <h2 id="usb-provisioning-and-identity">USB provisioning and identity<a class="headerlink" href="#usb-provisioning-and-identity" title="Permanent link">¶</a></h2>
-<p>A base image needs MicroPython, ROSMicroPy, and a small bootstrap runtime that
+<p>For the current MicroPython target, a base image needs MicroPython, any selected transport support (such as ROSMicroPy for ROS), and a small bootstrap runtime that
 works even when application packages or node manifests are missing. An
 unprovisioned device remains inactive and reports <code>UNPROVISIONED</code> over USB.</p>
 <p>Initial identity and hardware assignments are provisioned through a USB serial
-cable using <code>mpremote</code>. Robot Architect reads the physical device identifier,
+cable using <code>mpremote</code>. The Loom reads the physical device identifier,
 shows board information, and can request an identification indicator before
 writing. It verifies the written manifest by reading it back. USB selects a
 physical target, but a device binding is still needed to detect the wrong profile.</p>
@@ -84,12 +85,12 @@ physical target, but a device binding is still needed to detect the wrong profil
 </tr>
 </tbody>
 </table>
-<p>A node manifest declares its services, apps, configuration, and bindings. Architect
+<p>In the target model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans assign hosts and exact software. The current node manifest combines services, apps, configuration, and bindings. The Loom
 binds it to the intended device during provisioning. Replacing a controller
 requires explicitly rebinding its logical roles to the replacement device.
 Wireless software maintenance does not silently reassign identity or hardware.</p>
-<p>Dragging services or apps onto a device in Architect creates desired configuration.
-Before provisioning, Architect validates dependencies, driver compatibility, pin
+<p>Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; current service/app composition is the starting point.
+Before provisioning, The Loom validates dependencies, driver compatibility, pin
 and peripheral ownership, and estimated storage and memory needs. A provisioned
 device can appear as awaiting connection before it advertises an actual profile.</p>
 <h2 id="inventory-and-readiness">Inventory and readiness<a class="headerlink" href="#inventory-and-readiness" title="Permanent link">¶</a></h2>
@@ -106,8 +107,8 @@ safe preparation.</p>
 reporting and recovery access available. The device remains inactive and exposes
 an actionable fault, including the affected node or component and expected versus
 observed state.</p>
-<h2 id="architect-managed-updates">Architect-managed updates<a class="headerlink" href="#architect-managed-updates" title="Permanent link">¶</a></h2>
-<p>When Architect connects, it compares device inventories with the selected robot
+<h2 id="loom-managed-updates">Loom-managed updates<a class="headerlink" href="#loom-managed-updates" title="Permanent link">¶</a></h2>
+<p>When The Loom connects, it compares device inventories with the selected robot
 deployment. Discovery requires an actual management connection, such as a radio
 gateway; being within radio range does not by itself provide file transfer.</p>
 <ol>
@@ -133,7 +134,7 @@ do not assume every board can hold two installations.</p>
 <p>Python package delivery and firmware image replacement are separate operations.
 Replacing MicroPython/ROSMicroPy requires a board-supported flashing or OTA path
 with its own recovery behavior. A file receiver is not sufficient for firmware
-replacement. Registry credentials stay on Architect, never on devices.</p>
+replacement. Registry credentials stay on The Loom, never on devices.</p>
 <h2 id="coordinated-startup">Coordinated startup<a class="headerlink" href="#coordinated-startup" title="Permanent link">¶</a></h2>
 <p>The robot deployment declares the expected nodes, their device bindings, and
 required revisions. Discovery alone cannot establish completeness: a silent or
@@ -151,7 +152,7 @@ unpowered required controller must prevent operation even though it sent no erro
 <p>Management communications and fault supervision start before application
 preparation. Preparation keeps actuator activity and operational commands gated.
 The initial design uses one designated onboard supervisor, which grants run
-permission only when every required node is ready for the same deployment.</p>
+permission only when every required node is ready for the same deployment. Coordinator failover is separate proposed work. Actor ownership and stale-instance fencing must also be established before activating replacement instances; see <a href="fabric-management.html">Fabric management</a>.</p>
 <p>Permission is renewable and expires locally if communication or the supervisor
 fails. It is bound to the deployment and current sessions, so old messages cannot
 reactivate a restarted device. A startup barrier does not promise simultaneous
@@ -188,14 +189,14 @@ establish a robot-wide readiness barrier.</p>
 <p>See <a href="registries.html">Service and app registries</a> for software discovery,
 dependency resolution, private sources, and deployment locks.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="ros-integration.html"><small>Previous</small>ROS 2 integration</a><a href="registries.html"><small>Next</small>Service &amp; app registries</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#device-provisioning-and-bootstrap">Device provisioning and bootstrap</a><ul>
 <li><a href="#responsibilities">Responsibilities</a></li>
 <li><a href="#usb-provisioning-and-identity">USB provisioning and identity</a></li>
 <li><a href="#inventory-and-readiness">Inventory and readiness</a></li>
-<li><a href="#architect-managed-updates">Architect-managed updates</a></li>
+<li><a href="#loom-managed-updates">Loom-managed updates</a></li>
 <li><a href="#coordinated-startup">Coordinated startup</a></li>
 <li><a href="#critical-faults-and-safe-states">Critical faults and safe states</a></li>
 <li><a href="#multiple-logical-nodes-on-one-device">Multiple logical nodes on one device</a></li>

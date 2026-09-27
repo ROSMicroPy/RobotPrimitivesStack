@@ -1,13 +1,15 @@
 # Multiple Devices
 
+Somatic Mesh currently uses explicit logical-node placement. This guide moves installation roles between configured devices; it does not provide automatic Actor relocation. The proposed [Fabric management layer](fabric-management.html) will separate Actor identity from placement and control recovery.
+
 This guide describes the current manual installation workflow. See the
 [provisioning and bootstrap proposal](bootstrap.html) for planned USB identity
-assignment, wireless software maintenance through Robot Architect, and robot-wide
+assignment, wireless software maintenance through The Loom, and robot-wide
 readiness checks.
 
 Install the **same** `examples/slide_nodes/package.json` on both boards. The device manifests use a shared ESP-NOW transport that delivers between local logical nodes and broadcasts over the radio.
 
-## RobotArchitect discovery
+## The Loom and current gateway discovery
 
 Both resident roles include Wi-Fi, HTTP, catalog and the gateway app. Configure
 `WIFI_SSID` and `WIFI_PASSWORD` through `rpstack.env.setEnv` on each board before
@@ -16,7 +18,7 @@ and `slide_client_host.json` (default 6).
 
 The slide role hosts the gateway on node1. The client role starts a persistent
 `node2-host` gateway and creates one-off node2 apps for commands. Connect
-RobotArchitect's System view to the URL printed at startup, or read
+the current Robot Architect extension's System view (The Loom's proposed product identity) to the URL printed at startup, or read
 `slide_nodes.status()['gateway_url']`. `/api/robot` includes discovered peer nodes,
 services, capabilities and apps; it excludes deployment credentials.
 

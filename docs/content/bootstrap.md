@@ -1,19 +1,21 @@
 # Device provisioning and bootstrap
 
-**Design proposal.** This page defines the intended Robot Architect provisioning,
+**Naming:** The Loom is the proposed product name for Robot Architect. This design extends Somatic Mesh's management layer; existing extension names, schemas, and package paths are unchanged.
+
+**Design proposal.** This page defines the intended Somatic Mesh and Loom provisioning,
 update, and coordinated startup model. The update receiver, deployment inventory,
 and robot-wide startup gate described here are not yet implemented. See
 [Multiple Devices](deployment.html) for the current installation workflow.
 
 ## Responsibilities
 
-Robot Architect resolves and delivers software. Devices verify what is installed
+The Loom resolves and delivers software. Devices verify what is installed
 and report whether they are ready. Devices do not contact registries, resolve
 dependencies, or fetch upgrades themselves.
 
 | Component | Responsibility |
 | --- | --- |
-| Robot Architect | Browse registries, configure nodes, resolve dependencies, build exact deployments, compare inventories, and push updates |
+| The Loom | Browse registries, configure nodes, resolve dependencies, build exact deployments, compare inventories, and push updates |
 | Device bootstrap runtime | Load identity, report inventory, receive and verify installations, prepare services, enforce local run permission, and retain recovery access |
 | Onboard robot supervisor | Check all required nodes and grant or revoke permission to operate |
 | Runtime catalog | Advertise observed identities, capabilities, and health for discovery and desktop visualization |
@@ -26,12 +28,12 @@ substitute for a run-permission protocol.
 
 ## USB provisioning and identity
 
-A base image needs MicroPython, ROSMicroPy, and a small bootstrap runtime that
+For the current MicroPython target, a base image needs MicroPython, any selected transport support (such as ROSMicroPy for ROS), and a small bootstrap runtime that
 works even when application packages or node manifests are missing. An
 unprovisioned device remains inactive and reports `UNPROVISIONED` over USB.
 
 Initial identity and hardware assignments are provisioned through a USB serial
-cable using `mpremote`. Robot Architect reads the physical device identifier,
+cable using `mpremote`. The Loom reads the physical device identifier,
 shows board information, and can request an identification indicator before
 writing. It verifies the written manifest by reading it back. USB selects a
 physical target, but a device binding is still needed to detect the wrong profile.
@@ -43,13 +45,13 @@ physical target, but a device binding is still needed to detect the wrong profil
 | Deployment ID | Exact approved set of manifests and software |
 | Boot/session ID | Current runtime incarnation, used to reject stale readiness or activation messages |
 
-A node manifest declares its services, apps, configuration, and bindings. Architect
+In the target model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans assign hosts and exact software. The current node manifest combines services, apps, configuration, and bindings. The Loom
 binds it to the intended device during provisioning. Replacing a controller
 requires explicitly rebinding its logical roles to the replacement device.
 Wireless software maintenance does not silently reassign identity or hardware.
 
-Dragging services or apps onto a device in Architect creates desired configuration.
-Before provisioning, Architect validates dependencies, driver compatibility, pin
+Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; current service/app composition is the starting point.
+Before provisioning, The Loom validates dependencies, driver compatibility, pin
 and peripheral ownership, and estimated storage and memory needs. A provisioned
 device can appear as awaiting connection before it advertises an actual profile.
 
@@ -71,9 +73,9 @@ reporting and recovery access available. The device remains inactive and exposes
 an actionable fault, including the affected node or component and expected versus
 observed state.
 
-## Architect-managed updates
+## Loom-managed updates
 
-When Architect connects, it compares device inventories with the selected robot
+When The Loom connects, it compares device inventories with the selected robot
 deployment. Discovery requires an actual management connection, such as a radio
 gateway; being within radio range does not by itself provide file transfer.
 
@@ -101,7 +103,7 @@ do not assume every board can hold two installations.
 Python package delivery and firmware image replacement are separate operations.
 Replacing MicroPython/ROSMicroPy requires a board-supported flashing or OTA path
 with its own recovery behavior. A file receiver is not sufficient for firmware
-replacement. Registry credentials stay on Architect, never on devices.
+replacement. Registry credentials stay on The Loom, never on devices.
 
 ## Coordinated startup
 
@@ -124,7 +126,7 @@ flowchart LR
 Management communications and fault supervision start before application
 preparation. Preparation keeps actuator activity and operational commands gated.
 The initial design uses one designated onboard supervisor, which grants run
-permission only when every required node is ready for the same deployment.
+permission only when every required node is ready for the same deployment. Coordinator failover is separate proposed work. Actor ownership and stale-instance fencing must also be established before activating replacement instances; see [Fabric management](fabric-management.html).
 
 Permission is renewable and expires locally if communication or the supervisor
 fails. It is bound to the deployment and current sessions, so old messages cannot

@@ -1,6 +1,8 @@
 # Apps and Behaviors
 
-Apps implement node-level behavior using services and shared runtime facilities. Reusable apps live under `RPStack/apps/`; complete deployments live under `examples/`. Some domain-specific apps, such as the slide command adapter, live beside their service.
+Somatic Mesh assigns Behaviors to Actors in its target programming model. Current apps and declarative flows are the building blocks for those Behaviors; there is not yet a separate Actor runtime API, stable Actor address, or checkpoint/restore contract.
+
+Apps currently implement node-level behavior using services and shared runtime facilities. Reusable apps live under `PrimitiveFabric/apps/`; complete deployments live under `examples/`. Some domain-specific apps, such as the slide command adapter, live beside their service.
 
 ## App lifecycle
 

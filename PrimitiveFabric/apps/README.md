@@ -1,9 +1,11 @@
 # Node apps
 
-`RPStack/apps/<app>/src/rpstack/apps/<app>/` is the home for reusable node
-applications that orchestrate node capabilities. `RPStack/services` contains reusable
-hardware primitives and capability providers; `RPStack/runtime` contains shared
-lifecycle, signals, discovery, and execution. `RPStack/control` provides HTTP and shell interfaces; `RPStack/transports` provides ESP-NOW and ROS signal adapters. `examples` holds complete
+Somatic Mesh implementation note: apps and flows are current building blocks for the proposed Actor/Behavior model. Apps retain their existing lifecycle and node bindings; this documentation does not introduce an Actor API. See the [mental model](../../docs/content/concepts.md).
+
+`PrimitiveFabric/apps/<app>/src/rpstack/apps/<app>/` is the home for reusable node
+applications that orchestrate node capabilities. `PrimitiveFabric/services` contains reusable
+hardware primitives and capability providers; `PrimitiveFabric/runtime` contains shared
+lifecycle, signals, discovery, and execution. `PrimitiveFabric/control` provides HTTP and shell interfaces; `PrimitiveFabric/transports` provides ESP-NOW and ROS signal adapters. `examples` holds complete
 deployments and hardware examples that assemble these layers.
 
 A node can run multiple apps and primitive services concurrently on its single

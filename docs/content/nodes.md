@@ -1,6 +1,8 @@
 # Nodes and Manifests
 
-A node manifest (`rp.node/v1`) describes a complete deployment. Service manifests (`rp.service/v1`) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.
+In the Somatic Mesh model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans select placement, bindings, and exact versions. That separation is proposed. The current manifest below combines these concerns and remains the supported format; there are no new Actor or Fabric Node fields yet. A logical node is not synonymous with an Actor. See the [mental model](concepts.html).
+
+A node manifest (`rp.node/v1`) describes one current logical-node assembly. Service manifests (`rp.service/v1`) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.
 
 ## Node manifest fields
 

@@ -1,6 +1,8 @@
 # Service and app registries
 
-**Design proposal.** This page defines the intended Robot Architect registry
+The Loom is the proposed name for Robot Architect. Somatic Mesh will also need versioned Behavior definitions and their compatibility requirements. The service/app registry below is the proposed packaging foundation; it does not yet define a Behavior schema or establish Actor placement and recovery.
+
+**Design proposal.** This page defines the intended Somatic Mesh and Loom registry
 model. Registry schemas, publishing automation, multi-registry discovery, and
 deployment locking described here are not yet implemented. JSON examples are
 proposed formats, not inputs supported by the current runtime.
@@ -8,7 +10,7 @@ proposed formats, not inputs supported by the current runtime.
 ## Available software and observed devices
 
 A software registry lists services and apps available to install. The runtime
-catalog lists nodes and capabilities actually observed on the robot. Architect
+catalog lists nodes and capabilities actually observed on the robot. The Loom
 uses both to display desired configuration alongside installed state.
 
 | Document | Question it answers |
@@ -32,7 +34,7 @@ released component version; authors do not maintain one growing central list.
 
 ```text
 Source repository:
-  RPStack/services/motor_control/
+  PrimitiveFabric/services/motor_control/
     component.yaml
     package.json
     src/...
@@ -50,7 +52,7 @@ Published registry:
 
 The top-level index holds stable component IDs, names, summaries, kinds, and links
 to version indexes. Each component index lists available versions and links to
-their descriptors. Architect fetches detailed metadata as needed. Both index
+their descriptors. The Loom fetches detailed metadata as needed. Both index
 levels are generated, not edited manually. Published versions cannot be replaced
 with different contents; fixes require a new version.
 
@@ -81,7 +83,7 @@ are examples, not a claim about the current linear-slide contract:
   "source": {
     "repository": "ROSMicroPy/RobotPrimitivesStack",
     "commit": "<full-source-commit-sha>",
-    "package": "RPStack/services/linear_slide/package.json"
+    "package": "PrimitiveFabric/services/linear_slide/package.json"
   },
   "dependencies": {
     "services": [
@@ -98,7 +100,7 @@ are examples, not a claim about the current linear-slide contract:
 }
 ```
 
-Define one version-range syntax for the registry. Architect resolves compatible
+Define one version-range syntax for the registry. The Loom resolves compatible
 ranges into exact versions, source commits, and file hashes in the deployment
 lock. Resolve the full transitive graph across all logical nodes on each device;
 reject missing dependencies, incompatible versions, and lifecycle dependency
@@ -126,11 +128,11 @@ branch. Released version descriptors remain available when branch pointers advan
 The registry index and every referenced source file must agree on the source
 snapshot. A failed publication leaves the previous valid pointer intact.
 
-Architect supports selecting a branch, tag, or commit for Git-backed sources.
+The Loom supports selecting a branch, tag, or commit for Git-backed sources.
 Browsing may follow a branch; deployments retain the resolved immutable commit.
 Testing builds need commit-qualified identities because several commits may share
 the same development version. Show the selected branch and resolved commit in
-Architect so users can distinguish a moving source from an installed build.
+The Loom so users can distinguish a moving source from an installed build.
 
 Same-repository dependencies resolve consistently to the selected snapshot unless
 explicitly overridden. Existing package references to `archdef` must be accounted
@@ -139,7 +141,7 @@ with dependency code from another branch.
 
 ## Multiple registries and private sources
 
-Architect supports several enabled sources and presents their apps and services
+The Loom supports several enabled sources and presents their apps and services
 in one searchable palette, with their origin visible. Each source has a stable
 registry identity, display name, index URL, optional Git ref, optional credential
 reference, and enabled state. Arbitrary HTTP registries need not expose Git refs.
@@ -181,7 +183,7 @@ Resolution follows these rules:
 - Record the selected source identity, URL, immutable revision, and hashes in the
   deployment lock. Disabling a source does not rewrite existing selections.
 
-Private registry access is needed only on Architect. Devices receive resolved
+Private registry access is needed only on The Loom. Devices receive resolved
 files and their deployment manifest over the management connection.
 
 ## Refresh, caching, and offline use
@@ -196,9 +198,9 @@ possible only when all exact locked artifacts are cached and verified. Refreshin
 the palette does not modify an existing deployment; adopting a new version is a
 separate deployment change, whether manual or governed by an update policy.
 
-## Integration with Robot Architect
+## Integration with The Loom
 
-Current Architect discovery scans local `component.yaml` files. Registry discovery
+Current Robot Architect discovery scans local `component.yaml` files. Registry discovery
 should become an additional source feeding that component palette. Local metadata
 remains useful during development; identify it explicitly and capture its exact
 contents when creating a deployment rather than presenting uncommitted code as a

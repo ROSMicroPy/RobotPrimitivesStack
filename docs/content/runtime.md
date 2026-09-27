@@ -1,6 +1,8 @@
-# Runtime Level
+# Host runtime and execution
 
-The runtime handles assembly and execution rather than implementing the mechanics of a particular robot.
+The current runtime is Somatic Mesh's execution foundation: it assembles logical nodes, binds capabilities, and supervises work. Apps and flows express behavior today. Explicit Actor identity and hosting are proposed extensions; a task remains a tracked execution instance, not an Actor.
+
+Fabric-wide placement, authoritative ownership, and recovery belong to the proposed [management layer](fabric-management.html). Current remote-action leases and resource claims do not establish automatic Actor failover. The API names and startup sequence below describe the existing implementation.
 
 | Package | Responsibility |
 | --- | --- |

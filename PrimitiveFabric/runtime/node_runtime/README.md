@@ -1,5 +1,7 @@
 # Node runtime
 
+Somatic Mesh implementation note: `NodeRuntime` remains a manifest-defined logical assembly, and `NodeHost` hosts several such assemblies. Neither is renamed to Actor. The proposed Actor and Fabric Node concepts are explained in the [architecture](../../ARCHITECTURE.md); the APIs below describe the current implementation.
+
 `NodeRuntime.load(path)` loads a complete `rp.node/v1` application. Use
 `run_manifest(path)` from the device's `/main.py`, or `await node.boot()` inside
 an existing event loop. See [the linear slide node](../../../examples/linear_slide/README.md)

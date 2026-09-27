@@ -1,5 +1,7 @@
 # API Reference
 
+This is the current implementation API for Somatic Mesh's RPStack foundation. Keep using the documented `rpstack` imports and node/service identifiers. Actor identity, automatic placement, and recovery APIs are proposed work, described in [Fabric management](fabric-management.html).
+
 ## Native REPL helpers
 
 These functions are installed by the slide demo package, not by every RPStack node.

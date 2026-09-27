@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Services level · RPStack</title><meta name="description" content="RPStack documentation: Services level">
+<title>Services &amp; capabilities · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Services &amp; capabilities">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">RP</span> RPStack <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; behaviors</a><h2>Architecture</h2><a href="architecture.html">Package structure</a><a href="runtime.html">Runtime level</a><a href="services.html" aria-current="page">Services level</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="services-level">Services Level<a class="headerlink" href="#services-level" title="Permanent link">¶</a></h1>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html" aria-current="page">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="services-and-capabilities">Services and capabilities<a class="headerlink" href="#services-and-capabilities" title="Permanent link">¶</a></h1>
+<p>In Somatic Mesh, Actors will use capabilities to perform their assigned Behaviors. Services remain the concrete capability providers; a driver, adapter, or composite does not need its own Actor identity. The contracts and examples below are implemented service APIs, independent of the proposed Actor layer.</p>
 <p>Services expose hardware-independent capabilities. A component contract describes configuration, lifecycle hooks, operations, required/provided interfaces, implementation choices, and tests.</p>
-<p>For planned publishing and discovery in Robot Architect, see
+<p>For planned publishing and discovery through The Loom (currently Robot Architect), see
 <a href="registries.html">Service and app registries</a>. That design adds immutable version
 records and explicit dependency resolution across public and private sources.</p>
 <h2 id="drivers-adapters-composites">Drivers, adapters, composites<a class="headerlink" href="#drivers-adapters-composites" title="Permanent link">¶</a></h2>
@@ -76,11 +77,11 @@ records and explicit dependency resolution across public and private sources.</p
 <li>Assemble it in a node manifest with explicit hardware resources and bindings.</li>
 </ol>
 <p>Use cooperative waits for device readiness and stop physical work in cancellation/error cleanup. Keep installation-specific offsets in adapters and application sequencing in apps or flows.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="runtime.html"><small>Previous</small>Runtime level</a><a href="ros-integration.html"><small>Next</small>ROS 2 integration</a></nav>
-<footer>RPStack · Robot Primitives Software Stack</footer></main>
+<nav class="pager" aria-label="Adjacent pages"><a href="runtime.html"><small>Previous</small>Host runtime</a><a href="ros-integration.html"><small>Next</small>ROS 2 integration</a></nav>
+<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#services-level">Services Level</a><ul>
+<li><a href="#services-and-capabilities">Services and capabilities</a><ul>
 <li><a href="#drivers-adapters-composites">Drivers, adapters, composites</a></li>
 <li><a href="#capability-contracts">Capability contracts</a></li>
 <li><a href="#describe-an-operation">Describe an operation</a></li>

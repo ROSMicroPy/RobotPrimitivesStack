@@ -27,22 +27,27 @@
   {
     "group": "Basic concepts",
     "slug": "apps",
-    "title": "Apps & behaviors"
+    "title": "Apps & Behaviors"
   },
   {
     "group": "Architecture",
     "slug": "architecture",
-    "title": "Package structure"
+    "title": "Architecture & layers"
+  },
+  {
+    "group": "Architecture",
+    "slug": "fabric-management",
+    "title": "Fabric management & recovery"
   },
   {
     "group": "Architecture",
     "slug": "runtime",
-    "title": "Runtime level"
+    "title": "Host runtime"
   },
   {
     "group": "Architecture",
     "slug": "services",
-    "title": "Services level"
+    "title": "Services & capabilities"
   },
   {
     "group": "Architecture",
