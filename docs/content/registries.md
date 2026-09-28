@@ -1,6 +1,4 @@
-# Service and app registries
-
-The Loom is the proposed name for Robot Architect. Somatic Mesh will also need versioned Behavior definitions and their compatibility requirements. The service/app registry below is the proposed packaging foundation; it does not yet define a Behavior schema or establish Actor placement and recovery.
+# Service and behavior registries
 
 **Design proposal.** This page defines the intended Somatic Mesh and Loom registry
 model. Registry schemas, publishing automation, multi-registry discovery, and
@@ -9,20 +7,20 @@ proposed formats, not inputs supported by the current runtime.
 
 ## Available software and observed devices
 
-A software registry lists services and apps available to install. The runtime
+A software registry lists services and actors available to install. The runtime
 catalog lists nodes and capabilities actually observed on the robot. The Loom
 uses both to display desired configuration alongside installed state.
 
 | Document | Question it answers |
 | --- | --- |
-| Registry index | Which services and apps are available? |
-| Versioned service/app descriptor | What does this version do, require, and support? |
+| Registry index | Which services and actors are available? |
+| Versioned service/behavior descriptor | What does this version do, require, and support? |
 | Package manifest (`package.json`) | Which files and package dependencies install it? |
 | Node manifest | Which configured instances and bindings should this logical node have? |
 | Deployment lock | Exactly which sources, versions, files, and manifests belong on this robot? |
 
-One package may expose several selectable services or apps. Registry entries
-represent those components and reference their installation packages. Each app
+One package may expose several selectable services or actors. Registry entries
+represent those components and reference their installation packages. Each behavior
 needs metadata for its entry point, configuration, and required capabilities,
 just as services need their component contracts.
 
@@ -34,7 +32,7 @@ released component version; authors do not maintain one growing central list.
 
 ```text
 Source repository:
-  PrimitiveFabric/services/motor_control/
+  SomaticMesh/services/motor_control/
     component.yaml
     package.json
     src/...
@@ -45,7 +43,7 @@ Published registry:
     index.json
     0.4.0.json
     0.5.0.json
-  apps/slide_commands/
+  actors/slide_commands/
     index.json
     0.1.0.json
 ```
@@ -77,19 +75,19 @@ are examples, not a claim about the current linear-slide contract:
 
 ```json
 {
-  "schema": "rp.registry.service/v1",
-  "id": "rp.linear_slide",
+  "schema": "somatic.registry.service/v1",
+  "id": "somatic.linear_slide",
   "version": "0.3.0",
   "source": {
     "repository": "ROSMicroPy/RobotPrimitivesStack",
     "commit": "<full-source-commit-sha>",
-    "package": "PrimitiveFabric/services/linear_slide/package.json"
+    "package": "SomaticMesh/services/linear_slide/package.json"
   },
   "dependencies": {
     "services": [
       {
         "role": "motor",
-        "service": "rp.motor_control",
+        "service": "somatic.motor_control",
         "version": ">=0.4.0 <0.5.0",
         "interface": "motion.motion_actuator",
         "interface_version": 1,
@@ -135,13 +133,13 @@ the same development version. Show the selected branch and resolved commit in
 The Loom so users can distinguish a moving source from an installed build.
 
 Same-repository dependencies resolve consistently to the selected snapshot unless
-explicitly overridden. Existing package references to `archdef` must be accounted
-for by the resolver; selecting a testing branch must not silently mix its code
-with dependency code from another branch.
+explicitly overridden. The resolver must account for dependency Git references;
+selecting a testing branch must not silently mix its code with dependency code
+from another branch.
 
 ## Multiple registries and private sources
 
-The Loom supports several enabled sources and presents their apps and services
+The Loom supports several enabled sources and presents their actors and services
 in one searchable palette, with their origin visible. Each source has a stable
 registry identity, display name, index URL, optional Git ref, optional credential
 reference, and enabled state. Arbitrary HTTP registries need not expose Git refs.
@@ -152,9 +150,9 @@ Illustrative configuration using placeholder URLs:
 {
   "registries": [
     {
-      "id": "rpstack",
-      "name": "RPStack",
-      "url": "https://registry.example.org/rpstack/index.json",
+      "id": "somatic_mesh",
+      "name": "SomaticMesh",
+      "url": "https://registry.example.org/somatic_mesh/index.json",
       "enabled": true
     },
     {
@@ -200,7 +198,7 @@ separate deployment change, whether manual or governed by an update policy.
 
 ## Integration with The Loom
 
-Current Robot Architect discovery scans local `component.yaml` files. Registry discovery
+The Loom discovery scans local `component.yaml` files. Registry discovery
 should become an additional source feeding that component palette. Local metadata
 remains useful during development; identify it explicitly and capture its exact
 contents when creating a deployment rather than presenting uncommitted code as a

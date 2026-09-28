@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "slide-ros-gateway",
   "identity": {
     "entity": "RosSlide",
@@ -22,22 +22,23 @@
     "transports": [
       {
         "id": "ros",
-        "entry_point": "rpstack.ros_signals:RosTransport",
+        "entry_point": "somatic_mesh.ros_signals:RosTransport",
         "config": {
           "backend": "rclpy"
         }
       }
     ]
   },
-  "apps": [
+  "actors": [
     {
       "id": "ros",
-      "entry_point": "rpstack.apps.ros_gateway:SlideRosGateway",
       "config": {
         "target_node": "slide_device",
         "service": "slide",
-        "namespace": "rpstack/slide"
-      }
+        "namespace": "somatic_mesh/slide"
+      },
+      "behavior": "somatic_mesh.behaviors.ros_gateway:SlideRosBehavior",
+      "version": "0.1.0"
     }
   ]
 }

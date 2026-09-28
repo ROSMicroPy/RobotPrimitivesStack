@@ -1,0 +1,32 @@
+{
+  "name": "somatic-espnow",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/espnow/__init__.py",
+      "src/somatic_mesh/espnow/__init__.py"
+    ],
+    [
+      "somatic_mesh/espnow/shared.py",
+      "src/somatic_mesh/espnow/shared.py"
+    ],
+    [
+      "somatic_mesh/espnow/transport.py",
+      "src/somatic_mesh/espnow/transport.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/signals",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

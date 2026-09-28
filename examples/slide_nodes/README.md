@@ -45,13 +45,13 @@ Set installation coordinates and minimum/maximum travel for your slide.
 Calibration determines the electrical direction.
 The default demo target is an absolute **100 mm** position.
 
-## Wi-Fi and RobotArchitect catalog
+## Wi-Fi and TheLoom catalog
 
-Version 0.3.0 includes the gateway app. Configure Wi-Fi on each physical device
+Version 0.3.0 includes the gateway behavior. Configure Wi-Fi on each physical device
 before `start()` (or connect its station interface beforehand):
 
 ```python
-from rpstack.env import setEnv
+from somatic_mesh.env import setEnv
 setEnv("WIFI_SSID", "your-network", True)
 setEnv("WIFI_PASSWORD", "your-password", True)
 ```
@@ -60,18 +60,18 @@ These credentials are persisted on the device, not included in catalog profiles.
 The access point channel must match the ESP-NOW channel in **both**
 `slide_node1.json` and `slide_node2.json`, plus `slide_client_host.json`.
 The shipped channel is 6. HTTP gateways require a reachable Wi-Fi network;
-an ESP-NOW-only setup cannot be reached by RobotArchitect's HTTP client.
+an ESP-NOW-only setup cannot be reached by TheLoom's HTTP client.
 
-`start()` hosts the gateway on node1, alongside the slide command app.
+`start()` hosts the gateway on node1, alongside the slide command behavior.
 `start("client")` hosts a resident `node2-host` with its own gateway and catalog;
-it owns no slide hardware. The temporary `node2` move app remains one-off and
+it owns no slide hardware. The temporary `node2` move behavior remains one-off and
 shares the resident host's radio. Ending a command does not close the gateway.
 Keep node1, node2-host and the active node2 unique within `SlideDemo`.
 
-Startup prints `RobotArchitect gateway: http://<address>:80`. Retrieve it with
-`slide_nodes.status()["gateway_url"]`. Open RobotArchitect's **System** view and
+Startup prints `TheLoom gateway: http://<address>:80`. Retrieve it with
+`slide_nodes.status()["gateway_url"]`. Open TheLoom's **System** view and
 enter that base URL. It can attach to either device to fetch `/api/robot` and
-see the local node plus discovered peers, service capabilities and apps.
+see the local node plus discovered peers, service capabilities and actors.
 The same server retains `/manifest`, task and service-operation APIs.
 This development API includes motion controls: use a trusted network.
 
@@ -83,8 +83,8 @@ for empty outbound queues so profile fragments do not fill the command queue.
 Stopping the client host stops its gateway but does not stop remote slide motion.
 
 For an ESP-NOW-only deployment, remove `wifi` and `http` runtime entries and the
-`gateway` app from the resident manifests; keep `catalog` if mesh discovery is
-still wanted. This intentionally disables RobotArchitect's HTTP attachment.
+`gateway` behavior from the resident manifests; keep `catalog` if mesh discovery is
+still wanted. This intentionally disables TheLoom's HTTP attachment.
 
 ## One device: start, return to the prompt, run the demo
 
@@ -147,7 +147,7 @@ correlation ID, so unrelated nodes do not consume them as their own results.
 
 ## REPL and transport behavior
 
-Startup imports runtime/app/driver modules and reads both manifests on the
+Startup imports runtime/behavior/driver modules and reads both manifests on the
 foreground stack before creating any worker. A single background `_thread`
 then owns the asyncio loop and all node objects, with an explicit 64 KiB stack.
 Each motion batch uses a separate 64 KiB pulse worker; TOF reads wait until that
@@ -195,10 +195,10 @@ Replies target the requester and retain the correlation ID:
 `slide.ping` / `slide.ready` implement readiness without moving hardware. The
 client subscribes before publishing and filters source and correlation.
 
-Apps default to `mode: resident`; `mode: oneshot` permits successful return.
-When all apps are oneshot, `NodeRuntime.wait()` waits for their results and
+Actors default to `mode: resident`; `mode: oneshot` permits successful return.
+When all actors are oneshot, `FabricNode.wait()` waits for their results and
 propagates failures. The manifest runners shut down completed task-only nodes;
-mixed nodes remain resident. `NodeHost.failures` records failed task-only nodes
+mixed nodes remain resident. `DeviceHost.failures` records failed task-only nodes
 without stopping resident peers.
 
 For boot-time execution without a native REPL, the same installed manifests work

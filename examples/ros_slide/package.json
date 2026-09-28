@@ -1,5 +1,5 @@
 {
-  "name": "rp-ros-slide-example",
+  "name": "somatic-ros-slide-example",
   "version": "0.1.0",
   "urls": [
     [
@@ -9,63 +9,63 @@
   ],
   "deps": [
     [
-      "../../RPStack/runtime/signals/package.local.json",
+      "../../SomaticMesh/runtime/signals/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/foundation/interfaces/package.local.json",
+      "../../SomaticMesh/foundation/interfaces/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/services/motor_control/package.local.json",
+      "../../SomaticMesh/services/motor_control/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/services/distance_sensor/package.local.json",
+      "../../SomaticMesh/services/distance_sensor/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/services/distance_to_position/package.local.json",
+      "../../SomaticMesh/services/distance_to_position/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/services/linear_slide/package.local.json",
+      "../../SomaticMesh/services/linear_slide/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/runtime/execution_engine/package.local.json",
+      "../../SomaticMesh/runtime/execution_engine/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/runtime/node_runtime/package.local.json",
+      "../../SomaticMesh/runtime/fabric_node/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/platform/env/package.json",
+      "../../SomaticMesh/platform/env/package.json",
       "latest"
     ],
     [
-      "../../RPStack/control/http/package.local.json",
+      "../../SomaticMesh/control/http/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/runtime/catalog/package.local.json",
+      "../../SomaticMesh/runtime/catalog/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/apps/robot_gateway/package.local.json",
+      "../../SomaticMesh/behaviors/robot_gateway/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/foundation/support/package.local.json",
+      "../../SomaticMesh/foundation/support/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/apps/slide_commands/package.local.json",
+      "../../SomaticMesh/behaviors/slide_commands/package.local.json",
       "latest"
     ],
     [
-      "../../RPStack/transports/ros_signals/package.local.json",
+      "../../SomaticMesh/transports/ros_signals/package.local.json",
       "latest"
     ]
   ]

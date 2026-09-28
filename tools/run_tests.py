@@ -1,4 +1,4 @@
-"""Run independent RPStack host suites across all responsibility groups."""
+"""Run independent SomaticMesh host suites across all responsibility groups."""
 import os
 from pathlib import Path
 import re
@@ -11,9 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 # Keep suites in separate interpreters so hardware fakes and event loops cannot leak.
 def main():
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1',
-               PYTHONPATH=os.pathsep.join(str(p) for p in sorted((ROOT / 'RPStack').glob('*/*/src'))))
+               PYTHONPATH=os.pathsep.join(str(p) for p in sorted((ROOT / 'SomaticMesh').glob('*/*/src'))))
     failures, total = [], 0
-    suites = sorted({p.parent for p in (ROOT / 'RPStack').rglob('test_*.py')})
+    suites = sorted({p.parent for p in (ROOT / 'SomaticMesh').rglob('test_*.py')})
+    if not suites:
+        raise RuntimeError("no Somatic Mesh test suites found")
     for suite in suites:
         result = subprocess.run([sys.executable, '-B', '-m', 'unittest', 'discover', '-s', str(suite)],
                                 cwd=ROOT, env=env, text=True, capture_output=True, timeout=120)

@@ -1,8 +1,6 @@
 # Nodes and Manifests
 
-In the Somatic Mesh model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans select placement, bindings, and exact versions. That separation is proposed. The current manifest below combines these concerns and remains the supported format; there are no new Actor or Fabric Node fields yet. A logical node is not synonymous with an Actor. See the [mental model](concepts.html).
-
-A node manifest (`rp.node/v1`) describes one current logical-node assembly. Service manifests (`rp.service/v1`) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.
+A node manifest (`somatic.node/v1`) describes one Fabric Node deployment. Service manifests (`somatic.service/v1`) describe reusable contracts. JSON is the device format; component YAML files are useful for authoring and reviewing service definitions.
 
 ## Node manifest fields
 
@@ -14,7 +12,7 @@ A node manifest (`rp.node/v1`) describes one current logical-node assembly. Serv
 | `services` | Instances, implementations, constructor arguments, configuration and bindings |
 | `runtime` | Shared listeners and infrastructure |
 | `signals` | Routes, transport adapters and optional bridges |
-| `apps` | Resident or one-off application factories |
+| `actors` | Named participants with Behavior entry points, versions, configuration, dependencies, and lifecycle modes |
 | `flows` | Declarative behavior graphs |
 | `execution` | Distributed peers, exposed operations and leases |
 
@@ -44,9 +42,9 @@ Use `examples/slide_nodes/node1.device.json` as a complete device example. Its c
 Inside an existing async entry point:
 
 ```python
-from rpstack.node_runtime import NodeRuntime
+from somatic_mesh.fabric_node import FabricNode
 
-node = NodeRuntime.load('/lib/slide_node1.json')
+node = FabricNode.load('/lib/slide_node1.json')
 await node.boot()
 try:
     await node.wait()
@@ -60,4 +58,4 @@ For an application that owns the event loop, `run_manifest(path)` is the blockin
 
 A required capability can be bound automatically when exactly one compatible provider matches. Explicit bindings select a specific service instance. Missing, ambiguous, incompatible, or cyclic dependencies are rejected. Shared resources use references such as `{"$resource": "carriage_bus"}`.
 
-Each entity/node pair must be unique. A node's service ID, such as `slide`, is local to that node. `NodeHost` can host multiple logical nodes in one process, but it does not make conflicting peripheral ownership safe.
+Each entity/node pair must be unique. A node's service ID, such as `slide`, is local to that node. `DeviceHost` can host multiple logical nodes in one process, but it does not make conflicting peripheral ownership safe.

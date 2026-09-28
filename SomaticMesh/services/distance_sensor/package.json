@@ -1,0 +1,44 @@
+{
+  "name": "somatic-distance-sensor",
+  "version": "0.3.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/__init__.py",
+      "src/somatic_mesh/distance_sensor/__init__.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/distance_drivers/__init__.py",
+      "src/somatic_mesh/distance_sensor/distance_drivers/__init__.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/distance_drivers/hcsr04.py",
+      "src/somatic_mesh/distance_sensor/distance_drivers/hcsr04.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/distance_drivers/vl53l4cd.py",
+      "src/somatic_mesh/distance_sensor/distance_drivers/vl53l4cd.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/distance_drivers/vl53l4cd_core.py",
+      "src/somatic_mesh/distance_sensor/distance_drivers/vl53l4cd_core.py"
+    ],
+    [
+      "somatic_mesh/distance_sensor/service.py",
+      "src/somatic_mesh/distance_sensor/service.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/interfaces",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

@@ -8,107 +8,84 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html" aria-current="page">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html" aria-current="page">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="the-somatic-mesh-mental-model">The Somatic Mesh mental model<a class="headerlink" href="#the-somatic-mesh-mental-model" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh is a distributed compute framework and management system for small devices. Define participants and their work, then bind that work to the capabilities and resources available across connected devices.</p>
-<p><strong>Status:</strong> Actors, Fabric Nodes, and the separated deployment model below describe the product direction. Current APIs still assemble logical nodes from services, apps, and flows. These concepts do not introduce new supported manifest fields or migration guarantees.</p>
-<h2 id="actors-and-behaviors">Actors and Behaviors<a class="headerlink" href="#actors-and-behaviors" title="Permanent link">¶</a></h2>
-<p>An <strong>Actor</strong> is a stable logical participant: for example, a carriage controller, measurement coordinator, or data processor. Its intended contract includes identity, an assigned Behavior and version, configuration, explicit state, message handling, and lifecycle. Its identity should remain stable when an eligible deployment changes its location.</p>
-<p>A <strong>Behavior</strong> defines what an Actor does and how it responds to actions or signals. It may be implemented by application code or a declarative workflow. A <strong>task</strong> is a managed execution instance, such as one move or a running flow; it is not the Actor's identity. A <strong>capability</strong> describes what a provider can do, not the Behavior that decides when to use it.</p>
-<p>Do not turn every driver or adapter into an Actor. An Actor can coordinate several services. The current <code>NodeRuntime</code> may contain several such participants in the future; renaming it to Actor would conflate hosting with application identity.</p>
-<h2 id="fabric-hosts-and-devices">Fabric, hosts, and devices<a class="headerlink" href="#fabric-hosts-and-devices" title="Permanent link">¶</a></h2>
+<p>Somatic Mesh connects physical capabilities and computation into coordinated applications. Actors perform Behaviors on Fabric Nodes; signals and managed operations connect their work.</p>
+<h2 id="participants-and-execution">Participants and execution<a class="headerlink" href="#participants-and-execution" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
 <th>Term</th>
-<th>Product meaning</th>
-<th>Current implementation relationship</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>Fabric</td>
-<td>Connected execution and management infrastructure</td>
-<td>Runtime, signals, transports, control, and discovery are foundations; placement and recovery management remain proposed</td>
-</tr>
 <tr>
 <td>Device</td>
-<td>Physical board or computer</td>
-<td>Owns hardware connections and supplies processing, memory, storage, and power</td>
+<td>Physical board or computer, including its processing, storage, power, and attached hardware</td>
 </tr>
 <tr>
-<td>Fabric Node</td>
-<td>Runtime host that offers an execution location for Actors</td>
-<td>Target vocabulary; there is no separate Fabric Node API yet</td>
+<td>DeviceHost</td>
+<td>Hosts multiple Fabric Nodes on one cooperative event loop</td>
 </tr>
 <tr>
-<td>Logical node</td>
-<td>Current manifest-defined assembly with an entity/node identity</td>
-<td><code>NodeRuntime</code> holds services, apps, flows, and tasks; <code>NodeHost</code> can run several logical nodes on one device</td>
+<td>FabricNode</td>
+<td>Runtime host with an entity/node identity, services, Actors, workflows, and task registry</td>
 </tr>
 <tr>
-<td>Entity</td>
-<td>Scope for cooperating participants in an installation</td>
-<td>Existing <code>identity.entity</code>, such as <code>SlideDemo</code> or <code>Robie1</code>; not a new Fabric identifier schema</td>
+<td>Actor</td>
+<td>Named participant owning one configured Behavior instance and its managed execution</td>
+</tr>
+<tr>
+<td>Behavior</td>
+<td>Code that prepares, performs, and cleans up an Actor's work</td>
+</tr>
+<tr>
+<td>Task</td>
+<td>One tracked execution with a result, failure, or cancellation</td>
+</tr>
+<tr>
+<td>Capability</td>
+<td>Versioned interface and semantic constraints supplied by a service</td>
+</tr>
+<tr>
+<td>Fabric</td>
+<td>Connected runtime, communication, discovery, and management facilities</td>
 </tr>
 </tbody>
 </table>
-<p>Several logical nodes share an interpreter and filesystem. They are not isolated failure domains or independent package environments. A host failure can affect all of them. Each physical peripheral needs one owner; logical separation does not provide hardware arbitration.</p>
-<h2 id="the-loom-and-ila">The Loom and ILA<a class="headerlink" href="#the-loom-and-ila" title="Permanent link">¶</a></h2>
-<p><strong>The Loom</strong> is the proposed product name for Robot Architect, the authoring, deployment, and observation environment. Its current extension and repository names remain Robot Architect / <code>RobotArchitect</code>. <strong>ILA</strong> (Intelligent Loom Assistant, pronounced “eye-la”) is the proposed assistant within The Loom, using the same management interfaces and permissions as other clients.</p>
-<p>The Loom should define desired applications, resolve exact software versions, deliver code, and show running state. Onboard management should enforce readiness, ownership, and permitted recovery. The intended deployed system does not depend on The Loom or internet access remaining connected.</p>
-<h2 id="three-separate-descriptions">Three separate descriptions<a class="headerlink" href="#three-separate-descriptions" title="Permanent link">¶</a></h2>
-<table>
-<thead>
-<tr>
-<th>Description</th>
-<th>Contains</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Application definition</td>
-<td>Actors, assigned Behaviors, connections, capability requirements, constraints, and recovery policy</td>
-</tr>
-<tr>
-<td>Device profile</td>
-<td>Board identity, firmware, pins, peripherals, resource budgets, and available hardware capabilities</td>
-</tr>
-<tr>
-<td>Deployment plan</td>
-<td>Actor placement, concrete bindings, exact software revisions, and eligible fallback hosts</td>
-</tr>
-</tbody>
-</table>
-<p>This separation is proposed. Today's <code>rp.node/v1</code> manifest combines application, hardware, and deployment information. Continue to use the documented <a href="nodes.html">current format</a>; no new Actor schema is defined here.</p>
+<p>An Actor ID is unique within its Fabric Node. Its address is <code>(entity, node, actor)</code>. Its task ID identifies an execution rather than the participant itself. <code>node.actors['carriage'].behavior</code> accesses the assigned implementation; <code>describe()</code> returns public lifecycle and execution metadata.</p>
+<p>A Fabric Node can host several Actors, and an Actor can use several services. Drivers and adapters remain capability providers without requiring their own Actor. Multiple Fabric Nodes on one DeviceHost share an interpreter and filesystem; their identities do not create isolated failure domains.</p>
+<h2 id="behaviors-and-workflows">Behaviors and workflows<a class="headerlink" href="#behaviors-and-workflows" title="Permanent link">¶</a></h2>
+<p>A Behavior factory receives <code>(actor, **config)</code>. It accesses the host through <code>actor.node</code>, prepares subscriptions in <code>start()</code>, performs cooperative work in <code>run()</code>, and releases its resources in <code>stop()</code>. A resident Actor's unexpected exit triggers node health handling. A oneshot Actor may return normally and expose its result through <code>await actor.wait()</code>.</p>
+<p><code>WorkflowBehavior</code> assigns an operation/signal graph to an Actor. The graph lives in <code>flows</code>; its <code>nodes</code> keys identify steps, not Fabric Nodes. A workflow has one coordinator, and can request leased actions from configured peer nodes. Coordinator failover is outside the runtime contract.</p>
 <h2 id="services-operations-and-signals">Services, operations, and signals<a class="headerlink" href="#services-operations-and-signals" title="Permanent link">¶</a></h2>
-<p>Services provide reusable capabilities. Drivers access hardware, adapters translate meaning or coordinates, and composites coordinate capabilities into a higher-level service. Apps and flows currently express application behavior.</p>
-<p>An <strong>operation</strong> invokes an allowlisted service method through the supervisor, with validated arguments, concurrency rules, and a tracked result. A <strong>signal</strong> is an event envelope delivered to subscribers. It becomes a command only when a handler interprets it and submits an operation.</p>
+<p>Drivers own hardware protocols. Adapters translate units or installation meaning. Composites coordinate capability providers. A service's declared operations provide validated arguments, resource claims, and tracked outcomes.</p>
+<p>Signals carry event envelopes between subscribers. They are routed by entity and node. A Behavior interprets a signal and may submit an operation; receiving a message alone is not confirmation that a physical action completed. Correlation IDs connect commands with their responses.</p>
 <pre class="mermaid">flowchart LR
-    Client[Current client app] --&gt;|slide.move signal| Handler[SlideCommandApp]
-    Handler --&gt;|submit move_to| Supervisor[Service supervisor]
+    Client[Client Actor / MoveOnceBehavior] --&gt;|slide.move| Carriage[Carriage Actor / SlideCommandBehavior]
+    Carriage --&gt;|submit move_to| Supervisor[Service supervisor]
     Supervisor --&gt; Slide[LinearSlide capability]
-    Slide --&gt;|result or error| Handler
-    Handler --&gt;|correlated reply| Client
+    Slide --&gt;|measured result or failure| Carriage
+    Carriage --&gt;|correlated outcome| Client
 </pre>
-<p>In the target model, these apps could implement Behaviors for a client Actor and a carriage Actor. Today their addresses and lifecycles remain tied to configured logical nodes.</p>
-<h2 id="placement-has-physical-limits">Placement has physical limits<a class="headerlink" href="#placement-has-physical-limits" title="Permanent link">¶</a></h2>
-<p>A Behavior that processes data may be eligible to restart on another host. A Behavior that depends on a directly wired motor still needs access to that motor. A dead board's electrical connections cannot be restored by moving software.</p>
-<p>Planned handoff can stop work and save state before transfer. Crash recovery can use only state already persisted or replicated. Resource-aware placement must consider memory, processor load, power, temperature, and communication cost; moving CPU work does not remove a local motor's power demand. See the <a href="fabric-management.html">Fabric management proposal</a>.</p>
-<h2 id="units-and-coordinates">Units and coordinates<a class="headerlink" href="#units-and-coordinates" title="Permanent link">¶</a></h2>
-<p>Capability boundaries use SI units: metres for linear distance and position, radians for angles. Convenience APIs may use millimetres when explicit. Position adapters own offsets, direction, and reference frames; a raw sensor does not know where a carriage is installed.</p></article>
+<h2 id="the-loom-and-rosmicropy">The Loom and ROSMicroPy<a class="headerlink" href="#the-loom-and-rosmicropy" title="Permanent link">¶</a></h2>
+<p>The Loom is the authoring, deployment, and observation environment. A deployment defines which external services it needs; local Behaviors can run with The Loom disconnected. ILA, the Intelligent Loom Assistant, is a planned assistant using the same management interfaces.</p>
+<p>ROSMicroPy is foundational to embedded ROS integration. ESP-NOW local coordination can run without a ROS connection; Behaviors that depend on external ROS participants require those participants and their communication path. The <a href="ros-integration.html">ROS guide</a> describes typed interfaces and agent dependencies.</p>
+<h2 id="placement-and-physical-ownership">Placement and physical ownership<a class="headerlink" href="#placement-and-physical-ownership" title="Permanent link">¶</a></h2>
+<p>Manifests assign Actors to specific Fabric Nodes and bind services to resources. Each physical peripheral needs one owner. Local claims arbitrate operations but do not establish distributed Actor ownership after a network partition.</p>
+<p>A data-processing Behavior may eventually be eligible for alternative-host recovery. A motor-control Behavior still requires access to its motor. Planned handoff needs checkpoint/restore and an ownership protocol; crash recovery can use only state already saved. These features are specified in the <a href="fabric-management.html">management roadmap</a>.</p>
+<p>Capability boundaries use SI units and explicit reference frames. Position adapters own offsets and direction; sensors report observations in their defined coordinates.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="getting-started.html"><small>Previous</small>Getting Started</a><a href="nodes.html"><small>Next</small>Nodes &amp; manifests</a></nav>
 <footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#the-somatic-mesh-mental-model">The Somatic Mesh mental model</a><ul>
-<li><a href="#actors-and-behaviors">Actors and Behaviors</a></li>
-<li><a href="#fabric-hosts-and-devices">Fabric, hosts, and devices</a></li>
-<li><a href="#the-loom-and-ila">The Loom and ILA</a></li>
-<li><a href="#three-separate-descriptions">Three separate descriptions</a></li>
+<li><a href="#participants-and-execution">Participants and execution</a></li>
+<li><a href="#behaviors-and-workflows">Behaviors and workflows</a></li>
 <li><a href="#services-operations-and-signals">Services, operations, and signals</a></li>
-<li><a href="#placement-has-physical-limits">Placement has physical limits</a></li>
-<li><a href="#units-and-coordinates">Units and coordinates</a></li>
+<li><a href="#the-loom-and-rosmicropy">The Loom and ROSMicroPy</a></li>
+<li><a href="#placement-and-physical-ownership">Placement and physical ownership</a></li>
 </ul>
 </li>
 </ul>

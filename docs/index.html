@@ -8,42 +8,37 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Start here</div><article><h1 id="somatic-mesh">Somatic Mesh<a class="headerlink" href="#somatic-mesh" title="Permanent link">¶</a></h1>
 <p><strong>A distributed compute framework and management system for small devices.</strong></p>
 <p><em>Design in The Loom. Bring Actors and Behaviors to life across the Fabric.</em></p>
-<p>Somatic Mesh connects small devices into coordinated systems. Its intended model assigns Behaviors to Actors and deploys them across a Fabric of suitable runtime hosts. The framework manages execution, communication, and software deployment, with a roadmap for recovery and resource-aware placement.</p>
-<h2 id="where-the-project-stands">Where the project stands<a class="headerlink" href="#where-the-project-stands" title="Permanent link">¶</a></h2>
-<p>The current implementation is RPStack: manifest-driven logical nodes, reusable capability services, supervised operations, apps, workflows, signals, transports, and discovery. <strong>Actors as a stable runtime abstraction, automatic placement, and recovery on alternative hosts are proposed work.</strong> Current packages, schemas, commands, and examples retain their RPStack names.</p>
-<p>The Loom is the proposed name for the Robot Architect authoring and management environment. ILA (Intelligent Loom Assistant) is its proposed assistant. Deployed operation and permitted recovery should be independent of the desktop and internet.</p>
-<h2 id="understand-the-model">Understand the model<a class="headerlink" href="#understand-the-model" title="Permanent link">¶</a></h2>
+<p>Somatic Mesh coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.</p>
+<p>ROSMicroPy provides the embedded ROS foundation. ROS interfaces connect the Fabric to robots and other ROS participants. ESP-NOW lets local devices cooperate without an access point or IP configuration, with bounded relaying for configured mesh deployments.</p>
+<h2 id="understand-the-system">Understand the system<a class="headerlink" href="#understand-the-system" title="Permanent link">¶</a></h2>
 <ul>
-<li><a href="concepts.html">Actors, Behaviors, and the Fabric</a>: product concepts and their relationship to current APIs.</li>
-<li><a href="architecture.html">Architecture</a>: existing package boundaries and proposed management responsibilities.</li>
-<li><a href="fabric-management.html">Fabric management and recovery</a>: placement, ownership, recovery limits, and development sequence.</li>
-<li><a href="nodes.html">Nodes and manifests</a>: the supported deployment format and its planned separation into application, hardware, and placement descriptions.</li>
+<li><a href="concepts.html">Mental model</a>: Actors, Behaviors, Devices, capabilities, and tasks.</li>
+<li><a href="actors.html">Actors and Behaviors</a>: implement a Behavior and assign it to an Actor.</li>
+<li><a href="architecture.html">Architecture</a>: package responsibilities and dependency boundaries.</li>
+<li><a href="nodes.html">Nodes and manifests</a>: configure resources, services, Actors, workflows, and transports.</li>
 </ul>
-<h2 id="run-what-exists-today">Run what exists today<a class="headerlink" href="#run-what-exists-today" title="Permanent link">¶</a></h2>
-<p>Start with a host simulation, then install the linear-slide example on an ESP32. Its signal-driven client can run beside the slide service or on a second device. These demonstrate current fixed deployment and capability coordination.</p>
+<h2 id="run-a-deployment">Run a deployment<a class="headerlink" href="#run-a-deployment" title="Permanent link">¶</a></h2>
 <ul>
-<li><a href="getting-started.html">Getting started</a>: simulation and first-device installation.</li>
-<li><a href="deployment.html">Multiple devices</a>: explicit placement and transport setup.</li>
-<li><a href="apps.html">Apps and Behaviors</a>: current app and workflow implementation patterns.</li>
-<li><a href="linear-slide.html">Linear slide</a> and <a href="api.html">API reference</a>: calibration, operations, and tracked tasks.</li>
-<li><a href="ros-integration.html">ROS 2 integration</a>: typed telemetry and the slide action gateway.</li>
+<li><a href="getting-started.html">Getting started</a>: host simulation and first-device installation.</li>
+<li><a href="deployment.html">Multiple devices</a>: explicit placement and ESP-NOW configuration.</li>
+<li><a href="linear-slide.html">Linear slide</a> and <a href="api.html">API reference</a>: calibration, commands, and tracked outcomes.</li>
+<li><a href="ros-integration.html">ROS integration</a>: ROSMicroPy telemetry and the typed slide action gateway.</li>
 </ul>
-<h2 id="plan-the-management-layer">Plan the management layer<a class="headerlink" href="#plan-the-management-layer" title="Permanent link">¶</a></h2>
-<p><a href="bootstrap.html">Provisioning and bootstrap</a> proposes identity provisioning, software delivery through The Loom, readiness, and onboard run permission. <a href="registries.html">Software registries</a> proposes exact version resolution and deployment locks. Both remain designs rather than current installation guarantees.</p>
-<p>Somatic Mesh is independent of a specific board or transport. The related StepperNode / Steppin Cube hardware is a potential building block, not the framework itself.</p></article>
+<h2 id="management-roadmap">Management roadmap<a class="headerlink" href="#management-roadmap" title="Permanent link">¶</a></h2>
+<p><a href="fabric-management.html">Fabric management</a>, <a href="bootstrap.html">bootstrap</a>, and <a href="registries.html">software registries</a> specify planned placement, inventory, readiness, code delivery, and recovery responsibilities. They are design documents; automatic Actor relocation and stateful recovery are not runtime features.</p>
+<p>Somatic Mesh is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="getting-started.html"><small>Next</small>Getting Started</a></nav>
 <footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#somatic-mesh">Somatic Mesh</a><ul>
-<li><a href="#where-the-project-stands">Where the project stands</a></li>
-<li><a href="#understand-the-model">Understand the model</a></li>
-<li><a href="#run-what-exists-today">Run what exists today</a></li>
-<li><a href="#plan-the-management-layer">Plan the management layer</a></li>
+<li><a href="#understand-the-system">Understand the system</a></li>
+<li><a href="#run-a-deployment">Run a deployment</a></li>
+<li><a href="#management-roadmap">Management roadmap</a></li>
 </ul>
 </li>
 </ul>

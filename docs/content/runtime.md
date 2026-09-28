@@ -1,12 +1,10 @@
 # Host runtime and execution
 
-The current runtime is Somatic Mesh's execution foundation: it assembles logical nodes, binds capabilities, and supervises work. Apps and flows express behavior today. Explicit Actor identity and hosting are proposed extensions; a task remains a tracked execution instance, not an Actor.
-
-Fabric-wide placement, authoritative ownership, and recovery belong to the proposed [management layer](fabric-management.html). Current remote-action leases and resource claims do not establish automatic Actor failover. The API names and startup sequence below describe the existing implementation.
+`FabricNode` assembles capability services, hosts Actors, and supervises managed work. Each Actor owns a Behavior and its execution task. `DeviceHost` runs several Fabric Nodes on a shared event loop.
 
 | Package | Responsibility |
 | --- | --- |
-| `node_runtime` | Manifest loading, capability resolution, lifecycle, node hosting |
+| `fabric_node` | Manifest loading, capability resolution, lifecycle, node hosting |
 | `execution_engine` | Tracked tasks, operations, behavior graphs and remote actions |
 | `signals` | Entity-scoped publication, subscriptions and routing |
 | `espnow`, `ros_signals` | Network transport adapters |
@@ -22,14 +20,14 @@ flowchart TD
     Resolve --> Init[Construct, configure and initialize services]
     Init --> Start[Start providers before consumers]
     Start --> Infra[Start runtime listeners and signal transports]
-    Infra --> Apps[Start apps and autostart flows]
-    Apps --> Work[Accept managed operations]
+    Infra --> Actors[Start Actors and autostart flows]
+    Actors --> Work[Accept managed operations]
     Work --> Stop[Stop admission and cancel managed work]
     Stop --> Cleanup[Stop consumers before providers]
-    Cleanup --> Shutdown[Shutdown closes apps, listeners and resources]
+    Cleanup --> Shutdown[Shutdown closes actors, listeners and resources]
 ```
 
-`stop()` stops application services and flows while controls remain available. `reset()` rebuilds service instances. `shutdown()` also closes runtime listeners, apps, and platform resources. Failed partial startup cleans up initialized instances.
+`stop()` stops application services and flows while controls remain available. `reset()` rebuilds service instances. `shutdown()` also closes runtime listeners, actors, and platform resources. Failed partial startup cleans up initialized instances.
 
 ## Managed operations
 

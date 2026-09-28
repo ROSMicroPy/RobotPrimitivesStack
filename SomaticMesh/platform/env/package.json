@@ -1,0 +1,35 @@
+{
+  "name": "somatic-env",
+  "version": "1.0.0",
+  "urls": [
+    [
+      "init.d/S005_env.py",
+      "src/init.d/S005_env.py"
+    ],
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/env/__init__.py",
+      "src/somatic_mesh/env/__init__.py"
+    ],
+    [
+      "somatic_mesh/env/cmds/__init__.py",
+      "src/somatic_mesh/env/cmds/__init__.py"
+    ],
+    [
+      "somatic_mesh/env/cmds/envcmd.py",
+      "src/somatic_mesh/env/cmds/envcmd.py"
+    ],
+    [
+      "somatic_mesh/env/cmds/exportcmd.py",
+      "src/somatic_mesh/env/cmds/exportcmd.py"
+    ],
+    [
+      "somatic_mesh/env/envstore.py",
+      "src/somatic_mesh/env/envstore.py"
+    ]
+  ],
+  "deps": []
+}

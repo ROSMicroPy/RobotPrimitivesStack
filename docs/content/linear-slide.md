@@ -1,24 +1,24 @@
 # Linear Slide
 
-The slide deployment combines a motor, TOF distance sensor, position adapter, composite controller, resident command app, and one-off client app.
+The slide deployment combines a motor, TOF distance sensor, position adapter, composite controller, resident command behavior, and one-off client behavior.
 
 ## Command lifecycle
 
 ```mermaid
 sequenceDiagram
-    participant Client as MoveOnceApp
-    participant App as SlideCommandApp
+    participant Client as MoveOnceBehavior
+    participant Behavior as SlideCommandBehavior
     participant Runtime as Supervisor
     participant Slide as LinearSlide
-    Client->>App: slide.ping
-    App-->>Client: slide.ready
-    Client->>App: slide.move (position_mm, correlation)
-    App->>Runtime: submit move_to(target in metres)
-    App-->>Client: motion.started
+    Client->>Behavior: slide.ping
+    Behavior-->>Client: slide.ready
+    Client->>Behavior: slide.move (position_mm, correlation)
+    Behavior->>Runtime: submit move_to(target in metres)
+    Behavior-->>Client: motion.started
     Runtime->>Slide: Execute managed move
     Slide-->>Runtime: PositionSample or error
-    Runtime-->>App: Task outcome
-    App-->>Client: motion.target.reached / motion.target.failed
+    Runtime-->>Behavior: Task outcome
+    Behavior-->>Client: motion.target.reached / motion.target.failed
 ```
 
 `motion.started` announces operation execution; it is not sensor confirmation that the carriage moved. The client subscribes before sending, filters by source and correlation, prints replies, and exits after the terminal result.

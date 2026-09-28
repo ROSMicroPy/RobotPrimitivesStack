@@ -1,0 +1,32 @@
+{
+  "name": "somatic-signals",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/signals/__init__.py",
+      "src/somatic_mesh/signals/__init__.py"
+    ],
+    [
+      "somatic_mesh/signals/bus.py",
+      "src/somatic_mesh/signals/bus.py"
+    ],
+    [
+      "somatic_mesh/signals/inprocess.py",
+      "src/somatic_mesh/signals/inprocess.py"
+    ],
+    [
+      "somatic_mesh/signals/model.py",
+      "src/somatic_mesh/signals/model.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

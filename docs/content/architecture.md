@@ -1,67 +1,61 @@
 # Somatic Mesh architecture
 
-Somatic Mesh is a distributed compute framework and management system for small devices. Its target model deploys Actors with assigned Behaviors across the Fabric, authored and observed through The Loom.
+Somatic Mesh hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.
 
-The existing RPStack implementation assembles logical nodes from independently installed packages. Drivers access hardware, services expose capabilities, adapters transform measurements, composites coordinate providers, and apps or flows orchestrate work. These remain the runtime foundation. Product terminology does not rename Python packages, schemas, or current runtime classes.
+## Responsibilities
 
-## Architectural responsibilities
-
-| Responsibility | Current foundation and proposed evolution |
+| Layer | Responsibility |
 | --- | --- |
-| Authoring and observation | Robot Architect is the existing environment; The Loom is its proposed product name, with ILA as a proposed assistant |
-| Fabric management | Proposed placement, authoritative ownership, controlled activation, recovery, and deployment reconciliation |
-| Host execution | Existing node assembly, lifecycle, managed tasks, operations, workflows, and resource claims; explicit Actor hosting remains proposed |
-| Capabilities | Existing services, drivers, adapters, and composites retain their contracts and hardware ownership |
-| Platform | Firmware, board support, storage, networking, and device resources |
-| Communication and visibility | Transports, signals, control interfaces, discovery, and telemetry span the other responsibilities |
-
-Application definitions should express Actors, Behaviors, connections, constraints, and recovery policy. Device profiles should express hardware and resources. Deployment plans should assign hosts, bindings, and exact versions. Today's node manifests combine these concerns; the separation is a design direction, not a supported replacement schema.
+| The Loom | Authoring, deployment tooling, and observation |
+| Fabric management | Discovery and public state; placement reconciliation and recovery are roadmap work |
+| Host execution | `DeviceHost`, `FabricNode`, `Actor`, lifecycle supervision, and tasks |
+| Behaviors | Application responses, sequences, and protocol handling |
+| Capabilities | Services, drivers, adapters, and composites with versioned contracts |
+| Platform | Firmware, hardware resources, networking, storage, and boot |
+| Communication and visibility | Signals, transport adapters, HTTP/shell controls, and telemetry |
 
 ## Repository groups
 
 | Group | Packages and responsibility |
 |---|---|
 | `foundation` | `interfaces` defines capability contracts and measurement types; `support` provides lightweight asyncio, JSON, invocation, and clock helpers. |
-| `runtime` | `node_runtime` constructs and supervises nodes; `execution_engine` manages operations and workflows; `signals` handles envelopes and subscriptions; `catalog` provides discovery and composition models. |
+| `runtime` | `fabric_node` constructs and supervises nodes; `execution_engine` manages operations and workflows; `signals` handles envelopes and subscriptions; `catalog` provides discovery and composition models. |
 | `transports` | `espnow` and `ros_signals` carry signal envelopes. |
 | `control` | `http` and `shell` expose node controls. |
 | `platform` | `bootmgr` and `env` provide startup and configuration storage. |
 | `observability` | `opentelemetry` provides tracing, metrics, and logs. |
 | `services` | Distance and motor providers, a distance-to-position adapter, and the linear-slide composite. |
-| `apps` | `robot_gateway` exposes robot discovery over HTTP; `slide_commands` provides slide command and client applications. |
+| `behaviors` | `robot_gateway` exposes robot discovery over HTTP; `slide_commands` provides slide command and client applications. |
 | `spec` | Node and service manifest schemas. |
 | `examples` (repository root) | Device deployments and host simulations. |
 
-Each package has one source tree under `src/rpstack`, a MIP source map, documentation, and relevant host tests. Service implementations live in `service.py`; package initializers expose their public classes. Drivers remain inside their owning service package.
+Each package has one source tree under `src/somatic_mesh`, a MIP source map, documentation, and relevant host tests. Service implementations live in `service.py`; package initializers expose their public classes. Drivers remain inside their owning service package.
 
 ## Dependency boundaries
 
 Foundation packages import no runtime, service, or application packages. Services use contracts and portable support directly. Composites consume capability interfaces. The node runtime constructs providers and binds consumers to them. Applications submit operations through nodes. Transports carry signals; control interfaces expose node actions.
 
-A slide client can install `rpstack.apps.slide_commands` without installing the slide hardware service. The slide service itself has no dependency on its orchestration applications.
+A slide client can install `somatic_mesh.behaviors.slide_commands` without installing the slide hardware service. The slide service itself has no dependency on its orchestration applications.
 
-## Vocabulary
+## Vocabulary and naming conventions
 
-| Term | Meaning |
-|---|---|
-| Device | Physical board or host environment. |
-| Fabric Node | Target runtime-host concept: an execution location for Actors; no separate API exists yet. |
-| Logical node | Current manifest-defined assembly and identity; `NodeHost` can host several on one device. |
-| Actor | Proposed stable participant with assigned Behavior, configuration, explicit state, message handling, and lifecycle. |
-| Behavior | Implementation or workflow defining an Actor's work and responses; apps and flows are current building blocks. |
-| Fabric | Connected runtime and management infrastructure; automatic placement and recovery remain proposed. |
-| Service type | Reusable implementation and contract definition in a manifest's `components` map. |
-| Service instance | Configured capability provider constructed on a node. |
-| Driver | Hardware-specific backend owned by a service. |
-| Capability | Versioned service interface and provider constraints. |
-| Operation | Declared callable exposed by a service. |
-| App | Orchestration code with a resident or one-shot lifecycle. |
-| Workflow | Declarative operation/signal graph in `flows`; its `nodes` entries are workflow steps. |
-| Task | Managed execution instance tracked by `TaskRegistry`. |
-| Signal | Event envelope carried by `SignalBus`. |
-| Deployment | Node manifests, resources, apps, and installed packages for a scenario. |
+| Concept | Code convention |
+| --- | --- |
+| Product / source root | Somatic Mesh / `SomaticMesh/` |
+| Python namespace | `somatic_mesh` |
+| Runtime host | `FabricNode`, package `somatic_mesh.fabric_node` |
+| Shared device process | `DeviceHost` |
+| Logical participant | `Actor`, manifest `actors`, node-local `id` |
+| Assigned implementation | `Behavior` subclasses with a `Behavior` suffix; manifest `behavior` entry point |
+| Workflow | Named `flows` graph; graph `nodes` are steps |
+| Execution | Managed task with a task ID; Actor execution uses task kind `actor` |
+| Contracts | `somatic.node/v1` and `somatic.service/v1` |
+| Runtime signals | Reserved `_sm.` prefix |
+| ROS interfaces | `somatic_mesh_interfaces`; default namespace `/somatic_mesh` |
 
-`ServiceRegistry` resolves service dependencies. `Catalog` describes discovered nodes. `PhysicalComponent` and `CompositionRegistry` model physical assemblies and mount claims.
+A Device is physical hardware. A Fabric Node has an entity/node identity and hosts services and Actors. An Actor has a node-local identity and owns a Behavior instance; it is neither a service nor a task. Its address is `(entity, node, actor)`. Signals route between nodes; Actor-independent placement and addressing are roadmap work.
+
+`ServiceRegistry` resolves capabilities. `Catalog` reports observed nodes, Actor assignments, and services. `PhysicalComponent` and `CompositionRegistry` model hardware assemblies and mount claims. Discovery excludes Actor configuration and is not permission to operate.
 
 ## Lifecycle
 
@@ -73,14 +67,10 @@ Use package manifests at their canonical locations. Remote `package.json` files 
 
 Run `python3 tools/check_architecture.py` to validate package maps and isolated installations. Run `python3 tools/run_tests.py` for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.
 
-## Management and recovery boundaries
+## Deployment boundaries and roadmap
 
-The Loom should resolve and deliver exact software while onboard management permits operation and recovery without desktop or internet access. Start with one onboard coordinator and preinstall code on eligible fallback hosts. Coordinator failover is separate work.
+Node manifests define fixed Actor placement, service bindings, resources, and transports. Multiple Fabric Nodes on one DeviceHost share an interpreter and filesystem. Local resource claims arbitrate operations; they do not establish cross-host ownership after a partition.
 
-Catalog discovery is observational, not authority to execute or take over. Existing action leases do not prevent two Actor instances from controlling the same machinery after a partition. Actor ownership requires explicit transfer and enforcement that rejects stale instances at resource boundaries.
+The Loom need not remain connected for local deployed Behaviors to run. ROS-dependent Behaviors require their ROS communication path. ESP-NOW peers share a radio channel; bounded relaying extends configured signal delivery beyond direct neighbors. End-to-end latency and physical stop timing require hardware measurement.
 
-Start with fixed placement and stable Actor addressing, then stateless restart elsewhere. Add explicit checkpoint/restore and planned handoff only for selected stateful Behaviors. Crash recovery cannot retrieve unsaved state from a dead device. Physical bindings constrain relocation, and moving CPU work does not remove local actuator power demand.
-
-Multiple logical nodes share an interpreter and filesystem; they are not isolated failure domains. An Actor is not a renamed `NodeRuntime` or task, and each small driver need not become an Actor.
-
-See the [Fabric management proposal](fabric-management.html), [bootstrap design](bootstrap.html), and [registry design](registries.html) for scope and milestones. These are proposed designs, not implemented guarantees.
+The [Fabric management roadmap](fabric-management.html) specifies application/hardware/deployment separation, exact delivery, controlled activation, and recovery. Alternative-host restart needs eligible resources and stale-instance fencing. Stateful handoff needs checkpoint/restore. Physical wiring constrains relocation, and unsaved state cannot be recovered from a dead device.

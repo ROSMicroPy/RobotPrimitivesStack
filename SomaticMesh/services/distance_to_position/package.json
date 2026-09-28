@@ -1,0 +1,28 @@
+{
+  "name": "somatic-distance-to-position",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/distance_to_position/__init__.py",
+      "src/somatic_mesh/distance_to_position/__init__.py"
+    ],
+    [
+      "somatic_mesh/distance_to_position/service.py",
+      "src/somatic_mesh/distance_to_position/service.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/interfaces",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

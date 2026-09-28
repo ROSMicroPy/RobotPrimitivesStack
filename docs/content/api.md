@@ -1,10 +1,8 @@
 # API Reference
 
-This is the current implementation API for Somatic Mesh's RPStack foundation. Keep using the documented `rpstack` imports and node/service identifiers. Actor identity, automatic placement, and recovery APIs are proposed work, described in [Fabric management](fabric-management.html).
-
 ## Native REPL helpers
 
-These functions are installed by the slide demo package, not by every RPStack node.
+These functions are installed by the slide demo package, not by every SomaticMesh node.
 
 | Function | Behavior |
 | --- | --- |
@@ -21,7 +19,7 @@ Remote commands use the same helpers. A timeout describes the missing outcome, n
 
 ## Service operations
 
-From inside an async app:
+From inside an async behavior:
 
 ```python
 await node.invoke('slide', 'set_range', {'min_mm': 30, 'max_mm': 300})
@@ -33,7 +31,7 @@ position = await node.invoke('slide', 'move_to', {'target': 0.1})
 
 ## HTTP task API
 
-HTTP is available only when the node manifest enables `rpstack.micropyserver:NodeRestApi` and suitable networking. The slide-node demo includes HTTP, catalog and gateway runtimes on the provider and persistent client host. Configure Wi-Fi before starting; use the printed gateway URL.
+HTTP is available only when the node manifest enables `somatic_mesh.micropyserver:FabricRestApi` and suitable networking. The slide-node demo includes HTTP, catalog and gateway runtimes on the provider and persistent client host. Configure Wi-Fi before starting; use the printed gateway URL.
 
 | Method and path | Purpose |
 | --- | --- |

@@ -8,15 +8,14 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html" aria-current="page">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html" aria-current="page">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">¶</a></h1>
-<p>In the target Somatic Mesh model, signals let Actors respond to events and coordinate Behaviors. Today's envelopes address configured entities and logical nodes; stable Actor addressing across placement changes is proposed work. The examples below retain the existing routing contract.</p>
 <p>Signals connect publishers and subscribers within an entity. Applications use the same envelope through local delivery, in-process transports, ESP-NOW, or ROS adapters.</p>
 <p>See <a href="ros-integration.html">ROS 2 integration</a> for direct typed ROSMicroPy
 telemetry and the optional desktop action/diagnostics gateway. The generic ROS
 signal envelope remains available alongside those native interfaces.</p>
 <h2 id="publish-and-subscribe">Publish and subscribe<a class="headerlink" href="#publish-and-subscribe" title="Permanent link">¶</a></h2>
-<p>Inside an app with a node reference:</p>
+<p>Inside a Behavior with a node reference:</p>
 <pre><code class="language-python">subscription = node.signals.subscribe(
     'motion.target.reached', source='node1', correlation=run_id)
 try:
@@ -30,7 +29,7 @@ finally:
 <h2 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">¶</a></h2>
 <p><code>signals.routes</code> selects the destinations of locally published messages. Omitted routes default to local delivery. Transport IDs identify configured adapters; bridge rules explicitly forward between transports. Incoming messages addressed to this node or <code>*</code> are delivered locally. Identity and correlation filters keep unrelated responses separate.</p>
 <pre class="mermaid">flowchart LR
-    App[Publishing app] --&gt; Bus[Entity signal bus]
+    Behavior[Publishing behavior] --&gt; Bus[Entity signal bus]
     Bus --&gt; Local[Local subscribers]
     Bus --&gt; Transport[Configured transport]
     Transport --&gt; Peer[Peer node bus]
@@ -39,8 +38,8 @@ finally:
 <h2 id="delivery-semantics">Delivery semantics<a class="headerlink" href="#delivery-semantics" title="Permanent link">¶</a></h2>
 <p>Publishing enqueues a bounded message; transport tasks perform network I/O. Signals are not a persistent event log. Late subscribers do not receive earlier publications. Queue overflow and listener failures are explicit failure conditions.</p>
 <p>Duplicate suppression and bounded relaying do not make physical commands exactly-once across arbitrary failures. The slide demo retries readiness probes but sends each move command once. A lost reply produces a timeout, which does not prove that motion stopped.</p>
-<p>Names beginning <code>_rp.</code> are reserved for runtime protocols. Application names such as <code>slide.move</code> and <code>motion.target.reached</code> belong to application contracts.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="nodes.html"><small>Previous</small>Nodes &amp; manifests</a><a href="apps.html"><small>Next</small>Apps &amp; Behaviors</a></nav>
+<p>Names beginning <code>_sm.</code> are reserved for runtime protocols. Application names such as <code>slide.move</code> and <code>motion.target.reached</code> belong to application contracts.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="nodes.html"><small>Previous</small>Nodes &amp; manifests</a><a href="actors.html"><small>Next</small>Apps &amp; Behaviors</a></nav>
 <footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>

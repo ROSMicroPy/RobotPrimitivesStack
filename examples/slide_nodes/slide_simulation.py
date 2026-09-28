@@ -1,5 +1,5 @@
 """Host-only simulated motor/TOF pair, using the real composite slide service."""
-from rpstack.motor_control.motor_drivers.step_dir import StepDirDriver
+from somatic_mesh.motor_control.motor_drivers.step_dir import StepDirDriver
 
 
 class Carriage:
@@ -51,13 +51,13 @@ class DistanceDriver:
 
 
 def simulated_node(document, calibrate=False):
-    from rpstack.node_runtime import NodeRuntime
+    from somatic_mesh.fabric_node import FabricNode
     for component, implementation, cls in (
         ('motor_control', 'step_dir', 'MotorDriver'),
         ('distance_sensor', 'vl53l4cd', 'DistanceDriver'),
     ):
         document['components'][component]['service']['implementations'][implementation]['entry_point'] = __name__ + ':' + cls
-    class SimulatedRuntime(NodeRuntime):
+    class SimulatedRuntime(FabricNode):
         async def boot(self):
             await super().boot()
             if calibrate:

@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "ros-slide-provider",
   "resources": {
     "carriage_bus": {
@@ -12,11 +12,11 @@
   },
   "components": {
     "motor_control": {
-      "manifest": "rp.service/v1",
+      "manifest": "somatic.service/v1",
       "package": {
         "name": "motor-control",
         "version": "0.4.0",
-        "import": "rpstack.motor_control"
+        "import": "somatic_mesh.motor_control"
       },
       "service": {
         "name": "motor-control",
@@ -24,7 +24,7 @@
         "kind": "individual_driver",
         "type": "actuator.motor",
         "description": "A runtime-managed motor with a selectable concrete driver.",
-        "entry_point": "rpstack.motor_control:Motor",
+        "entry_point": "somatic_mesh.motor_control:Motor",
         "capabilities": {
           "provides": [],
           "requires": {}
@@ -150,7 +150,7 @@
         },
         "implementations": {
           "step_dir": {
-            "entry_point": "rpstack.motor_control.motor_drivers.step_dir:StepDirDriver",
+            "entry_point": "somatic_mesh.motor_control.motor_drivers.step_dir:StepDirDriver",
             "description": "Incremental STEP/DIR motor controller.",
             "capabilities": {
               "provides": [
@@ -205,13 +205,13 @@
             "safe_state": "stop"
           },
           "pwm_servo": {
-            "entry_point": "rpstack.motor_control.motor_drivers.pwm_servo:PWMServoDriver",
+            "entry_point": "somatic_mesh.motor_control.motor_drivers.pwm_servo:PWMServoDriver",
             "description": "Hobby servo PWM driver.",
             "configuration": {},
             "safe_state": "shutdown"
           },
           "pwm_bldc": {
-            "entry_point": "rpstack.motor_control.motor_drivers.pwm_bldc:PWMBLDCDriver",
+            "entry_point": "somatic_mesh.motor_control.motor_drivers.pwm_bldc:PWMBLDCDriver",
             "description": "Open-loop PWM/ESC BLDC driver.",
             "configuration": {},
             "safe_state": "stop"
@@ -266,11 +266,11 @@
       }
     },
     "distance_sensor": {
-      "manifest": "rp.service/v1",
+      "manifest": "somatic.service/v1",
       "package": {
         "name": "distance-sensor",
         "version": "0.3.1",
-        "import": "rpstack.distance_sensor"
+        "import": "somatic_mesh.distance_sensor"
       },
       "service": {
         "name": "distance-sensor",
@@ -278,7 +278,7 @@
         "kind": "individual_driver",
         "type": "sensor.distance",
         "description": "A runtime-managed scalar distance sensor with selectable hardware driver.",
-        "entry_point": "rpstack.distance_sensor:DistanceSensor",
+        "entry_point": "somatic_mesh.distance_sensor:DistanceSensor",
         "capabilities": {
           "provides": [
             {
@@ -377,7 +377,7 @@
         },
         "implementations": {
           "hcsr04": {
-            "entry_point": "rpstack.distance_sensor.distance_drivers.hcsr04:HCSR04Driver",
+            "entry_point": "somatic_mesh.distance_sensor.distance_drivers.hcsr04:HCSR04Driver",
             "description": "Trigger/echo ultrasonic range sensor.",
             "configuration": {
               "trigger_pin": {
@@ -403,7 +403,7 @@
             "safe_state": "shutdown"
           },
           "vl53l4cd": {
-            "entry_point": "rpstack.distance_sensor.distance_drivers.vl53l4cd:VL53L4CDDriver",
+            "entry_point": "somatic_mesh.distance_sensor.distance_drivers.vl53l4cd:VL53L4CDDriver",
             "description": "ST VL53L4CD time-of-flight distance sensor.",
             "configuration": {
               "i2c": {
@@ -460,11 +460,11 @@
       }
     },
     "distance_to_position": {
-      "manifest": "rp.service/v1",
+      "manifest": "somatic.service/v1",
       "package": {
         "name": "distance-to-position",
         "version": "0.1.0",
-        "import": "rpstack.distance_to_position"
+        "import": "somatic_mesh.distance_to_position"
       },
       "service": {
         "name": "distance-to-position",
@@ -472,7 +472,7 @@
         "kind": "adapter",
         "type": "adapter.distance_to_position",
         "description": "Convert a ray distance into installed linear position.",
-        "entry_point": "rpstack.distance_to_position:DistanceToPositionAdapter",
+        "entry_point": "somatic_mesh.distance_to_position:DistanceToPositionAdapter",
         "capabilities": {
           "provides": [
             {
@@ -584,11 +584,11 @@
       }
     },
     "linear_slide": {
-      "manifest": "rp.service/v1",
+      "manifest": "somatic.service/v1",
       "package": {
         "name": "rube-goldberg-linear-slide",
         "version": "0.4.1",
-        "import": "rpstack.linear_slide"
+        "import": "somatic_mesh.linear_slide"
       },
       "service": {
         "name": "observed-linear-actuator",
@@ -596,7 +596,7 @@
         "kind": "composite_driver",
         "type": "motion.linear_actuator",
         "description": "Closed-loop linear slide composed from motion and position capabilities.",
-        "entry_point": "rpstack.linear_slide:LinearSlide",
+        "entry_point": "somatic_mesh.linear_slide:LinearSlide",
         "capabilities": {
           "provides": [
             {
@@ -959,7 +959,7 @@
   "runtime": [
     {
       "id": "wifi",
-      "entry_point": "rpstack.node_runtime.network:WifiService",
+      "entry_point": "somatic_mesh.fabric_node.network:WifiService",
       "config": {
         "ssid_env": "WIFI_SSID",
         "password_env": "WIFI_PASSWORD"
@@ -967,14 +967,14 @@
     },
     {
       "id": "http",
-      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "entry_point": "somatic_mesh.micropyserver:FabricRestApi",
       "config": {
         "port": 80
       }
     },
     {
       "id": "catalog",
-      "entry_point": "rpstack.catalog:Catalog"
+      "entry_point": "somatic_mesh.catalog:Catalog"
     }
   ],
   "flows": {},
@@ -990,7 +990,7 @@
     "transports": [
       {
         "id": "ros",
-        "entry_point": "rpstack.ros_signals:RosTransport",
+        "entry_point": "somatic_mesh.ros_signals:RosTransport",
         "config": {
           "backend": "rosmicropy",
           "init": {
@@ -1001,7 +1001,7 @@
             {
               "kind": "linear_joint_state",
               "service": "slide",
-              "topic": "/rpstack/slide_device/joint_states",
+              "topic": "/somatic_mesh/slide_device/joint_states",
               "joint_name": "slide_joint"
             }
           ]
@@ -1009,18 +1009,20 @@
       }
     ]
   },
-  "apps": [
+  "actors": [
     {
       "id": "commands",
-      "entry_point": "rpstack.apps.slide_commands:SlideCommandApp"
+      "behavior": "somatic_mesh.behaviors.slide_commands:SlideCommandBehavior",
+      "version": "0.1.0"
     },
     {
       "id": "gateway",
-      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
       "requires": [
         "http",
         "catalog"
-      ]
+      ],
+      "behavior": "somatic_mesh.behaviors.robot_gateway:GatewayBehavior",
+      "version": "0.1.0"
     }
   ],
   "execution": {

@@ -1,0 +1,23 @@
+{
+  "name": "somatic-slide-commands",
+  "version": "0.1.0",
+  "deps": [],
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/__init__.py",
+      "src/somatic_mesh/behaviors/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/slide_commands/__init__.py",
+      "src/somatic_mesh/behaviors/slide_commands/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/slide_commands/behaviors.py",
+      "src/somatic_mesh/behaviors/slide_commands/behaviors.py"
+    ]
+  ]
+}

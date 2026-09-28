@@ -8,24 +8,24 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html" aria-current="page">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html" aria-current="page">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Guides</div><article><h1 id="linear-slide">Linear Slide<a class="headerlink" href="#linear-slide" title="Permanent link">¶</a></h1>
-<p>The slide deployment combines a motor, TOF distance sensor, position adapter, composite controller, resident command app, and one-off client app.</p>
+<p>The slide deployment combines a motor, TOF distance sensor, position adapter, composite controller, resident command behavior, and one-off client behavior.</p>
 <h2 id="command-lifecycle">Command lifecycle<a class="headerlink" href="#command-lifecycle" title="Permanent link">¶</a></h2>
 <pre class="mermaid">sequenceDiagram
-    participant Client as MoveOnceApp
-    participant App as SlideCommandApp
+    participant Client as MoveOnceBehavior
+    participant Behavior as SlideCommandBehavior
     participant Runtime as Supervisor
     participant Slide as LinearSlide
-    Client-&gt;&gt;App: slide.ping
-    App--&gt;&gt;Client: slide.ready
-    Client-&gt;&gt;App: slide.move (position_mm, correlation)
-    App-&gt;&gt;Runtime: submit move_to(target in metres)
-    App--&gt;&gt;Client: motion.started
+    Client-&gt;&gt;Behavior: slide.ping
+    Behavior--&gt;&gt;Client: slide.ready
+    Client-&gt;&gt;Behavior: slide.move (position_mm, correlation)
+    Behavior-&gt;&gt;Runtime: submit move_to(target in metres)
+    Behavior--&gt;&gt;Client: motion.started
     Runtime-&gt;&gt;Slide: Execute managed move
     Slide--&gt;&gt;Runtime: PositionSample or error
-    Runtime--&gt;&gt;App: Task outcome
-    App--&gt;&gt;Client: motion.target.reached / motion.target.failed
+    Runtime--&gt;&gt;Behavior: Task outcome
+    Behavior--&gt;&gt;Client: motion.target.reached / motion.target.failed
 </pre>
 <p><code>motion.started</code> announces operation execution; it is not sensor confirmation that the carriage moved. The client subscribes before sending, filters by source and correlation, prints replies, and exits after the terminal result.</p>
 <h2 id="repl-workflow">REPL workflow<a class="headerlink" href="#repl-workflow" title="Permanent link">¶</a></h2>

@@ -1,9 +1,9 @@
 name: ROS gateway
 on:
   push:
-    paths: ['ros2/**', 'RPStack/apps/ros_gateway/**', 'RPStack/runtime/**', 'RPStack/foundation/**', 'RPStack/services/**', 'RPStack/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
+    paths: ['ros2/**', 'SomaticMesh/behaviors/ros_gateway/**', 'SomaticMesh/runtime/**', 'SomaticMesh/foundation/**', 'SomaticMesh/services/**', 'SomaticMesh/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
   pull_request:
-    paths: ['ros2/**', 'RPStack/apps/ros_gateway/**', 'RPStack/runtime/**', 'RPStack/foundation/**', 'RPStack/services/**', 'RPStack/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
+    paths: ['ros2/**', 'SomaticMesh/behaviors/ros_gateway/**', 'SomaticMesh/runtime/**', 'SomaticMesh/foundation/**', 'SomaticMesh/services/**', 'SomaticMesh/transports/ros_signals/**', 'examples/ros_slide/**', 'examples/slide_nodes/**', 'examples/robie1/**', '.github/workflows/ros-gateway.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --base-paths ros2 --build-base /tmp/rpstack-build --install-base /tmp/rpstack-install
-          source /tmp/rpstack-install/setup.bash
-          python3 -c 'import rclpy; from rpstack_interfaces.action import MoveLinear'
-          python3 -B -m unittest discover -s RPStack/apps/ros_gateway/test -v
+          colcon build --base-paths ros2 --build-base /tmp/somatic_mesh-build --install-base /tmp/somatic_mesh-install
+          source /tmp/somatic_mesh-install/setup.bash
+          python3 -c 'import rclpy; from somatic_mesh_interfaces.action import MoveLinear'
+          python3 -B -m unittest discover -s SomaticMesh/behaviors/ros_gateway/test -v

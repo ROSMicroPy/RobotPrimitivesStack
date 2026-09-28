@@ -1,0 +1,55 @@
+{
+  "name": "somatic-opentelemetry",
+  "version": "2.6.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/__init__.py",
+      "src/somatic_mesh/opentelemetry/__init__.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/api.py",
+      "src/somatic_mesh/opentelemetry/api.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/context.py",
+      "src/somatic_mesh/opentelemetry/context.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/exporter.py",
+      "src/somatic_mesh/opentelemetry/exporter.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/http.py",
+      "src/somatic_mesh/opentelemetry/http.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/logging.py",
+      "src/somatic_mesh/opentelemetry/logging.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/metric.py",
+      "src/somatic_mesh/opentelemetry/metric.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/processor.py",
+      "src/somatic_mesh/opentelemetry/processor.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/propagation.py",
+      "src/somatic_mesh/opentelemetry/propagation.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/trace.py",
+      "src/somatic_mesh/opentelemetry/trace.py"
+    ],
+    [
+      "somatic_mesh/opentelemetry/util.py",
+      "src/somatic_mesh/opentelemetry/util.py"
+    ]
+  ],
+  "deps": []
+}

@@ -1,0 +1,35 @@
+{
+  "name": "somatic-motor-control",
+  "version": "0.4.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/motor_control/__init__.py",
+      "src/somatic_mesh/motor_control/__init__.py"
+    ],
+    [
+      "somatic_mesh/motor_control/motor_drivers/__init__.py",
+      "src/somatic_mesh/motor_control/motor_drivers/__init__.py"
+    ],
+    [
+      "somatic_mesh/motor_control/motor_drivers/pwm_bldc.py",
+      "src/somatic_mesh/motor_control/motor_drivers/pwm_bldc.py"
+    ],
+    [
+      "somatic_mesh/motor_control/motor_drivers/pwm_servo.py",
+      "src/somatic_mesh/motor_control/motor_drivers/pwm_servo.py"
+    ],
+    [
+      "somatic_mesh/motor_control/motor_drivers/step_dir.py",
+      "src/somatic_mesh/motor_control/motor_drivers/step_dir.py"
+    ],
+    [
+      "somatic_mesh/motor_control/service.py",
+      "src/somatic_mesh/motor_control/service.py"
+    ]
+  ],
+  "deps": []
+}

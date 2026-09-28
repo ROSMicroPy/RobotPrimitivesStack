@@ -1,0 +1,32 @@
+{
+  "name": "somatic-ros-gateway",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/__init__.py",
+      "src/somatic_mesh/behaviors/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/ros_gateway/__init__.py",
+      "src/somatic_mesh/behaviors/ros_gateway/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/ros_gateway/controller.py",
+      "src/somatic_mesh/behaviors/ros_gateway/controller.py"
+    ],
+    [
+      "somatic_mesh/behaviors/ros_gateway/gateway.py",
+      "src/somatic_mesh/behaviors/ros_gateway/gateway.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/fabric_node",
+      "main"
+    ]
+  ]
+}

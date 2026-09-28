@@ -1,7 +1,5 @@
 # Device provisioning and bootstrap
 
-**Naming:** The Loom is the proposed product name for Robot Architect. This design extends Somatic Mesh's management layer; existing extension names, schemas, and package paths are unchanged.
-
 **Design proposal.** This page defines the intended Somatic Mesh and Loom provisioning,
 update, and coordinated startup model. The update receiver, deployment inventory,
 and robot-wide startup gate described here are not yet implemented. See
@@ -45,12 +43,12 @@ physical target, but a device binding is still needed to detect the wrong profil
 | Deployment ID | Exact approved set of manifests and software |
 | Boot/session ID | Current runtime incarnation, used to reject stale readiness or activation messages |
 
-In the target model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans assign hosts and exact software. The current node manifest combines services, apps, configuration, and bindings. The Loom
+Application definitions should describe Actors and Behaviors; device profiles should describe hardware; deployment plans should assign hosts and exact software. A node manifest combines concrete services, Actors, configuration, and bindings. The Loom
 binds it to the intended device during provisioning. Replacing a controller
 requires explicitly rebinding its logical roles to the replacement device.
 Wireless software maintenance does not silently reassign identity or hardware.
 
-Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; current service/app composition is the starting point.
+Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; the deployment compiler should emit node manifests.
 Before provisioning, The Loom validates dependencies, driver compatibility, pin
 and peripheral ownership, and estimated storage and memory needs. A provisioned
 device can appear as awaiting connection before it advertises an actual profile.
@@ -137,7 +135,7 @@ guarantee need an appropriate shared interlock.
 ## Critical faults and safe states
 
 Fault handling belongs in the permanent bootstrap supervisor, independent of
-optional apps. On a critical fault, a device immediately applies its local safe
+optional actors. On a critical fault, a device immediately applies its local safe
 state and then reports the fault. It never waits for an acknowledgment before
 acting. The robot supervisor revokes permission; other devices stop on receipt
 or when their permission expires if the notification is lost.
@@ -154,7 +152,7 @@ appropriate hardware interlocks or watchdogs and validate timing on the hardware
 ## Multiple logical nodes on one device
 
 Several manifests can describe several logical nodes on one controller, as
-supported by `NodeHost`. One device-level supervisor must validate their combined
+supported by `DeviceHost`. One device-level supervisor must validate their combined
 package requirements, memory budget, pins, and exclusive peripherals. They share
 an interpreter and filesystem, so incompatible versions of a package cannot be
 installed independently for each node.
@@ -162,14 +160,14 @@ installed independently for each node.
 For the initial design, a critical failure in any required local node invalidates
 the device's readiness. Multiple manifests are not isolated failure domains.
 
-## Relationship to the current runtime
+## Runtime requirements
 
-The current Boot Manager sequences startup modules, NodeRuntime manages local
-service lifecycle, and Catalog advertises profiles. Current `NodeRuntime.boot()`
+The Boot Manager sequences startup modules, FabricNode manages local
+service lifecycle, and Catalog advertises profiles. `FabricNode.boot()`
 starts application services before runtime facilities and signal transports;
 implementing this proposal requires separating management startup, service
-preparation, and gated activation. Current `NodeHost` startup cleanup does not
+preparation, and gated activation. `DeviceHost` startup cleanup does not
 establish a robot-wide readiness barrier.
 
-See [Service and app registries](registries.html) for software discovery,
+See [Service and behavior registries](registries.html) for software discovery,
 dependency resolution, private sources, and deployment locks.

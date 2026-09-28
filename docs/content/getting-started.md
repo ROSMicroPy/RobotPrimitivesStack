@@ -1,7 +1,5 @@
 # Getting Started
 
-These steps run the current RPStack foundation of Somatic Mesh. Package paths, imports, node manifests, and launcher commands retain their existing names. The examples use explicitly placed services and apps; they do not require or implement the proposed Actor management layer.
-
 ## Run without hardware
 
 Clone the repository and run these commands from its root using Python 3:
@@ -46,13 +44,13 @@ For a specific connected board, use `mpremote connect /dev/ttyACM0 mip install p
 Before startup, configure the board's Wi-Fi credentials:
 
 ```python
-from rpstack.env import setEnv
+from somatic_mesh.env import setEnv
 setEnv('WIFI_SSID', 'your-network', True)
 setEnv('WIFI_PASSWORD', 'your-password', True)
 ```
 
 The access point channel must match the ESP-NOW channel (default 6) in all three
-installed manifests. Startup prints the HTTP gateway URL for RobotArchitect.
+installed manifests. Startup prints the HTTP gateway URL for TheLoom.
 
 ## Start and observe
 

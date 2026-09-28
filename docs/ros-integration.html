@@ -8,26 +8,26 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html" aria-current="page">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html" aria-current="page">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="ros-2-integration">ROS 2 integration<a class="headerlink" href="#ros-2-integration" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh currently uses the RPStack runtime to manage device capabilities and their execution. ROS 2 applications can
+<p>ROSMicroPy is the embedded ROS foundation of Somatic Mesh. The Fabric runtime manages device capabilities and their execution. ROS 2 applications can
 use those capabilities through typed interfaces, while controllers retain their
 MicroPython service runtime and manifest-driven hardware bindings.</p>
 <h2 id="device-and-desktop-responsibilities">Device and desktop responsibilities<a class="headerlink" href="#device-and-desktop-responsibilities" title="Permanent link">¶</a></h2>
 <p>ROSMicroPy already includes an <code>rclpy</code> implementation on top of micro-ROS. It
 supports typed publishers and subscribers. Its current action-server, executor,
-and future support is incomplete, so the optional desktop <code>SlideRosGateway</code>
+and future support is incomplete, so the optional desktop <code>SlideRosBehavior</code>
 provides the linear-slide action facade using full CPython rclpy.</p>
 <pre class="mermaid">flowchart LR
-    Device[RPStack slide on ROSMicroPy] &lt;--&gt;|micro-ROS| Agent[micro-ROS agent]
-    Agent &lt;--&gt;|RPStack signal envelopes| Gateway[Typed ROS gateway]
-    Gateway &lt;--&gt;|Move action and feedback| Apps[ROS 2 applications]
-    Agent --&gt;|Direct typed joint states| Apps
-    Gateway --&gt;|Position and diagnostics| Apps
+    Device[SomaticMesh slide on ROSMicroPy] &lt;--&gt;|micro-ROS| Agent[micro-ROS agent]
+    Agent &lt;--&gt;|SomaticMesh signal envelopes| Gateway[Typed ROS gateway]
+    Gateway &lt;--&gt;|Move action and feedback| Actors[ROS 2 applications]
+    Agent --&gt;|Direct typed joint states| Actors
+    Gateway --&gt;|Position and diagnostics| Actors
 </pre>
 <p>The controller's ROS transport owns one native worker. Optional typed publishers
 are registered before that worker starts. The desktop gateway is independent of
-The Loom (currently Robot Architect) and can run on an onboard Linux computer.</p>
+The Loom and can run on an onboard Linux computer.</p>
 <h2 id="linear-slide-interfaces">Linear-slide interfaces<a class="headerlink" href="#linear-slide-interfaces" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -42,11 +42,11 @@ The Loom (currently Robot Architect) and can run on an onboard Linux computer.</
 <td>Actual linear measurement for a configured prismatic joint</td>
 </tr>
 <tr>
-<td><code>rpstack_interfaces/msg/LinearPosition</code> from the gateway</td>
+<td><code>somatic_mesh_interfaces/msg/LinearPosition</code> from the gateway</td>
 <td>Measured position in metres, validity, quality, frame, and source timestamp</td>
 </tr>
 <tr>
-<td><code>rpstack_interfaces/action/MoveLinear</code></td>
+<td><code>somatic_mesh_interfaces/action/MoveLinear</code></td>
 <td>Absolute target, measured feedback, and explicit confirmed/unconfirmed outcome</td>
 </tr>
 <tr>
@@ -55,10 +55,10 @@ The Loom (currently Robot Architect) and can run on an onboard Linux computer.</
 </tr>
 </tbody>
 </table>
-<p>The default gateway namespace is <code>/rpstack/slide</code>, with endpoints <code>position</code>,
+<p>The default gateway namespace is <code>/somatic_mesh/slide</code>, with endpoints <code>position</code>,
 <code>move</code>, and <code>diagnostics</code>. The example publishes direct firmware joint states on
-<code>/rpstack/slide_device/joint_states</code>. This is a linear-slide adapter, not a claim
-that every RPStack operation automatically becomes a ROS interface.</p>
+<code>/somatic_mesh/slide_device/joint_states</code>. This is a linear-slide adapter, not a claim
+that every SomaticMesh operation automatically becomes a ROS interface.</p>
 <h2 id="admission-and-cancellation">Admission and cancellation<a class="headerlink" href="#admission-and-cancellation" title="Permanent link">¶</a></h2>
 <p>The gateway checks fresh worker health, calibration, valid position, and travel
 bounds before admitting one goal. The device supervisor still validates commands
@@ -88,8 +88,8 @@ delivery guarantees also do not extend automatically across a lossy mesh segment
 <h2 id="deployment-and-validation">Deployment and validation<a class="headerlink" href="#deployment-and-validation" title="Permanent link">¶</a></h2>
 <p>The repository's <code>examples/ros_slide/README.md</code> contains the complete USB install,
 agent configuration, colcon build, calibration, and ROS CLI workflow. The gateway
-app is under <code>PrimitiveFabric/apps/ros_gateway</code>; generated ROS interfaces are under
-<code>ros2/rpstack_interfaces</code>.</p>
+behavior is under <code>SomaticMesh/behaviors/ros_gateway</code>; generated ROS interfaces are under
+<code>ros2/somatic_mesh_interfaces</code>.</p>
 <p>Host tests exercise managed execution, resource exclusion, cancellation, lease
 expiry, and packet loss. Firmware tests load the actual ROSMicroPy Python shim
 with its native module substituted. A ROS 2 Jazzy workflow builds the interfaces
@@ -99,8 +99,8 @@ timing, native serialization correctness on the board, or radio reliability.</p>
 <p>Additional adapters can expose sensors as standard ROS messages and long-running
 operations as actions. Reuse standard types only when their semantics fit; the
 slide does not advertise trajectory execution that it does not implement.
-Generic registry-driven adapter generation and Architect UI configuration remain
-future work. See <a href="registries.html">Service and app registries</a> and
+Generic registry-driven adapter generation and Loom UI configuration remain
+future work. See <a href="registries.html">Service and behavior registries</a> and
 <a href="bootstrap.html">Device provisioning and bootstrap</a> for those proposals.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="services.html"><small>Previous</small>Services &amp; capabilities</a><a href="bootstrap.html"><small>Next</small>Provisioning &amp; bootstrap</a></nav>
 <footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>

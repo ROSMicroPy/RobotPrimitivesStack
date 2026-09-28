@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "slide-client-gateway",
   "identity": {
     "entity": "SlideDemo",
@@ -15,31 +15,32 @@
     "transports": [
       {
         "id": "link",
-        "entry_point": "rpstack.signals.inprocess:InProcessTransport"
+        "entry_point": "somatic_mesh.signals.inprocess:InProcessTransport"
       }
     ]
   },
-  "apps": [
+  "actors": [
     {
       "id": "gateway",
-      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
       "requires": [
         "http",
         "catalog"
-      ]
+      ],
+      "behavior": "somatic_mesh.behaviors.robot_gateway:GatewayBehavior",
+      "version": "0.1.0"
     }
   ],
   "runtime": [
     {
       "id": "http",
-      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "entry_point": "somatic_mesh.micropyserver:FabricRestApi",
       "config": {
         "port": 8081
       }
     },
     {
       "id": "catalog",
-      "entry_point": "rpstack.catalog:Catalog"
+      "entry_point": "somatic_mesh.catalog:Catalog"
     }
   ]
 }

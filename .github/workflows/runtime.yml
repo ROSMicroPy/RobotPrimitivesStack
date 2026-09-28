@@ -1,0 +1,28 @@
+name: Somatic Mesh runtime
+on:
+  push:
+    paths: ['SomaticMesh/**', 'examples/**', 'tools/**', '.gitmodules', 'ROSMicroPy', '.github/workflows/runtime.yml']
+  pull_request:
+    paths: ['SomaticMesh/**', 'examples/**', 'tools/**', '.gitmodules', 'ROSMicroPy', '.github/workflows/runtime.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Load embedded ROS foundation
+        run: git submodule update --init --depth 1 ROSMicroPy
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r tools/requirements-test.txt
+      - name: Validate schemas and deployment manifests
+        run: python tools/validate_manifests.py
+      - name: Verify isolated package installation
+        run: python tools/check_architecture.py
+      - name: Run host regression suites
+        run: python tools/run_tests.py

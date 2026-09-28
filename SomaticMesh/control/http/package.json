@@ -1,0 +1,35 @@
+{
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/micropyserver/__init__.py",
+      "src/somatic_mesh/micropyserver/__init__.py"
+    ],
+    [
+      "somatic_mesh/micropyserver/http.py",
+      "src/somatic_mesh/micropyserver/http.py"
+    ],
+    [
+      "somatic_mesh/micropyserver/rest.py",
+      "src/somatic_mesh/micropyserver/rest.py"
+    ],
+    [
+      "somatic_mesh/micropyserver/server.py",
+      "src/somatic_mesh/micropyserver/server.py"
+    ]
+  ],
+  "version": "0.3.2",
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/execution_engine",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/fabric_node",
+      "main"
+    ]
+  ]
+}

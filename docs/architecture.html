@@ -8,46 +8,48 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="somatic-mesh-architecture">Somatic Mesh architecture<a class="headerlink" href="#somatic-mesh-architecture" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh is a distributed compute framework and management system for small devices. Its target model deploys Actors with assigned Behaviors across the Fabric, authored and observed through The Loom.</p>
-<p>The existing RPStack implementation assembles logical nodes from independently installed packages. Drivers access hardware, services expose capabilities, adapters transform measurements, composites coordinate providers, and apps or flows orchestrate work. These remain the runtime foundation. Product terminology does not rename Python packages, schemas, or current runtime classes.</p>
-<h2 id="architectural-responsibilities">Architectural responsibilities<a class="headerlink" href="#architectural-responsibilities" title="Permanent link">¶</a></h2>
+<p>Somatic Mesh hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.</p>
+<h2 id="responsibilities">Responsibilities<a class="headerlink" href="#responsibilities" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
+<th>Layer</th>
 <th>Responsibility</th>
-<th>Current foundation and proposed evolution</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Authoring and observation</td>
-<td>Robot Architect is the existing environment; The Loom is its proposed product name, with ILA as a proposed assistant</td>
+<td>The Loom</td>
+<td>Authoring, deployment tooling, and observation</td>
 </tr>
 <tr>
 <td>Fabric management</td>
-<td>Proposed placement, authoritative ownership, controlled activation, recovery, and deployment reconciliation</td>
+<td>Discovery and public state; placement reconciliation and recovery are roadmap work</td>
 </tr>
 <tr>
 <td>Host execution</td>
-<td>Existing node assembly, lifecycle, managed tasks, operations, workflows, and resource claims; explicit Actor hosting remains proposed</td>
+<td><code>DeviceHost</code>, <code>FabricNode</code>, <code>Actor</code>, lifecycle supervision, and tasks</td>
+</tr>
+<tr>
+<td>Behaviors</td>
+<td>Application responses, sequences, and protocol handling</td>
 </tr>
 <tr>
 <td>Capabilities</td>
-<td>Existing services, drivers, adapters, and composites retain their contracts and hardware ownership</td>
+<td>Services, drivers, adapters, and composites with versioned contracts</td>
 </tr>
 <tr>
 <td>Platform</td>
-<td>Firmware, board support, storage, networking, and device resources</td>
+<td>Firmware, hardware resources, networking, storage, and boot</td>
 </tr>
 <tr>
 <td>Communication and visibility</td>
-<td>Transports, signals, control interfaces, discovery, and telemetry span the other responsibilities</td>
+<td>Signals, transport adapters, HTTP/shell controls, and telemetry</td>
 </tr>
 </tbody>
 </table>
-<p>Application definitions should express Actors, Behaviors, connections, constraints, and recovery policy. Device profiles should express hardware and resources. Deployment plans should assign hosts, bindings, and exact versions. Today's node manifests combine these concerns; the separation is a design direction, not a supported replacement schema.</p>
 <h2 id="repository-groups">Repository groups<a class="headerlink" href="#repository-groups" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -63,7 +65,7 @@
 </tr>
 <tr>
 <td><code>runtime</code></td>
-<td><code>node_runtime</code> constructs and supervises nodes; <code>execution_engine</code> manages operations and workflows; <code>signals</code> handles envelopes and subscriptions; <code>catalog</code> provides discovery and composition models.</td>
+<td><code>fabric_node</code> constructs and supervises nodes; <code>execution_engine</code> manages operations and workflows; <code>signals</code> handles envelopes and subscriptions; <code>catalog</code> provides discovery and composition models.</td>
 </tr>
 <tr>
 <td><code>transports</code></td>
@@ -86,7 +88,7 @@
 <td>Distance and motor providers, a distance-to-position adapter, and the linear-slide composite.</td>
 </tr>
 <tr>
-<td><code>apps</code></td>
+<td><code>behaviors</code></td>
 <td><code>robot_gateway</code> exposes robot discovery over HTTP; <code>slide_commands</code> provides slide command and client applications.</td>
 </tr>
 <tr>
@@ -99,109 +101,88 @@
 </tr>
 </tbody>
 </table>
-<p>Each package has one source tree under <code>src/rpstack</code>, a MIP source map, documentation, and relevant host tests. Service implementations live in <code>service.py</code>; package initializers expose their public classes. Drivers remain inside their owning service package.</p>
+<p>Each package has one source tree under <code>src/somatic_mesh</code>, a MIP source map, documentation, and relevant host tests. Service implementations live in <code>service.py</code>; package initializers expose their public classes. Drivers remain inside their owning service package.</p>
 <h2 id="dependency-boundaries">Dependency boundaries<a class="headerlink" href="#dependency-boundaries" title="Permanent link">¶</a></h2>
 <p>Foundation packages import no runtime, service, or application packages. Services use contracts and portable support directly. Composites consume capability interfaces. The node runtime constructs providers and binds consumers to them. Applications submit operations through nodes. Transports carry signals; control interfaces expose node actions.</p>
-<p>A slide client can install <code>rpstack.apps.slide_commands</code> without installing the slide hardware service. The slide service itself has no dependency on its orchestration applications.</p>
-<h2 id="vocabulary">Vocabulary<a class="headerlink" href="#vocabulary" title="Permanent link">¶</a></h2>
+<p>A slide client can install <code>somatic_mesh.behaviors.slide_commands</code> without installing the slide hardware service. The slide service itself has no dependency on its orchestration applications.</p>
+<h2 id="vocabulary-and-naming-conventions">Vocabulary and naming conventions<a class="headerlink" href="#vocabulary-and-naming-conventions" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
-<th>Term</th>
-<th>Meaning</th>
+<th>Concept</th>
+<th>Code convention</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Device</td>
-<td>Physical board or host environment.</td>
+<td>Product / source root</td>
+<td>Somatic Mesh / <code>SomaticMesh/</code></td>
 </tr>
 <tr>
-<td>Fabric Node</td>
-<td>Target runtime-host concept: an execution location for Actors; no separate API exists yet.</td>
+<td>Python namespace</td>
+<td><code>somatic_mesh</code></td>
 </tr>
 <tr>
-<td>Logical node</td>
-<td>Current manifest-defined assembly and identity; <code>NodeHost</code> can host several on one device.</td>
+<td>Runtime host</td>
+<td><code>FabricNode</code>, package <code>somatic_mesh.fabric_node</code></td>
 </tr>
 <tr>
-<td>Actor</td>
-<td>Proposed stable participant with assigned Behavior, configuration, explicit state, message handling, and lifecycle.</td>
+<td>Shared device process</td>
+<td><code>DeviceHost</code></td>
 </tr>
 <tr>
-<td>Behavior</td>
-<td>Implementation or workflow defining an Actor's work and responses; apps and flows are current building blocks.</td>
+<td>Logical participant</td>
+<td><code>Actor</code>, manifest <code>actors</code>, node-local <code>id</code></td>
 </tr>
 <tr>
-<td>Fabric</td>
-<td>Connected runtime and management infrastructure; automatic placement and recovery remain proposed.</td>
-</tr>
-<tr>
-<td>Service type</td>
-<td>Reusable implementation and contract definition in a manifest's <code>components</code> map.</td>
-</tr>
-<tr>
-<td>Service instance</td>
-<td>Configured capability provider constructed on a node.</td>
-</tr>
-<tr>
-<td>Driver</td>
-<td>Hardware-specific backend owned by a service.</td>
-</tr>
-<tr>
-<td>Capability</td>
-<td>Versioned service interface and provider constraints.</td>
-</tr>
-<tr>
-<td>Operation</td>
-<td>Declared callable exposed by a service.</td>
-</tr>
-<tr>
-<td>App</td>
-<td>Orchestration code with a resident or one-shot lifecycle.</td>
+<td>Assigned implementation</td>
+<td><code>Behavior</code> subclasses with a <code>Behavior</code> suffix; manifest <code>behavior</code> entry point</td>
 </tr>
 <tr>
 <td>Workflow</td>
-<td>Declarative operation/signal graph in <code>flows</code>; its <code>nodes</code> entries are workflow steps.</td>
+<td>Named <code>flows</code> graph; graph <code>nodes</code> are steps</td>
 </tr>
 <tr>
-<td>Task</td>
-<td>Managed execution instance tracked by <code>TaskRegistry</code>.</td>
+<td>Execution</td>
+<td>Managed task with a task ID; Actor execution uses task kind <code>actor</code></td>
 </tr>
 <tr>
-<td>Signal</td>
-<td>Event envelope carried by <code>SignalBus</code>.</td>
+<td>Contracts</td>
+<td><code>somatic.node/v1</code> and <code>somatic.service/v1</code></td>
 </tr>
 <tr>
-<td>Deployment</td>
-<td>Node manifests, resources, apps, and installed packages for a scenario.</td>
+<td>Runtime signals</td>
+<td>Reserved <code>_sm.</code> prefix</td>
+</tr>
+<tr>
+<td>ROS interfaces</td>
+<td><code>somatic_mesh_interfaces</code>; default namespace <code>/somatic_mesh</code></td>
 </tr>
 </tbody>
 </table>
-<p><code>ServiceRegistry</code> resolves service dependencies. <code>Catalog</code> describes discovered nodes. <code>PhysicalComponent</code> and <code>CompositionRegistry</code> model physical assemblies and mount claims.</p>
+<p>A Device is physical hardware. A Fabric Node has an entity/node identity and hosts services and Actors. An Actor has a node-local identity and owns a Behavior instance; it is neither a service nor a task. Its address is <code>(entity, node, actor)</code>. Signals route between nodes; Actor-independent placement and addressing are roadmap work.</p>
+<p><code>ServiceRegistry</code> resolves capabilities. <code>Catalog</code> reports observed nodes, Actor assignments, and services. <code>PhysicalComponent</code> and <code>CompositionRegistry</code> model hardware assemblies and mount claims. Discovery excludes Actor configuration and is not permission to operate.</p>
 <h2 id="lifecycle">Lifecycle<a class="headerlink" href="#lifecycle" title="Permanent link">¶</a></h2>
 <p>Providers start before consumers and stop in reverse dependency order. Service stop/reset keeps control facilities reachable. Full shutdown releases applications, transports, and runtime resources as well. Work runs through managed tasks on the node's cooperative event loop, with dedicated pulse workers for blocking motor batches.</p>
 <h2 id="installation-and-validation">Installation and validation<a class="headerlink" href="#installation-and-validation" title="Permanent link">¶</a></h2>
 <p>Use package manifests at their canonical locations. Remote <code>package.json</code> files declare dependencies; <code>package.local.json</code> files describe local source maps. Example manifests list the full local installation set.</p>
 <p>Run <code>python3 tools/check_architecture.py</code> to validate package maps and isolated installations. Run <code>python3 tools/run_tests.py</code> for host regression suites. Device memory, physical motor timing, sensor feedback, and radio behavior require hardware validation.</p>
-<h2 id="management-and-recovery-boundaries">Management and recovery boundaries<a class="headerlink" href="#management-and-recovery-boundaries" title="Permanent link">¶</a></h2>
-<p>The Loom should resolve and deliver exact software while onboard management permits operation and recovery without desktop or internet access. Start with one onboard coordinator and preinstall code on eligible fallback hosts. Coordinator failover is separate work.</p>
-<p>Catalog discovery is observational, not authority to execute or take over. Existing action leases do not prevent two Actor instances from controlling the same machinery after a partition. Actor ownership requires explicit transfer and enforcement that rejects stale instances at resource boundaries.</p>
-<p>Start with fixed placement and stable Actor addressing, then stateless restart elsewhere. Add explicit checkpoint/restore and planned handoff only for selected stateful Behaviors. Crash recovery cannot retrieve unsaved state from a dead device. Physical bindings constrain relocation, and moving CPU work does not remove local actuator power demand.</p>
-<p>Multiple logical nodes share an interpreter and filesystem; they are not isolated failure domains. An Actor is not a renamed <code>NodeRuntime</code> or task, and each small driver need not become an Actor.</p>
-<p>See the <a href="fabric-management.html">Fabric management proposal</a>, <a href="bootstrap.html">bootstrap design</a>, and <a href="registries.html">registry design</a> for scope and milestones. These are proposed designs, not implemented guarantees.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="apps.html"><small>Previous</small>Apps &amp; Behaviors</a><a href="fabric-management.html"><small>Next</small>Fabric management &amp; recovery</a></nav>
+<h2 id="deployment-boundaries-and-roadmap">Deployment boundaries and roadmap<a class="headerlink" href="#deployment-boundaries-and-roadmap" title="Permanent link">¶</a></h2>
+<p>Node manifests define fixed Actor placement, service bindings, resources, and transports. Multiple Fabric Nodes on one DeviceHost share an interpreter and filesystem. Local resource claims arbitrate operations; they do not establish cross-host ownership after a partition.</p>
+<p>The Loom need not remain connected for local deployed Behaviors to run. ROS-dependent Behaviors require their ROS communication path. ESP-NOW peers share a radio channel; bounded relaying extends configured signal delivery beyond direct neighbors. End-to-end latency and physical stop timing require hardware measurement.</p>
+<p>The <a href="fabric-management.html">Fabric management roadmap</a> specifies application/hardware/deployment separation, exact delivery, controlled activation, and recovery. Alternative-host restart needs eligible resources and stale-instance fencing. Stateful handoff needs checkpoint/restore. Physical wiring constrains relocation, and unsaved state cannot be recovered from a dead device.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="actors.html"><small>Previous</small>Apps &amp; Behaviors</a><a href="fabric-management.html"><small>Next</small>Fabric management &amp; recovery</a></nav>
 <footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#somatic-mesh-architecture">Somatic Mesh architecture</a><ul>
-<li><a href="#architectural-responsibilities">Architectural responsibilities</a></li>
+<li><a href="#responsibilities">Responsibilities</a></li>
 <li><a href="#repository-groups">Repository groups</a></li>
 <li><a href="#dependency-boundaries">Dependency boundaries</a></li>
-<li><a href="#vocabulary">Vocabulary</a></li>
+<li><a href="#vocabulary-and-naming-conventions">Vocabulary and naming conventions</a></li>
 <li><a href="#lifecycle">Lifecycle</a></li>
 <li><a href="#installation-and-validation">Installation and validation</a></li>
-<li><a href="#management-and-recovery-boundaries">Management and recovery boundaries</a></li>
+<li><a href="#deployment-boundaries-and-roadmap">Deployment boundaries and roadmap</a></li>
 </ul>
 </li>
 </ul>

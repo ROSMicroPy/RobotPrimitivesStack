@@ -1,58 +1,47 @@
-# Fabric management and recovery
+# Fabric management roadmap
 
-**Design proposal.** This page describes Somatic Mesh's intended management responsibilities and implementation sequence. Stable Actor addressing, automatic placement, Actor ownership, restart on alternative hosts, and stateful handoff are not current runtime guarantees.
+**Design specification.** The runtime supports fixed Actor placement, lifecycle supervision, workflows, discovery, and leased remote operations. Automatic placement, cross-host Actor ownership, controlled activation, and stateful recovery require the management work described here.
 
-## From node assembly to Actor deployment
+## Application, hardware, and deployment
 
-Today, an application assembles services, apps, and flows on predefined logical nodes. The proposed model defines Actors and their Behaviors independently of placement, then deploys them onto eligible Fabric Nodes. Eligibility depends on required capabilities, compatible code and firmware, available resources, physical access, and application policy.
+Separate three descriptions as management evolves:
 
-The initial implementation should keep placement explicit. Stable Actor identity and addressing must be established before automatic relocation. The current node/service addresses and task IDs remain the supported interfaces until that layer exists.
+| Description | Contents |
+| --- | --- |
+| Application | Actors, Behaviors, connections, capability requirements, and recovery policy |
+| Device profile | Hardware identity, pins, peripherals, firmware, and resource budgets |
+| Deployment plan | Placement, bindings, exact code revisions, and eligible fallback hosts |
 
-## Desired state and observed state
+The `somatic.node/v1` runtime manifest contains concrete host assignments. A management compiler should produce those manifests from higher-level descriptions. Actor addresses include their host node; location-independent addressing needs an explicit routing and ownership design.
 
-Fabric management should reconcile an application definition, device profiles, and an exact deployment plan with reported inventory and health. Keep these decisions distinct:
+## Discovery, readiness, and authority
 
-1. **Discovery:** which participants have been observed?
-2. **Inventory:** which code, configuration, and hardware are installed?
-3. **Readiness:** have required preparation and binding checks succeeded?
-4. **Run permission:** is this instance authorized to operate now?
-5. **Ownership:** which current Actor instance may act on the assigned resources?
+Discovery reports observed participants. Inventory should report installed code and configuration. Readiness should establish successful preparation. Renewable run permission should gate activation. An ownership protocol must determine which Actor instance is authorized to act on a resource.
 
-The catalog answers discovery questions. A missing announcement is not proof that a device stopped, and a discovery timeout must not authorize takeover. Existing remote-action leases and correlation support bounded distributed operations; they do not establish exclusive Actor ownership across failures.
+A missing catalog announcement is not evidence that a device stopped. Remote-action leases bound requested work; they do not authorize Actor takeover. Recovery needs instance generations or equivalent fencing enforced at resource boundaries. Leave work inactive if an old instance cannot be fenced.
 
-## Authority and hardware ownership
+Start with one designated onboard coordinator. Coordinator failover is a separate milestone. Local operation and already permitted recovery should survive The Loom disconnecting. See [bootstrap](bootstrap.html) for the design of preparation and activation.
 
-An Actor identity must have an authoritative current owner. Recovery must prevent an old and a replacement instance from simultaneously controlling machinery, including after a network partition or delayed message. The design needs instance generations or equivalent fencing enforced at the resource access boundary, plus expiring permission and explicit transfer rules. The exact protocol remains to be designed and validated.
+## Delivery and recovery
 
-Local resource claims remain useful but do not replace cross-host authority. If an old instance cannot be fenced from a physical resource, activating a replacement is not a safe recovery strategy. Reconciliation must be able to leave an Actor inactive and report why.
+The Loom should resolve exact package versions and deliver verified installations. Preinstall Behavior code on eligible fallback hosts so recovery does not require internet access or desktop availability. Devices should report inventory and enforce compatibility. Peer-to-peer package distribution is not a prerequisite.
 
-Start with one designated onboard coordinator. Its absence should prevent new activation and follow the deployment's permission-expiry policy. Coordinator failover is a separate milestone, not a consequence of Actor restart support. See [bootstrap](bootstrap.html) for the proposed preparation and run-permission lifecycle.
+| Recovery mode | Requirements |
+| --- | --- |
+| Stateless restart | Eligible resources, available code, fresh ownership, and explicit handling of interrupted effects |
+| Planned stateful handoff | Quiesce work, checkpoint compatible state, transfer ownership, restore, activate |
+| Crash recovery | Previously persisted or replicated state; state held only on a failed device is unavailable |
+| Resource-aware placement | Resource measurements and policy plus all ownership and recovery prerequisites |
 
-## Code delivery and offline operation
+Transparent migration of arbitrary Python execution and exactly-once physical effects are outside this design. Moving CPU work cannot reconnect a motor attached exclusively to a failed board or remove its local power load.
 
-The Loom should resolve dependencies and deliver exact packages and deployment records. Preinstall the required Behavior code on eligible fallback hosts so permitted recovery can work without the desktop or internet. Devices report inventory and enforce compatibility; they do not initially need peer-to-peer package distribution or their own registry resolver.
+## Milestones
 
-The Loom observes and changes desired state through management interfaces. ILA should use those same interfaces. Neither should be required to remain connected for a deployed system to operate or perform already permitted recovery. [Registries](registries.html) describes the proposed software discovery and locking model.
+1. Define application and device descriptions that compile to fixed deployments.
+2. Add location-independent Actor addressing and authoritative instance ownership.
+3. Implement inventory, preparation, and controlled activation.
+4. Enable stateless restart on preprovisioned eligible hosts.
+5. Add selected checkpoint/restore and planned handoff.
+6. Add resource-aware placement using measured memory, compute, power, thermal, and communication costs.
 
-## Recovery modes
-
-| Mode | Required conditions | Limits |
-| --- | --- | --- |
-| Fixed placement | Explicit host and capability bindings | Initial Actor milestone; no relocation |
-| Stateless restart elsewhere | Eligible host, installed code, fresh authorization, and safe handling of interrupted work | Restarting computation does not undo or prove completion of external effects |
-| Planned stateful handoff | Quiesce work, checkpoint compatible state, transfer ownership, restore, then activate | Selected Behaviors must define checkpoint/restore and in-flight message handling |
-| Crash recovery | Previously persisted or replicated state and a valid ownership decision | State held only on a dead device is lost; recovery may resume from an older checkpoint |
-| Resource-aware placement | Measured resource conditions and policy, plus all migration prerequisites | CPU, memory, power, temperature, and communication costs constrain placement |
-
-There is no promise of transparent migration of arbitrary Python execution, exactly-once physical actions, or recovery of a peripheral wired exclusively to a dead controller. Behaviors with external effects need explicit retry, deduplication, or reconciliation rules before restart is enabled.
-
-## Development sequence
-
-1. Define Actor identity, Behavior versions, configuration, state, and lifecycle; retain the distinction from tasks and services.
-2. Separate application definitions, hardware profiles, and concrete deployment plans.
-3. Add stable Actor addressing with fixed placement and explicit capability bindings.
-4. Introduce inventory, preparation, authoritative ownership, and controlled activation with an onboard coordinator.
-5. Support stateless restart on preprovisioned eligible hosts, including stale-instance fencing and interrupted-operation handling.
-6. Add checkpoint/restore and planned handoff for selected stateful Behaviors, followed by resource-aware placement.
-
-Keep capability contracts, transport independence, hardware ownership, managed operations, resource claims, and observability throughout. The current package layers remain foundations for this work; this proposal does not create new packages or supported manifest fields.
+Preserve capability contracts, hardware ownership, managed operations, resource claims, and observability throughout. [Software registry design](registries.html) covers component metadata and deployment locks.

@@ -8,11 +8,10 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html" aria-current="page">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html" aria-current="page">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Reference</div><article><h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">¶</a></h1>
-<p>This is the current implementation API for Somatic Mesh's RPStack foundation. Keep using the documented <code>rpstack</code> imports and node/service identifiers. Actor identity, automatic placement, and recovery APIs are proposed work, described in <a href="fabric-management.html">Fabric management</a>.</p>
 <h2 id="native-repl-helpers">Native REPL helpers<a class="headerlink" href="#native-repl-helpers" title="Permanent link">¶</a></h2>
-<p>These functions are installed by the slide demo package, not by every RPStack node.</p>
+<p>These functions are installed by the slide demo package, not by every SomaticMesh node.</p>
 <table>
 <thead>
 <tr>
@@ -57,14 +56,14 @@
 </table>
 <p>Remote commands use the same helpers. A timeout describes the missing outcome, not proof of remote cancellation.</p>
 <h2 id="service-operations">Service operations<a class="headerlink" href="#service-operations" title="Permanent link">¶</a></h2>
-<p>From inside an async app:</p>
+<p>From inside an async behavior:</p>
 <pre><code class="language-python">await node.invoke('slide', 'set_range', {'min_mm': 30, 'max_mm': 300})
 bounds = await node.invoke('slide', 'get_range', {})
 position = await node.invoke('slide', 'move_to', {'target': 0.1})
 </code></pre>
 <p><code>move_to</code> uses metres. <code>set_range</code> uses explicitly named millimetre arguments. Other slide operations include <code>observe_position</code>, <code>status</code>, <code>calibrate</code>, <code>jog_steps</code>.</p>
 <h2 id="http-task-api">HTTP task API<a class="headerlink" href="#http-task-api" title="Permanent link">¶</a></h2>
-<p>HTTP is available only when the node manifest enables <code>rpstack.micropyserver:NodeRestApi</code> and suitable networking. The slide-node demo includes HTTP, catalog and gateway runtimes on the provider and persistent client host. Configure Wi-Fi before starting; use the printed gateway URL.</p>
+<p>HTTP is available only when the node manifest enables <code>somatic_mesh.micropyserver:FabricRestApi</code> and suitable networking. The slide-node demo includes HTTP, catalog and gateway runtimes on the provider and persistent client host. Configure Wi-Fi before starting; use the printed gateway URL.</p>
 <table>
 <thead>
 <tr>

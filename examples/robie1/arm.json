@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "Robie1-arm",
   "identity": {
     "entity": "Robie1",
@@ -7,7 +7,7 @@
   },
   "components": {
     "joint": {
-      "manifest": "rp.service/v1",
+      "manifest": "somatic.service/v1",
       "service": {
         "name": "simulated-joint",
         "version": "1.0.0",

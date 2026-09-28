@@ -1,0 +1,19 @@
+{
+  "name": "somatic-bootmgr",
+  "version": "1.0.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/bootmgr/__init__.py",
+      "src/somatic_mesh/bootmgr/__init__.py"
+    ],
+    [
+      "somatic_mesh/bootmgr/bootmgr.py",
+      "src/somatic_mesh/bootmgr/bootmgr.py"
+    ]
+  ],
+  "deps": []
+}

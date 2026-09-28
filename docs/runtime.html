@@ -8,10 +8,9 @@
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html" aria-current="page">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html" aria-current="page">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="host-runtime-and-execution">Host runtime and execution<a class="headerlink" href="#host-runtime-and-execution" title="Permanent link">¶</a></h1>
-<p>The current runtime is Somatic Mesh's execution foundation: it assembles logical nodes, binds capabilities, and supervises work. Apps and flows express behavior today. Explicit Actor identity and hosting are proposed extensions; a task remains a tracked execution instance, not an Actor.</p>
-<p>Fabric-wide placement, authoritative ownership, and recovery belong to the proposed <a href="fabric-management.html">management layer</a>. Current remote-action leases and resource claims do not establish automatic Actor failover. The API names and startup sequence below describe the existing implementation.</p>
+<p><code>FabricNode</code> assembles capability services, hosts Actors, and supervises managed work. Each Actor owns a Behavior and its execution task. <code>DeviceHost</code> runs several Fabric Nodes on a shared event loop.</p>
 <table>
 <thead>
 <tr>
@@ -21,7 +20,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>node_runtime</code></td>
+<td><code>fabric_node</code></td>
 <td>Manifest loading, capability resolution, lifecycle, node hosting</td>
 </tr>
 <tr>
@@ -56,13 +55,13 @@
     Resolve --&gt; Init[Construct, configure and initialize services]
     Init --&gt; Start[Start providers before consumers]
     Start --&gt; Infra[Start runtime listeners and signal transports]
-    Infra --&gt; Apps[Start apps and autostart flows]
-    Apps --&gt; Work[Accept managed operations]
+    Infra --&gt; Actors[Start Actors and autostart flows]
+    Actors --&gt; Work[Accept managed operations]
     Work --&gt; Stop[Stop admission and cancel managed work]
     Stop --&gt; Cleanup[Stop consumers before providers]
-    Cleanup --&gt; Shutdown[Shutdown closes apps, listeners and resources]
+    Cleanup --&gt; Shutdown[Shutdown closes actors, listeners and resources]
 </pre>
-<p><code>stop()</code> stops application services and flows while controls remain available. <code>reset()</code> rebuilds service instances. <code>shutdown()</code> also closes runtime listeners, apps, and platform resources. Failed partial startup cleans up initialized instances.</p>
+<p><code>stop()</code> stops application services and flows while controls remain available. <code>reset()</code> rebuilds service instances. <code>shutdown()</code> also closes runtime listeners, actors, and platform resources. Failed partial startup cleans up initialized instances.</p>
 <h2 id="managed-operations">Managed operations<a class="headerlink" href="#managed-operations" title="Permanent link">¶</a></h2>
 <pre><code class="language-python">result = await node.invoke('slide', 'get_range', {})
 job_id = node.submit('slide', 'move_to', {'target': 0.1})
