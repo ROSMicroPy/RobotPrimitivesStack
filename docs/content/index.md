@@ -1,10 +1,10 @@
-# Somatic Mesh
+# Primitive Fabric
 
 **A distributed compute framework and management system for small devices.**
 
 *Design in The Loom. Bring Actors and Behaviors to life across the Fabric.*
 
-Somatic Mesh coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.
+Primitive Fabric coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.
 
 ROSMicroPy provides the embedded ROS foundation. ROS interfaces connect the Fabric to robots and other ROS participants. ESP-NOW lets local devices cooperate without an access point or IP configuration, with bounded relaying for configured mesh deployments.
 
@@ -26,4 +26,4 @@ ROSMicroPy provides the embedded ROS foundation. ROS interfaces connect the Fabr
 
 [Fabric management](fabric-management.html), [bootstrap](bootstrap.html), and [software registries](registries.html) specify planned placement, inventory, readiness, code delivery, and recovery responsibilities. They are design documents; automatic Actor relocation and stateful recovery are not runtime features.
 
-Somatic Mesh is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.
+Primitive Fabric is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.

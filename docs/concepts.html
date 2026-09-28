@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The mental model · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: The mental model">
+<title>The mental model · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: The mental model">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
 <div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html" aria-current="page">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="the-somatic-mesh-mental-model">The Somatic Mesh mental model<a class="headerlink" href="#the-somatic-mesh-mental-model" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh connects physical capabilities and computation into coordinated applications. Actors perform Behaviors on Fabric Nodes; signals and managed operations connect their work.</p>
+<main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="the-primitive-fabric-mental-model">The Primitive Fabric mental model<a class="headerlink" href="#the-primitive-fabric-mental-model" title="Permanent link">¶</a></h1>
+<p>Primitive Fabric connects physical capabilities and computation into coordinated applications. Actors perform Behaviors on Fabric Nodes; signals and managed operations connect their work.</p>
 <h2 id="participants-and-execution">Participants and execution<a class="headerlink" href="#participants-and-execution" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -77,10 +77,10 @@
 <p>A data-processing Behavior may eventually be eligible for alternative-host recovery. A motor-control Behavior still requires access to its motor. Planned handoff needs checkpoint/restore and an ownership protocol; crash recovery can use only state already saved. These features are specified in the <a href="fabric-management.html">management roadmap</a>.</p>
 <p>Capability boundaries use SI units and explicit reference frames. Position adapters own offsets and direction; sensors report observations in their defined coordinates.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="getting-started.html"><small>Previous</small>Getting Started</a><a href="nodes.html"><small>Next</small>Nodes &amp; manifests</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#the-somatic-mesh-mental-model">The Somatic Mesh mental model</a><ul>
+<li><a href="#the-primitive-fabric-mental-model">The Primitive Fabric mental model</a><ul>
 <li><a href="#participants-and-execution">Participants and execution</a></li>
 <li><a href="#behaviors-and-workflows">Behaviors and workflows</a></li>
 <li><a href="#services-operations-and-signals">Services, operations, and signals</a></li>

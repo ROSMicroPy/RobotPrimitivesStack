@@ -1,6 +1,6 @@
-# Somatic Mesh documentation site
+# Primitive Fabric documentation site
 
-Product prose uses Somatic Mesh, Actors, Behaviors, the Fabric, and The Loom. Use the implemented Actor/Behavior APIs directly. Keep automatic placement, recovery, ILA, and deployment separation in design/roadmap pages until implemented. Code snippets and schema identifiers must match the source and examples.
+Product prose uses Primitive Fabric, Actors, Behaviors, the Fabric, and The Loom. Use the implemented Actor/Behavior APIs directly. Keep automatic placement, recovery, ILA, and deployment separation in design/roadmap pages until implemented. Code snippets and schema identifiers must match the source and examples.
 
 The authored documentation is in `content/`; `navigation.json` defines left-menu
 order and groups. CSS/JavaScript live in `assets/`. The Python builder produces

@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>API Reference · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: API Reference">
+<title>API Reference · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: API Reference">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
@@ -11,7 +11,7 @@
 <div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html" aria-current="page">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Reference</div><article><h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">¶</a></h1>
 <h2 id="native-repl-helpers">Native REPL helpers<a class="headerlink" href="#native-repl-helpers" title="Permanent link">¶</a></h2>
-<p>These functions are installed by the slide demo package, not by every SomaticMesh node.</p>
+<p>These functions are installed by the slide demo package, not by every Primitive Fabric node.</p>
 <table>
 <thead>
 <tr>
@@ -152,7 +152,7 @@ position = await node.invoke('slide', 'move_to', {'target': 0.1})
 </table>
 <p>Commands require an explicit target and nonempty correlation ID. Failures use <code>motion.target.failed</code>, including observation and configuration errors. Only motion/calibration requests emit <code>motion.started</code>. The ready reply identifies the command protocol version.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="calibration.html"><small>Previous</small>Calibration</a><a href="troubleshooting.html"><small>Next</small>Troubleshooting</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#api-reference">API Reference</a><ul>

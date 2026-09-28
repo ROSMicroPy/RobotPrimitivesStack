@@ -1,6 +1,6 @@
 # Service and behavior registries
 
-**Design proposal.** This page defines the intended Somatic Mesh and Loom registry
+**Design proposal.** This page defines the intended Primitive Fabric and Loom registry
 model. Registry schemas, publishing automation, multi-registry discovery, and
 deployment locking described here are not yet implemented. JSON examples are
 proposed formats, not inputs supported by the current runtime.
@@ -151,7 +151,7 @@ Illustrative configuration using placeholder URLs:
   "registries": [
     {
       "id": "somatic_mesh",
-      "name": "SomaticMesh",
+      "name": "Primitive Fabric",
       "url": "https://registry.example.org/somatic_mesh/index.json",
       "enabled": true
     },

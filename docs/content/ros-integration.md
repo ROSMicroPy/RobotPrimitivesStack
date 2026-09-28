@@ -1,6 +1,6 @@
 # ROS 2 integration
 
-ROSMicroPy is the embedded ROS foundation of Somatic Mesh. The Fabric runtime manages device capabilities and their execution. ROS 2 applications can
+ROSMicroPy is the embedded ROS foundation of Primitive Fabric. The Fabric runtime manages device capabilities and their execution. ROS 2 applications can
 use those capabilities through typed interfaces, while controllers retain their
 MicroPython service runtime and manifest-driven hardware bindings.
 
@@ -13,8 +13,8 @@ provides the linear-slide action facade using full CPython rclpy.
 
 ```mermaid
 flowchart LR
-    Device[SomaticMesh slide on ROSMicroPy] <-->|micro-ROS| Agent[micro-ROS agent]
-    Agent <-->|SomaticMesh signal envelopes| Gateway[Typed ROS gateway]
+    Device[Primitive Fabric slide on ROSMicroPy] <-->|micro-ROS| Agent[micro-ROS agent]
+    Agent <-->|Primitive Fabric signal envelopes| Gateway[Typed ROS gateway]
     Gateway <-->|Move action and feedback| Actors[ROS 2 applications]
     Agent -->|Direct typed joint states| Actors
     Gateway -->|Position and diagnostics| Actors
@@ -36,7 +36,7 @@ The Loom and can run on an onboard Linux computer.
 The default gateway namespace is `/somatic_mesh/slide`, with endpoints `position`,
 `move`, and `diagnostics`. The example publishes direct firmware joint states on
 `/somatic_mesh/slide_device/joint_states`. This is a linear-slide adapter, not a claim
-that every SomaticMesh operation automatically becomes a ROS interface.
+that every Primitive Fabric operation automatically becomes a ROS interface.
 
 ## Admission and cancellation
 

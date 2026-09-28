@@ -15,7 +15,7 @@ underscores and prefixed with `somatic_mesh_`.
 
 Use `backend: "rosmicropy"` for the included firmware. Its `spin_once()` is a
 stub, so this adapter explicitly starts the native `run_ROS_Stack()` worker.
-SomaticMesh creates no Python worker thread. Native callbacks copy strings into a
+Primitive Fabric creates no Python worker thread. Native callbacks copy strings into a
 bounded mailbox guarded by a lock; only the asyncio loop decodes/routes them.
 The included Python shim is exercised directly by a host test with the native
 module substituted.
@@ -23,7 +23,7 @@ module substituted.
 The reference firmware cannot unregister subscriptions or stop its native ROS
 worker. On stop, callbacks become inert; a second native adapter is rejected
 until reboot. Do not call `rclpy.shutdown()` externally to try to reset this
-firmware worker: it only resets Python flags. SomaticMesh application stop/reset
+firmware worker: it only resets Python flags. Primitive Fabric application stop/reset
 keeps the transport running, so ordinary service reset does not need a reboot.
 Only one ROSMicroPy adapter may own the native stack on a device.
 

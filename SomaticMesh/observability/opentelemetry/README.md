@@ -4,9 +4,9 @@ This package provides lightweight traces, logs, metrics, context propagation, an
 
 It installs as **somatic_mesh.opentelemetry**.
 
-## Role in SomaticMesh
+## Role in Primitive Fabric
 
-Observability makes service lifecycle failures, sensor latency, operation duration, bridge traffic, and resource pressure visible outside the device. Instrumentation can use the same service identity and operation names declared in SomaticMesh manifests.
+Observability makes service lifecycle failures, sensor latency, operation duration, bridge traffic, and resource pressure visible outside the device. Instrumentation can use the same service identity and operation names declared in Primitive Fabric manifests.
 
 The package follows familiar OpenTelemetry concepts while remaining practical on constrained systems.
 
@@ -125,7 +125,7 @@ mip.install(
 )
 ~~~
 
-## SomaticMesh instrumentation guidance
+## Primitive Fabric instrumentation guidance
 
 - Use manifest service names as logical service attributes.
 - Add the device instance identifier separately.

@@ -2,7 +2,7 @@
 
 The Environment Store provides shell-style configuration values for MicroPython. Values can exist only for the current session or persist across device restarts.
 
-## Role in SomaticMesh
+## Role in Primitive Fabric
 
 Environment values are useful for operational settings shared by boot scripts, shell commands, bridges, and device assembly code. Service configuration that is part of a service contract belongs in its **component.yaml** manifest and instance configuration. The environment store is best suited to deployment-specific values such as endpoints, device names, feature flags, and credentials supplied by the device owner.
 

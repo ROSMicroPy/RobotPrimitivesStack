@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Architecture &amp; layers · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Architecture &amp; layers">
+<title>Architecture &amp; layers · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Architecture &amp; layers">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
 <div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html" aria-current="page">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="somatic-mesh-architecture">Somatic Mesh architecture<a class="headerlink" href="#somatic-mesh-architecture" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.</p>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="primitive-fabric-architecture">Primitive Fabric architecture<a class="headerlink" href="#primitive-fabric-architecture" title="Permanent link">¶</a></h1>
+<p>Primitive Fabric hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.</p>
 <h2 id="responsibilities">Responsibilities<a class="headerlink" href="#responsibilities" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -116,7 +116,7 @@
 <tbody>
 <tr>
 <td>Product / source root</td>
-<td>Somatic Mesh / <code>SomaticMesh/</code></td>
+<td>Primitive Fabric / <code>SomaticMesh/</code></td>
 </tr>
 <tr>
 <td>Python namespace</td>
@@ -172,10 +172,10 @@
 <p>The Loom need not remain connected for local deployed Behaviors to run. ROS-dependent Behaviors require their ROS communication path. ESP-NOW peers share a radio channel; bounded relaying extends configured signal delivery beyond direct neighbors. End-to-end latency and physical stop timing require hardware measurement.</p>
 <p>The <a href="fabric-management.html">Fabric management roadmap</a> specifies application/hardware/deployment separation, exact delivery, controlled activation, and recovery. Alternative-host restart needs eligible resources and stale-instance fencing. Stateful handoff needs checkpoint/restore. Physical wiring constrains relocation, and unsaved state cannot be recovered from a dead device.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="actors.html"><small>Previous</small>Apps &amp; Behaviors</a><a href="fabric-management.html"><small>Next</small>Fabric management &amp; recovery</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#somatic-mesh-architecture">Somatic Mesh architecture</a><ul>
+<li><a href="#primitive-fabric-architecture">Primitive Fabric architecture</a><ul>
 <li><a href="#responsibilities">Responsibilities</a></li>
 <li><a href="#repository-groups">Repository groups</a></li>
 <li><a href="#dependency-boundaries">Dependency boundaries</a></li>

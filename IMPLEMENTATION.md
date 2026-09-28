@@ -1,4 +1,4 @@
-# Somatic Mesh implementation reference
+# Primitive Fabric implementation reference
 
 ## Platform
 
@@ -186,7 +186,7 @@ A Capability Service is the unit managed by the runtime. Every service has:
 - implementation choices;
 - declarative tests.
 
-SomaticMesh uses three main service kinds.
+Primitive Fabric uses three main service kinds.
 
 ### Individual drivers
 
@@ -635,7 +635,7 @@ The compiler loads and validates the YAML through the same manifest model used b
 
 ## Signals, actions, and operations
 
-SomaticMesh distinguishes three related concepts.
+Primitive Fabric distinguishes three related concepts.
 
 ### Operations
 
@@ -682,7 +682,7 @@ signal: motion.target.reached
 
 ## Bridges
 
-A bridge adapts SomaticMesh capabilities, operations, and signals to an external transport.
+A bridge adapts Primitive Fabric capabilities, operations, and signals to an external transport.
 
 Possible bridges include:
 
@@ -883,7 +883,7 @@ mpremote mip install https://raw.githubusercontent.com/ROSMicroPy/RobotPrimitive
 Local directory names are not package arguments in the current `mpremote mip` implementation, so `mpremote mip install .` and a directory-only local path do not resolve `package.json` automatically.
 
 
-Service and runtime packages include MicroPython **package.json** files where applicable. A package manifest specifies installed files and dependent SomaticMesh packages.
+Service and runtime packages include MicroPython **package.json** files where applicable. A package manifest specifies installed files and dependent Primitive Fabric packages.
 
 For example, the linear-slide package depends on:
 
@@ -896,7 +896,7 @@ During development on **main**, package dependencies reference that branch. Rele
 
 ## Design principles
 
-SomaticMesh follows these principles:
+Primitive Fabric follows these principles:
 
 1. Firmware supplies a reusable hardware execution environment.
 2. Services describe device capabilities.

@@ -2,7 +2,7 @@
 
 The Boot Manager provides deterministic startup for MicroPython devices. It loads small startup modules from an **init.d** directory and runs them in filename order.
 
-## Role in SomaticMesh
+## Role in Primitive Fabric
 
 The Boot Manager starts runtime facilities such as environment loading, service assembly, observability, and shell integration. It is intentionally limited to boot sequencing. Capability binding and service lifecycle management belong to **FabricNode**.
 

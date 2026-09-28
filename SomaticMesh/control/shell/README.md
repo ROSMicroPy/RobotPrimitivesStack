@@ -1,4 +1,4 @@
-# SomaticMesh shell
+# Primitive Fabric shell
 
 Both `AsyncShell` and the standalone `sh.Shell` discover commands under `bin`.
 The front ends handle terminal input, completion and dispatch; every command

@@ -1,14 +1,14 @@
 # Typed ROS slide gateway
 
 `SlideRosBehavior` is an optional **desktop CPython/rclpy** resident behavior that exposes
-an SomaticMesh slide as native ROS interfaces. Controllers continue to use
+a Primitive Fabric slide as native ROS interfaces. Controllers continue to use
 **ROSMicroPy's frozen rclpy implementation and micro-ROS**. That implementation
 supports typed publishers/subscribers but currently has no action server,
 executor, or working future API; the desktop behavior supplies the action facade.
 
 The gateway does not replace the device supervisor, bypass resource claims, or
 require The Loom to remain open. It uses the existing leased remote
-execution protocol over any configured SomaticMesh signal transport.
+execution protocol over any configured Primitive Fabric signal transport.
 
 ## Interfaces
 
@@ -21,7 +21,7 @@ With namespace `somatic_mesh/slide`:
 | `/somatic_mesh/slide/diagnostics` | `diagnostic_msgs/msg/DiagnosticArray` | Readiness, motion, stale connectivity, and latched uncertain outcomes |
 
 Build the generated interface package under `ros2/somatic_mesh_interfaces` using colcon
-before loading the behavior. Importing the SomaticMesh package itself does not import ROS.
+before loading the behavior. Importing the Primitive Fabric package itself does not import ROS.
 The behavior owns a separate rclpy context and cooperatively polls its executor; it
 does not shut down a context belonging to the signal transport or another behavior.
 
@@ -88,7 +88,7 @@ The software registry/provisioning design remains separate proposed work.
 python3 -B -m unittest discover -s SomaticMesh/behaviors/ros_gateway/test -v
 ```
 
-Host integration tests run real SomaticMesh nodes over a simulated lossy transport.
+Host integration tests run real Primitive Fabric nodes over a simulated lossy transport.
 Real rclpy tests additionally require desktop ROS and the built interface package;
 they explicitly skip otherwise. `.github/workflows/ros-gateway.yml` builds the
 interfaces and runs both sets on ROS 2 Jazzy. Firmware shim tests live under

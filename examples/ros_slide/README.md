@@ -1,6 +1,6 @@
 # Linear slide with ROSMicroPy and ROS 2
 
-The controller runs SomaticMesh on ROSMicroPy and communicates with a micro-ROS agent.
+The controller runs Primitive Fabric on ROSMicroPy and communicates with a micro-ROS agent.
 It publishes a typed prismatic-joint measurement directly through the firmware's
 `rclpy` API. An optional desktop gateway adds a standard ROS action, richer typed
 position feedback, and diagnostics. No The Loom process is required.
@@ -75,7 +75,7 @@ must not be treated as evidence that no movement occurred.
 The transport's optional `publishers` profile maps measured slide signals to
 `sensor_msgs/msg/JointState`. Publishers are registered before starting the native
 ROS worker, and the existing String envelope transport remains available for
-SomaticMesh execution. Only the configured service on the local node is projected;
+Primitive Fabric execution. Only the configured service on the local node is projected;
 relayed peers and invalid samples are excluded.
 
 The firmware currently lacks a synchronized ROS clock API, so its direct joint
@@ -91,4 +91,4 @@ to the desktop adapter until equivalent firmware APIs exist.
 Only one ROSMicroPy transport may own the native worker on a device. Stopping and
 recreating that worker still requires reboot; application service reset keeps it
 running. Health diagnostics and action arbitration do not add authentication to the
-SomaticMesh signal protocol.
+Primitive Fabric signal protocol.

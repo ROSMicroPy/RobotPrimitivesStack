@@ -2,7 +2,7 @@
 
 ## Native REPL helpers
 
-These functions are installed by the slide demo package, not by every SomaticMesh node.
+These functions are installed by the slide demo package, not by every Primitive Fabric node.
 
 | Function | Behavior |
 | --- | --- |

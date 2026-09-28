@@ -1,6 +1,6 @@
-# The Somatic Mesh mental model
+# The Primitive Fabric mental model
 
-Somatic Mesh connects physical capabilities and computation into coordinated applications. Actors perform Behaviors on Fabric Nodes; signals and managed operations connect their work.
+Primitive Fabric connects physical capabilities and computation into coordinated applications. Actors perform Behaviors on Fabric Nodes; signals and managed operations connect their work.
 
 ## Participants and execution
 

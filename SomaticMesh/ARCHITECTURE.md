@@ -1,6 +1,6 @@
-# Somatic Mesh architecture
+# Primitive Fabric architecture
 
-Somatic Mesh hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.
+Primitive Fabric hosts Actors with assigned Behaviors across connected small devices. Capability services expose hardware and computation; managed operations, workflows, signals, and discovery coordinate their use. ROSMicroPy supplies the embedded ROS foundation, and ESP-NOW supports local communication without an access point or IP setup.
 
 ## Responsibilities
 
@@ -41,7 +41,7 @@ A slide client can install `somatic_mesh.behaviors.slide_commands` without insta
 
 | Concept | Code convention |
 | --- | --- |
-| Product / source root | Somatic Mesh / `SomaticMesh/` |
+| Product / source root | Primitive Fabric / `SomaticMesh/` |
 | Python namespace | `somatic_mesh` |
 | Runtime host | `FabricNode`, package `somatic_mesh.fabric_node` |
 | Shared device process | `DeviceHost` |

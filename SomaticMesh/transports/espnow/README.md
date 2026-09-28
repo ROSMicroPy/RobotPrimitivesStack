@@ -1,9 +1,9 @@
 # ESP-NOW signal transport
 
-`somatic_mesh.espnow:EspNowTransport` is SomaticMesh's asynchronous ESP-NOW signal
+`somatic_mesh.espnow:EspNowTransport` is Primitive Fabric's asynchronous ESP-NOW signal
 adapter. It uses 240-byte frames and a seven-byte fragment header
 (`7f 4d`, version 1, two-byte ID, count, index). Each reassembled payload is
-an SomaticMesh signal envelope.
+a Primitive Fabric signal envelope.
 
 Reception polls `irecv(0)` and copies reusable buffers. Transmission queues
 frames with `send(peer, frame, False)` and yields between them; broadcast

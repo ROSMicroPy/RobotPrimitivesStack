@@ -1,10 +1,10 @@
-# Somatic Mesh
+# Primitive Fabric
 
 **A distributed compute framework and management system for small devices.**
 
 *Design in The Loom. Bring Actors and Behaviors to life across the Fabric.*
 
-Somatic Mesh coordinates sensors, actuators, and computation across connected devices. Actors perform assigned Behaviors, exchange signals, and invoke capability services. Deploy a sequence across devices and let it run without keeping The Loom connected.
+Primitive Fabric coordinates sensors, actuators, and computation across connected devices. Actors perform assigned Behaviors, exchange signals, and invoke capability services. Deploy a sequence across devices and let it run without keeping The Loom connected.
 
 ROSMicroPy is a foundational part of the embedded ROS architecture. ROS transport and typed gateways connect the Fabric to ROS robots, while ESP-NOW supports local communication without an access point or IP configuration. Deployments select the transports and external participants their Behaviors require.
 

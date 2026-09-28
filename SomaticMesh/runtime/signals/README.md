@@ -105,7 +105,7 @@ of inactivity. The default origin cap is 512; this is configurable with
 fails the waiter; publication rejects a full egress before delivering locally.
 Ingress forwarding is best effort and counts congestion drops.
 
-TTL is decremented for time spent in SomaticMesh transport queues and checked while
+TTL is decremented for time spent in Primitive Fabric transport queues and checked while
 waiting in subscriptions. It is not a synchronized wall-clock deadline: radio,
 DDS and intermediary buffering can add time. Hops default to 8, maximum 16.
 These are bounded transient messages, not a durable delivery/replay system.

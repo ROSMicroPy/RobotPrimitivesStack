@@ -1,6 +1,6 @@
 # Device provisioning and bootstrap
 
-**Design proposal.** This page defines the intended Somatic Mesh and Loom provisioning,
+**Design proposal.** This page defines the intended Primitive Fabric and Loom provisioning,
 update, and coordinated startup model. The update receiver, deployment inventory,
 and robot-wide startup gate described here are not yet implemented. See
 [Multiple Devices](deployment.html) for the current installation workflow.

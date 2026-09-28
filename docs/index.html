@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Overview · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Overview">
+<title>Overview · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Overview">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
 <div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Start here</div><article><h1 id="somatic-mesh">Somatic Mesh<a class="headerlink" href="#somatic-mesh" title="Permanent link">¶</a></h1>
+<main id="main"><div class="eyebrow">Start here</div><article><h1 id="primitive-fabric">Primitive Fabric<a class="headerlink" href="#primitive-fabric" title="Permanent link">¶</a></h1>
 <p><strong>A distributed compute framework and management system for small devices.</strong></p>
 <p><em>Design in The Loom. Bring Actors and Behaviors to life across the Fabric.</em></p>
-<p>Somatic Mesh coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.</p>
+<p>Primitive Fabric coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.</p>
 <p>ROSMicroPy provides the embedded ROS foundation. ROS interfaces connect the Fabric to robots and other ROS participants. ESP-NOW lets local devices cooperate without an access point or IP configuration, with bounded relaying for configured mesh deployments.</p>
 <h2 id="understand-the-system">Understand the system<a class="headerlink" href="#understand-the-system" title="Permanent link">¶</a></h2>
 <ul>
@@ -30,12 +30,12 @@
 </ul>
 <h2 id="management-roadmap">Management roadmap<a class="headerlink" href="#management-roadmap" title="Permanent link">¶</a></h2>
 <p><a href="fabric-management.html">Fabric management</a>, <a href="bootstrap.html">bootstrap</a>, and <a href="registries.html">software registries</a> specify planned placement, inventory, readiness, code delivery, and recovery responsibilities. They are design documents; automatic Actor relocation and stateful recovery are not runtime features.</p>
-<p>Somatic Mesh is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.</p></article>
+<p>Primitive Fabric is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="getting-started.html"><small>Next</small>Getting Started</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#somatic-mesh">Somatic Mesh</a><ul>
+<li><a href="#primitive-fabric">Primitive Fabric</a><ul>
 <li><a href="#understand-the-system">Understand the system</a></li>
 <li><a href="#run-a-deployment">Run a deployment</a></li>
 <li><a href="#management-roadmap">Management roadmap</a></li>
