@@ -1,22 +1,21 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Service &amp; app registries · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Service &amp; app registries">
+<title>Software registry design · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Software registry design">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html" aria-current="page">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
-<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="service-and-app-registries">Service and app registries<a class="headerlink" href="#service-and-app-registries" title="Permanent link">¶</a></h1>
-<p>The Loom is the proposed name for Robot Architect. Somatic Mesh will also need versioned Behavior definitions and their compatibility requirements. The service/app registry below is the proposed packaging foundation; it does not yet define a Behavior schema or establish Actor placement and recovery.</p>
-<p><strong>Design proposal.</strong> This page defines the intended Somatic Mesh and Loom registry
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html" aria-current="page">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Architecture</div><article><h1 id="service-and-behavior-registries">Service and behavior registries<a class="headerlink" href="#service-and-behavior-registries" title="Permanent link">¶</a></h1>
+<p><strong>Design proposal.</strong> This page defines the intended Primitive Fabric and Loom registry
 model. Registry schemas, publishing automation, multi-registry discovery, and
 deployment locking described here are not yet implemented. JSON examples are
 proposed formats, not inputs supported by the current runtime.</p>
 <h2 id="available-software-and-observed-devices">Available software and observed devices<a class="headerlink" href="#available-software-and-observed-devices" title="Permanent link">¶</a></h2>
-<p>A software registry lists services and apps available to install. The runtime
+<p>A software registry lists services and actors available to install. The runtime
 catalog lists nodes and capabilities actually observed on the robot. The Loom
 uses both to display desired configuration alongside installed state.</p>
 <table>
@@ -29,10 +28,10 @@ uses both to display desired configuration alongside installed state.</p>
 <tbody>
 <tr>
 <td>Registry index</td>
-<td>Which services and apps are available?</td>
+<td>Which services and actors are available?</td>
 </tr>
 <tr>
-<td>Versioned service/app descriptor</td>
+<td>Versioned service/behavior descriptor</td>
 <td>What does this version do, require, and support?</td>
 </tr>
 <tr>
@@ -49,8 +48,8 @@ uses both to display desired configuration alongside installed state.</p>
 </tr>
 </tbody>
 </table>
-<p>One package may expose several selectable services or apps. Registry entries
-represent those components and reference their installation packages. Each app
+<p>One package may expose several selectable services or actors. Registry entries
+represent those components and reference their installation packages. Each behavior
 needs metadata for its entry point, configuration, and required capabilities,
 just as services need their component contracts.</p>
 <h2 id="one-descriptor-per-component-and-published-version">One descriptor per component and published version<a class="headerlink" href="#one-descriptor-per-component-and-published-version" title="Permanent link">¶</a></h2>
@@ -58,7 +57,7 @@ just as services need their component contracts.</p>
 historical source versions. Publishing creates an immutable descriptor for each
 released component version; authors do not maintain one growing central list.</p>
 <pre><code class="language-text">Source repository:
-  PrimitiveFabric/services/motor_control/
+  SomaticMesh/services/motor_control/
     component.yaml
     package.json
     src/...
@@ -69,7 +68,7 @@ Published registry:
     index.json
     0.4.0.json
     0.5.0.json
-  apps/slide_commands/
+  actors/slide_commands/
     index.json
     0.1.0.json
 </code></pre>
@@ -110,19 +109,19 @@ implement interface version <code>1</code>.</p>
 <p>Illustrative version descriptor fragment; the IDs and compatibility range below
 are examples, not a claim about the current linear-slide contract:</p>
 <pre><code class="language-json">{
-  &quot;schema&quot;: &quot;rp.registry.service/v1&quot;,
-  &quot;id&quot;: &quot;rp.linear_slide&quot;,
+  &quot;schema&quot;: &quot;somatic.registry.service/v1&quot;,
+  &quot;id&quot;: &quot;somatic.linear_slide&quot;,
   &quot;version&quot;: &quot;0.3.0&quot;,
   &quot;source&quot;: {
     &quot;repository&quot;: &quot;ROSMicroPy/RobotPrimitivesStack&quot;,
     &quot;commit&quot;: &quot;&lt;full-source-commit-sha&gt;&quot;,
-    &quot;package&quot;: &quot;PrimitiveFabric/services/linear_slide/package.json&quot;
+    &quot;package&quot;: &quot;SomaticMesh/services/linear_slide/package.json&quot;
   },
   &quot;dependencies&quot;: {
     &quot;services&quot;: [
       {
         &quot;role&quot;: &quot;motor&quot;,
-        &quot;service&quot;: &quot;rp.motor_control&quot;,
+        &quot;service&quot;: &quot;somatic.motor_control&quot;,
         &quot;version&quot;: &quot;&gt;=0.4.0 &lt;0.5.0&quot;,
         &quot;interface&quot;: &quot;motion.motion_actuator&quot;,
         &quot;interface_version&quot;: 1,
@@ -160,11 +159,11 @@ Testing builds need commit-qualified identities because several commits may shar
 the same development version. Show the selected branch and resolved commit in
 The Loom so users can distinguish a moving source from an installed build.</p>
 <p>Same-repository dependencies resolve consistently to the selected snapshot unless
-explicitly overridden. Existing package references to <code>archdef</code> must be accounted
-for by the resolver; selecting a testing branch must not silently mix its code
-with dependency code from another branch.</p>
+explicitly overridden. The resolver must account for dependency Git references;
+selecting a testing branch must not silently mix its code with dependency code
+from another branch.</p>
 <h2 id="multiple-registries-and-private-sources">Multiple registries and private sources<a class="headerlink" href="#multiple-registries-and-private-sources" title="Permanent link">¶</a></h2>
-<p>The Loom supports several enabled sources and presents their apps and services
+<p>The Loom supports several enabled sources and presents their actors and services
 in one searchable palette, with their origin visible. Each source has a stable
 registry identity, display name, index URL, optional Git ref, optional credential
 reference, and enabled state. Arbitrary HTTP registries need not expose Git refs.</p>
@@ -172,9 +171,9 @@ reference, and enabled state. Arbitrary HTTP registries need not expose Git refs
 <pre><code class="language-json">{
   &quot;registries&quot;: [
     {
-      &quot;id&quot;: &quot;rpstack&quot;,
-      &quot;name&quot;: &quot;RPStack&quot;,
-      &quot;url&quot;: &quot;https://registry.example.org/rpstack/index.json&quot;,
+      &quot;id&quot;: &quot;somatic_mesh&quot;,
+      &quot;name&quot;: &quot;Primitive Fabric&quot;,
+      &quot;url&quot;: &quot;https://registry.example.org/somatic_mesh/index.json&quot;,
       &quot;enabled&quot;: true
     },
     {
@@ -213,7 +212,7 @@ possible only when all exact locked artifacts are cached and verified. Refreshin
 the palette does not modify an existing deployment; adopting a new version is a
 separate deployment change, whether manual or governed by an update policy.</p>
 <h2 id="integration-with-the-loom">Integration with The Loom<a class="headerlink" href="#integration-with-the-loom" title="Permanent link">¶</a></h2>
-<p>Current Robot Architect discovery scans local <code>component.yaml</code> files. Registry discovery
+<p>The Loom discovery scans local <code>component.yaml</code> files. Registry discovery
 should become an additional source feeding that component palette. Local metadata
 remains useful during development; identify it explicitly and capture its exact
 contents when creating a deployment rather than presenting uncommitted code as a
@@ -226,10 +225,10 @@ and readiness, and <a href="services.html">Services level</a> for current capabi
 <li><a href="https://docs.github.com/rest/guides/best-practices-for-integrators">GitHub REST API best practices</a>: conditional requests and caching.</li>
 </ul></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="bootstrap.html"><small>Previous</small>Provisioning &amp; bootstrap</a><a href="deployment.html"><small>Next</small>Multiple Devices</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
-<li><a href="#service-and-app-registries">Service and app registries</a><ul>
+<li><a href="#service-and-behavior-registries">Service and behavior registries</a><ul>
 <li><a href="#available-software-and-observed-devices">Available software and observed devices</a></li>
 <li><a href="#one-descriptor-per-component-and-published-version">One descriptor per component and published version</a></li>
 <li><a href="#dependencies-and-versions">Dependencies and versions</a></li>

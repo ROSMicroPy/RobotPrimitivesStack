@@ -1,11 +1,9 @@
 # Services and capabilities
 
-In Somatic Mesh, Actors will use capabilities to perform their assigned Behaviors. Services remain the concrete capability providers; a driver, adapter, or composite does not need its own Actor identity. The contracts and examples below are implemented service APIs, independent of the proposed Actor layer.
-
 Services expose hardware-independent capabilities. A component contract describes configuration, lifecycle hooks, operations, required/provided interfaces, implementation choices, and tests.
 
-For planned publishing and discovery through The Loom (currently Robot Architect), see
-[Service and app registries](registries.html). That design adds immutable version
+For planned publishing and discovery through The Loom, see
+[Service and behavior registries](registries.html). That design adds immutable version
 records and explicit dependency resolution across public and private sources.
 
 ## Drivers, adapters, composites
@@ -56,4 +54,4 @@ The manifest is an allowlist, not just documentation. Keep the declared operatio
 4. Exercise it with fake capability providers on the host.
 5. Assemble it in a node manifest with explicit hardware resources and bindings.
 
-Use cooperative waits for device readiness and stop physical work in cancellation/error cleanup. Keep installation-specific offsets in adapters and application sequencing in apps or flows.
+Use cooperative waits for device readiness and stop physical work in cancellation/error cleanup. Keep installation-specific offsets in adapters and application sequencing in actors or flows.

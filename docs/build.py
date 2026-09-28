@@ -31,10 +31,10 @@ for index, page in enumerate(nav):
     title = html.escape(page['title'])
     output = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title} · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: {title}">
+<title>{title} · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: {title}">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
@@ -42,7 +42,7 @@ for index, page in enumerate(nav):
 <div id="results" aria-live="polite"></div><nav aria-label="Documentation">{''.join(links)}</nav></aside>
 <main id="main"><div class="eyebrow">{html.escape(page['group'])}</div><article>{body}</article>
 <nav class="pager" aria-label="Adjacent pages">{pager}</nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2>{md.toc}</aside></div>
 <script type="module">
 const diagrams = document.querySelectorAll('.mermaid');

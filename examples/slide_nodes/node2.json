@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "move-once",
   "identity": {
     "entity": "SlideDemo",
@@ -15,26 +15,27 @@
     "transports": [
       {
         "id": "link",
-        "entry_point": "rpstack.signals.inprocess:InProcessTransport"
+        "entry_point": "somatic_mesh.signals.inprocess:InProcessTransport"
       }
     ]
   },
-  "apps": [
+  "actors": [
     {
       "id": "move",
-      "entry_point": "rpstack.apps.slide_commands:MoveOnceApp",
       "mode": "oneshot",
       "config": {
         "target_node": "node1",
         "position_mm": 100,
         "timeout_s": 30
-      }
+      },
+      "behavior": "somatic_mesh.behaviors.slide_commands:MoveOnceBehavior",
+      "version": "0.1.0"
     }
   ],
   "runtime": [
     {
       "id": "catalog",
-      "entry_point": "rpstack.catalog:Catalog"
+      "entry_point": "somatic_mesh.catalog:Catalog"
     }
   ]
 }

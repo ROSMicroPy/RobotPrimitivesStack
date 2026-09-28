@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "Robot gateway",
   "identity": {
     "entity": "Robie1",
@@ -15,7 +15,7 @@
     "transports": [
       {
         "id": "mesh",
-        "entry_point": "rpstack.espnow:EspNowTransport",
+        "entry_point": "somatic_mesh.espnow:EspNowTransport",
         "relay": true
       }
     ]
@@ -23,7 +23,7 @@
   "runtime": [
     {
       "id": "wifi",
-      "entry_point": "rpstack.node_runtime.network:WifiService",
+      "entry_point": "somatic_mesh.fabric_node.network:WifiService",
       "config": {
         "ssid_env": "WIFI_SSID",
         "password_env": "WIFI_PASSWORD"
@@ -31,21 +31,22 @@
     },
     {
       "id": "http",
-      "entry_point": "rpstack.micropyserver:NodeRestApi"
+      "entry_point": "somatic_mesh.micropyserver:FabricRestApi"
     },
     {
       "id": "catalog",
-      "entry_point": "rpstack.catalog:Catalog"
+      "entry_point": "somatic_mesh.catalog:Catalog"
     }
   ],
-  "apps": [
+  "actors": [
     {
       "id": "gateway",
-      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
       "requires": [
         "http",
         "catalog"
-      ]
+      ],
+      "behavior": "somatic_mesh.behaviors.robot_gateway:GatewayBehavior",
+      "version": "0.1.0"
     }
   ]
 }

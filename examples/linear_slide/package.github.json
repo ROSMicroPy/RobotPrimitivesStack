@@ -1,5 +1,5 @@
 {
-  "name": "rp-test-linear-slide",
+  "name": "somatic-test-linear-slide",
   "version": "1.0.1",
   "urls": [
     [
@@ -13,52 +13,52 @@
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/foundation/interfaces",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/interfaces",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/motor_control",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/motor_control",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_sensor",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/distance_sensor",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/distance_to_position",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/distance_to_position",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/services/linear_slide",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/linear_slide",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/control/http",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/control/http",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/execution_engine",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/execution_engine",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/node_runtime",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/fabric_node",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/control/shell",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/control/shell",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/platform/env",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/platform/env",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/apps/robot_gateway",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/behaviors/robot_gateway",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/apps/slide_commands",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/behaviors/slide_commands",
+      "main"
     ]
   ]
 }

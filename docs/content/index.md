@@ -1,36 +1,29 @@
-# Somatic Mesh
+# Primitive Fabric
 
 **A distributed compute framework and management system for small devices.**
 
 *Design in The Loom. Bring Actors and Behaviors to life across the Fabric.*
 
-Somatic Mesh connects small devices into coordinated systems. Its intended model assigns Behaviors to Actors and deploys them across a Fabric of suitable runtime hosts. The framework manages execution, communication, and software deployment, with a roadmap for recovery and resource-aware placement.
+Primitive Fabric coordinates small devices through Actors and Behaviors. A Fabric Node hosts Actors, provides capability services, and manages operations, workflows, and communication. The Loom authors and observes the system; deployed local sequences run independently of its connection.
 
-## Where the project stands
+ROSMicroPy provides the embedded ROS foundation. ROS interfaces connect the Fabric to robots and other ROS participants. ESP-NOW lets local devices cooperate without an access point or IP configuration, with bounded relaying for configured mesh deployments.
 
-The current implementation is RPStack: manifest-driven logical nodes, reusable capability services, supervised operations, apps, workflows, signals, transports, and discovery. **Actors as a stable runtime abstraction, automatic placement, and recovery on alternative hosts are proposed work.** Current packages, schemas, commands, and examples retain their RPStack names.
+## Understand the system
 
-The Loom is the proposed name for the Robot Architect authoring and management environment. ILA (Intelligent Loom Assistant) is its proposed assistant. Deployed operation and permitted recovery should be independent of the desktop and internet.
+- [Mental model](concepts.html): Actors, Behaviors, Devices, capabilities, and tasks.
+- [Actors and Behaviors](actors.html): implement a Behavior and assign it to an Actor.
+- [Architecture](architecture.html): package responsibilities and dependency boundaries.
+- [Nodes and manifests](nodes.html): configure resources, services, Actors, workflows, and transports.
 
-## Understand the model
+## Run a deployment
 
-- [Actors, Behaviors, and the Fabric](concepts.html): product concepts and their relationship to current APIs.
-- [Architecture](architecture.html): existing package boundaries and proposed management responsibilities.
-- [Fabric management and recovery](fabric-management.html): placement, ownership, recovery limits, and development sequence.
-- [Nodes and manifests](nodes.html): the supported deployment format and its planned separation into application, hardware, and placement descriptions.
+- [Getting started](getting-started.html): host simulation and first-device installation.
+- [Multiple devices](deployment.html): explicit placement and ESP-NOW configuration.
+- [Linear slide](linear-slide.html) and [API reference](api.html): calibration, commands, and tracked outcomes.
+- [ROS integration](ros-integration.html): ROSMicroPy telemetry and the typed slide action gateway.
 
-## Run what exists today
+## Management roadmap
 
-Start with a host simulation, then install the linear-slide example on an ESP32. Its signal-driven client can run beside the slide service or on a second device. These demonstrate current fixed deployment and capability coordination.
+[Fabric management](fabric-management.html), [bootstrap](bootstrap.html), and [software registries](registries.html) specify planned placement, inventory, readiness, code delivery, and recovery responsibilities. They are design documents; automatic Actor relocation and stateful recovery are not runtime features.
 
-- [Getting started](getting-started.html): simulation and first-device installation.
-- [Multiple devices](deployment.html): explicit placement and transport setup.
-- [Apps and Behaviors](apps.html): current app and workflow implementation patterns.
-- [Linear slide](linear-slide.html) and [API reference](api.html): calibration, operations, and tracked tasks.
-- [ROS 2 integration](ros-integration.html): typed telemetry and the slide action gateway.
-
-## Plan the management layer
-
-[Provisioning and bootstrap](bootstrap.html) proposes identity provisioning, software delivery through The Loom, readiness, and onboard run permission. [Software registries](registries.html) proposes exact version resolution and deployment locks. Both remain designs rather than current installation guarantees.
-
-Somatic Mesh is independent of a specific board or transport. The related StepperNode / Steppin Cube hardware is a potential building block, not the framework itself.
+Primitive Fabric is independent of a particular controller board. StepperNode / Steppin Cube is a related hardware building block for instrumented deployments.

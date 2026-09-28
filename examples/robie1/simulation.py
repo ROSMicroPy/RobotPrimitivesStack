@@ -1,6 +1,6 @@
 """Host-only simulated devices and lossy links for the Robie1 example/tests."""
 import asyncio
-from rpstack.signals import decode
+from somatic_mesh.signals import decode
 
 
 class MemoryTransport:

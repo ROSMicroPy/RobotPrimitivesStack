@@ -1,0 +1,19 @@
+{
+  "name": "somatic-linear-slide",
+  "version": "0.4.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/linear_slide/__init__.py",
+      "src/somatic_mesh/linear_slide/__init__.py"
+    ],
+    [
+      "somatic_mesh/linear_slide/service.py",
+      "src/somatic_mesh/linear_slide/service.py"
+    ]
+  ],
+  "deps": []
+}

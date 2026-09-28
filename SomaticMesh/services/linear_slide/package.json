@@ -1,0 +1,40 @@
+{
+  "name": "somatic-linear-slide",
+  "version": "0.4.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/linear_slide/__init__.py",
+      "src/somatic_mesh/linear_slide/__init__.py"
+    ],
+    [
+      "somatic_mesh/linear_slide/service.py",
+      "src/somatic_mesh/linear_slide/service.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/interfaces",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/motor_control",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/distance_sensor",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/services/distance_to_position",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

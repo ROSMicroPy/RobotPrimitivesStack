@@ -4,10 +4,10 @@
 `run_manifest("/lib/linear_slide_manifest.json")`. No application assembly or pin
 configuration is required in Python.
 
-The `rp.node/v1` manifest contains:
+The `somatic.node/v1` manifest contains:
 
 - `resources`: shared platform resources (the carriage I2C bus).
-- `components`: embedded `rp.service/v1` contracts, including driver entry points.
+- `components`: embedded `somatic.service/v1` contracts, including driver entry points.
 - `services`: named instances, selected implementations, constructor arguments,
   configuration, and explicit capability bindings.
 - `runtime`: ordered runtime services: WiFi, HTTP, and the asyncio console.
@@ -39,7 +39,7 @@ interrupted install, rerun the install command to complete it.
 Configure credentials once through the MicroPython REPL before booting:
 
 ```python
-from rpstack.env import setEnv
+from somatic_mesh.env import setEnv
 setEnv("WIFI_SSID", "your-network", True)
 setEnv("WIFI_PASSWORD", "your-password", True)
 ```
@@ -113,7 +113,7 @@ Native I2C transactions remain synchronous bounded calls. Confirm pulse timing
 and stop latency on the target board; use a hardware pulse peripheral for tighter
 timing requirements.
 
-The deployment also runs `rpstack.catalog:Catalog` and the `robot_gateway` app
-on its existing HTTP listener. Query `/api/robot` or use RobotArchitect System.
+The deployment also runs `somatic_mesh.catalog:Catalog` and the `robot_gateway` behavior
+on its existing HTTP listener. Query `/api/robot` or use TheLoom System.
 The default local signal route lists only this node; configure a mesh transport
 and route to discover the complete robot.

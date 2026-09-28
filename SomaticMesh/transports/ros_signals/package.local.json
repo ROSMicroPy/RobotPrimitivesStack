@@ -1,0 +1,23 @@
+{
+  "name": "somatic-ros-signals",
+  "version": "0.2.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/ros_signals/__init__.py",
+      "src/somatic_mesh/ros_signals/__init__.py"
+    ],
+    [
+      "somatic_mesh/ros_signals/transport.py",
+      "src/somatic_mesh/ros_signals/transport.py"
+    ],
+    [
+      "somatic_mesh/ros_signals/typed.py",
+      "src/somatic_mesh/ros_signals/typed.py"
+    ]
+  ],
+  "deps": []
+}

@@ -1,38 +1,34 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Multiple Devices · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Multiple Devices">
+<title>Multiple Devices · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Multiple Devices">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html" aria-current="page">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html" aria-current="page">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Guides</div><article><h1 id="multiple-devices">Multiple Devices<a class="headerlink" href="#multiple-devices" title="Permanent link">¶</a></h1>
-<p>Somatic Mesh currently uses explicit logical-node placement. This guide moves installation roles between configured devices; it does not provide automatic Actor relocation. The proposed <a href="fabric-management.html">Fabric management layer</a> will separate Actor identity from placement and control recovery.</p>
-<p>This guide describes the current manual installation workflow. See the
-<a href="bootstrap.html">provisioning and bootstrap proposal</a> for planned USB identity
-assignment, wireless software maintenance through The Loom, and robot-wide
-readiness checks.</p>
+<p>Place Fabric Nodes and their Actors explicitly on devices. ESP-NOW carries signals between local and remote participants without an access point or IP configuration. Nodes on the same device share the radio and event loop.</p>
 <p>Install the <strong>same</strong> <code>examples/slide_nodes/package.json</code> on both boards. The device manifests use a shared ESP-NOW transport that delivers between local logical nodes and broadcasts over the radio.</p>
-<h2 id="the-loom-and-current-gateway-discovery">The Loom and current gateway discovery<a class="headerlink" href="#the-loom-and-current-gateway-discovery" title="Permanent link">¶</a></h2>
-<p>Both resident roles include Wi-Fi, HTTP, catalog and the gateway app. Configure
-<code>WIFI_SSID</code> and <code>WIFI_PASSWORD</code> through <code>rpstack.env.setEnv</code> on each board before
+<h2 id="the-loom-and-gateway-discovery">The Loom and gateway discovery<a class="headerlink" href="#the-loom-and-gateway-discovery" title="Permanent link">¶</a></h2>
+<p>Both resident roles include Wi-Fi, HTTP, catalog and the gateway behavior. Configure
+<code>WIFI_SSID</code> and <code>WIFI_PASSWORD</code> through <code>somatic_mesh.env.setEnv</code> on each board before
 startup. Match the access point channel in <code>slide_node1.json</code>, <code>slide_node2.json</code>
 and <code>slide_client_host.json</code> (default 6).</p>
 <p>The slide role hosts the gateway on node1. The client role starts a persistent
-<code>node2-host</code> gateway and creates one-off node2 apps for commands. Connect
-the current Robot Architect extension's System view (The Loom's proposed product identity) to the URL printed at startup, or read
+<code>node2-host</code> gateway and creates one-off node2 actors for commands. Connect
+The Loom's System view to the URL printed at startup, or read
 <code>slide_nodes.status()['gateway_url']</code>. <code>/api/robot</code> includes discovered peer nodes,
-services, capabilities and apps; it excludes deployment credentials.</p>
+services, capabilities and actors; it excludes deployment credentials.</p>
 <p>Catalogs announce every 5 seconds and expire peers after 20 seconds. A short-lived
 node2 may disappear before a full profile is received; its resident host remains
 available. Catalog discovery does not authorize remote operation execution.</p>
 <h2 id="one-device-or-two">One device or two<a class="headerlink" href="#one-device-or-two" title="Permanent link">¶</a></h2>
 <pre class="mermaid">flowchart LR
     subgraph A[Device A]
-        N1[Node1: slide services and command app]
+        N1[Node1: slide services and command behavior]
     end
     subgraph B[Device B]
         N2[Node2: one-off move client]
@@ -59,12 +55,12 @@ slide_nodes.demo(100)
 <h2 id="stop-behavior">Stop behavior<a class="headerlink" href="#stop-behavior" title="Permanent link">¶</a></h2>
 <p><code>slide_nodes.stop()</code> on A stops the slide node and its motion. On B it stops only B's client host. Ctrl-C cancels the local wait; it does not guarantee a remote move stopped. After timeout, inspect/stop the provider before deciding whether to issue another command.</p>
 <p>The client's <code>status()['node1'] == 'remote'</code> describes placement, not continuous remote health monitoring. The client performs a readiness exchange for each command.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="registries.html"><small>Previous</small>Service &amp; app registries</a><a href="linear-slide.html"><small>Next</small>Linear Slide</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<nav class="pager" aria-label="Adjacent pages"><a href="registries.html"><small>Previous</small>Software registry design</a><a href="linear-slide.html"><small>Next</small>Linear Slide</a></nav>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#multiple-devices">Multiple Devices</a><ul>
-<li><a href="#the-loom-and-current-gateway-discovery">The Loom and current gateway discovery</a></li>
+<li><a href="#the-loom-and-gateway-discovery">The Loom and gateway discovery</a></li>
 <li><a href="#one-device-or-two">One device or two</a></li>
 <li><a href="#radio-and-ownership">Radio and ownership</a></li>
 <li><a href="#stop-behavior">Stop behavior</a></li>

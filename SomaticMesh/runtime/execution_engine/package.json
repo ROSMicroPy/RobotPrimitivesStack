@@ -1,0 +1,40 @@
+{
+  "name": "somatic-execution-engine",
+  "version": "1.0.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/execution_engine/__init__.py",
+      "src/somatic_mesh/execution_engine/__init__.py"
+    ],
+    [
+      "somatic_mesh/execution_engine/distributed.py",
+      "src/somatic_mesh/execution_engine/distributed.py"
+    ],
+    [
+      "somatic_mesh/execution_engine/engine.py",
+      "src/somatic_mesh/execution_engine/engine.py"
+    ],
+    [
+      "somatic_mesh/execution_engine/tasks.py",
+      "src/somatic_mesh/execution_engine/tasks.py"
+    ],
+    [
+      "somatic_mesh/execution_engine/behavior.py",
+      "src/somatic_mesh/execution_engine/behavior.py"
+    ]
+  ],
+  "deps": [
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/signals",
+      "main"
+    ],
+    [
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/foundation/support",
+      "main"
+    ]
+  ]
+}

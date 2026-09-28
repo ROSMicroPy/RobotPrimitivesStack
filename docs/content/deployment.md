@@ -1,26 +1,21 @@
 # Multiple Devices
 
-Somatic Mesh currently uses explicit logical-node placement. This guide moves installation roles between configured devices; it does not provide automatic Actor relocation. The proposed [Fabric management layer](fabric-management.html) will separate Actor identity from placement and control recovery.
-
-This guide describes the current manual installation workflow. See the
-[provisioning and bootstrap proposal](bootstrap.html) for planned USB identity
-assignment, wireless software maintenance through The Loom, and robot-wide
-readiness checks.
+Place Fabric Nodes and their Actors explicitly on devices. ESP-NOW carries signals between local and remote participants without an access point or IP configuration. Nodes on the same device share the radio and event loop.
 
 Install the **same** `examples/slide_nodes/package.json` on both boards. The device manifests use a shared ESP-NOW transport that delivers between local logical nodes and broadcasts over the radio.
 
-## The Loom and current gateway discovery
+## The Loom and gateway discovery
 
-Both resident roles include Wi-Fi, HTTP, catalog and the gateway app. Configure
-`WIFI_SSID` and `WIFI_PASSWORD` through `rpstack.env.setEnv` on each board before
+Both resident roles include Wi-Fi, HTTP, catalog and the gateway behavior. Configure
+`WIFI_SSID` and `WIFI_PASSWORD` through `somatic_mesh.env.setEnv` on each board before
 startup. Match the access point channel in `slide_node1.json`, `slide_node2.json`
 and `slide_client_host.json` (default 6).
 
 The slide role hosts the gateway on node1. The client role starts a persistent
-`node2-host` gateway and creates one-off node2 apps for commands. Connect
-the current Robot Architect extension's System view (The Loom's proposed product identity) to the URL printed at startup, or read
+`node2-host` gateway and creates one-off node2 actors for commands. Connect
+The Loom's System view to the URL printed at startup, or read
 `slide_nodes.status()['gateway_url']`. `/api/robot` includes discovered peer nodes,
-services, capabilities and apps; it excludes deployment credentials.
+services, capabilities and actors; it excludes deployment credentials.
 
 Catalogs announce every 5 seconds and expire peers after 20 seconds. A short-lived
 node2 may disappear before a full profile is received; its resident host remains
@@ -31,7 +26,7 @@ available. Catalog discovery does not authorize remote operation execution.
 ```mermaid
 flowchart LR
     subgraph A[Device A]
-        N1[Node1: slide services and command app]
+        N1[Node1: slide services and command behavior]
     end
     subgraph B[Device B]
         N2[Node2: one-off move client]

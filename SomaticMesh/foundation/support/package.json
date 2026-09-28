@@ -1,0 +1,15 @@
+{
+  "name": "somatic-support",
+  "version": "0.1.0",
+  "deps": [],
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/support/__init__.py",
+      "src/somatic_mesh/support/__init__.py"
+    ]
+  ]
+}

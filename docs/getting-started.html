@@ -1,16 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Getting Started · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Getting Started">
+<title>Getting Started · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Getting Started">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html" aria-current="page">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html" aria-current="page">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Start here</div><article><h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">¶</a></h1>
-<p>These steps run the current RPStack foundation of Somatic Mesh. Package paths, imports, node manifests, and launcher commands retain their existing names. The examples use explicitly placed services and apps; they do not require or implement the proposed Actor management layer.</p>
 <h2 id="run-without-hardware">Run without hardware<a class="headerlink" href="#run-without-hardware" title="Permanent link">¶</a></h2>
 <p>Clone the repository and run these commands from its root using Python 3:</p>
 <pre><code class="language-sh">python3 examples/slide_nodes/demo.py
@@ -67,12 +66,12 @@ mpremote repl
 <p>For a specific connected board, use <code>mpremote connect /dev/ttyACM0 mip install package.json</code>. The package installs the launcher, both node manifests, and its local dependencies. It does not replace <code>main.py</code>. Reset after installation so imported modules are refreshed. Preserve custom manifest settings before reinstalling.</p>
 <h2 id="configure-gateway-networking">Configure gateway networking<a class="headerlink" href="#configure-gateway-networking" title="Permanent link">¶</a></h2>
 <p>Before startup, configure the board's Wi-Fi credentials:</p>
-<pre><code class="language-python">from rpstack.env import setEnv
+<pre><code class="language-python">from somatic_mesh.env import setEnv
 setEnv('WIFI_SSID', 'your-network', True)
 setEnv('WIFI_PASSWORD', 'your-password', True)
 </code></pre>
 <p>The access point channel must match the ESP-NOW channel (default 6) in all three
-installed manifests. Startup prints the HTTP gateway URL for RobotArchitect.</p>
+installed manifests. Startup prints the HTTP gateway URL for TheLoom.</p>
 <h2 id="start-and-observe">Start and observe<a class="headerlink" href="#start-and-observe" title="Permanent link">¶</a></h2>
 <p>At the device's native prompt:</p>
 <pre><code class="language-python">import slide_nodes
@@ -88,7 +87,7 @@ slide_nodes.stop()
 </code></pre>
 <p>Only proceed to the target move after calibration succeeds. See <a href="linear-slide.html">Linear Slide</a> for the calibration method and <a href="troubleshooting.html">Troubleshooting</a> for noisy readings. To keep the slide service on one device and run commands from another, follow <a href="deployment.html">Multiple Devices</a>.</p></article>
 <nav class="pager" aria-label="Adjacent pages"><a href="index.html"><small>Previous</small>Overview</a><a href="concepts.html"><small>Next</small>The mental model</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#getting-started">Getting Started</a><ul>

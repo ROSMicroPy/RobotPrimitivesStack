@@ -1,0 +1,23 @@
+{
+  "name": "somatic-robot-gateway",
+  "version": "0.1.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/__init__.py",
+      "src/somatic_mesh/behaviors/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/robot_gateway/__init__.py",
+      "src/somatic_mesh/behaviors/robot_gateway/__init__.py"
+    ],
+    [
+      "somatic_mesh/behaviors/robot_gateway/gateway.py",
+      "src/somatic_mesh/behaviors/robot_gateway/gateway.py"
+    ]
+  ],
+  "deps": []
+}

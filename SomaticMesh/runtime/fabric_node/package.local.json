@@ -1,0 +1,51 @@
+{
+  "name": "somatic-fabric-node",
+  "version": "0.1.0",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/__init__.py",
+      "src/somatic_mesh/fabric_node/__init__.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/host.py",
+      "src/somatic_mesh/fabric_node/host.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/manifest.py",
+      "src/somatic_mesh/fabric_node/manifest.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/network.py",
+      "src/somatic_mesh/fabric_node/network.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/node.py",
+      "src/somatic_mesh/fabric_node/node.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/registry.py",
+      "src/somatic_mesh/fabric_node/registry.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/supervisor.py",
+      "src/somatic_mesh/fabric_node/supervisor.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/testing.py",
+      "src/somatic_mesh/fabric_node/testing.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/validation.py",
+      "src/somatic_mesh/fabric_node/validation.py"
+    ],
+    [
+      "somatic_mesh/fabric_node/actor.py",
+      "src/somatic_mesh/fabric_node/actor.py"
+    ]
+  ],
+  "deps": []
+}

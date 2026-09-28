@@ -1,17 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Provisioning &amp; bootstrap · Somatic Mesh</title><meta name="description" content="Somatic Mesh documentation: Provisioning &amp; bootstrap">
+<title>Provisioning &amp; bootstrap · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Provisioning &amp; bootstrap">
 <link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><a class="brand" href="index.html"><span class="mark">SM</span> Somatic Mesh <small>Documentation</small></a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
 <button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
 <a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
 <div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
 <input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
-<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="apps.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html" aria-current="page">Provisioning &amp; bootstrap</a><a href="registries.html">Service &amp; app registries</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html" aria-current="page">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
 <main id="main"><div class="eyebrow">Architecture</div><article><h1 id="device-provisioning-and-bootstrap">Device provisioning and bootstrap<a class="headerlink" href="#device-provisioning-and-bootstrap" title="Permanent link">¶</a></h1>
-<p><strong>Naming:</strong> The Loom is the proposed product name for Robot Architect. This design extends Somatic Mesh's management layer; existing extension names, schemas, and package paths are unchanged.</p>
-<p><strong>Design proposal.</strong> This page defines the intended Somatic Mesh and Loom provisioning,
+<p><strong>Design proposal.</strong> This page defines the intended Primitive Fabric and Loom provisioning,
 update, and coordinated startup model. The update receiver, deployment inventory,
 and robot-wide startup gate described here are not yet implemented. See
 <a href="deployment.html">Multiple Devices</a> for the current installation workflow.</p>
@@ -85,11 +84,11 @@ physical target, but a device binding is still needed to detect the wrong profil
 </tr>
 </tbody>
 </table>
-<p>In the target model, application definitions describe Actors and Behaviors, device profiles describe hardware, and deployment plans assign hosts and exact software. The current node manifest combines services, apps, configuration, and bindings. The Loom
+<p>Application definitions should describe Actors and Behaviors; device profiles should describe hardware; deployment plans should assign hosts and exact software. A node manifest combines concrete services, Actors, configuration, and bindings. The Loom
 binds it to the intended device during provisioning. Replacing a controller
 requires explicitly rebinding its logical roles to the replacement device.
 Wireless software maintenance does not silently reassign identity or hardware.</p>
-<p>Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; current service/app composition is the starting point.
+<p>Authoring Actors and Behaviors in The Loom should define the application independently of placement. Assigning hosts and capability bindings should produce the deployment plan; the deployment compiler should emit node manifests.
 Before provisioning, The Loom validates dependencies, driver compatibility, pin
 and peripheral ownership, and estimated storage and memory needs. A provisioned
 device can appear as awaiting connection before it advertises an actual profile.</p>
@@ -160,7 +159,7 @@ physical activation over an unreliable network; mechanisms requiring that
 guarantee need an appropriate shared interlock.</p>
 <h2 id="critical-faults-and-safe-states">Critical faults and safe states<a class="headerlink" href="#critical-faults-and-safe-states" title="Permanent link">¶</a></h2>
 <p>Fault handling belongs in the permanent bootstrap supervisor, independent of
-optional apps. On a critical fault, a device immediately applies its local safe
+optional actors. On a critical fault, a device immediately applies its local safe
 state and then reports the fault. It never waits for an acknowledgment before
 acting. The robot supervisor revokes permission; other devices stop on receipt
 or when their permission expires if the notification is lost.</p>
@@ -173,23 +172,23 @@ deterministic physical stop deadline. Where such a deadline is required, use
 appropriate hardware interlocks or watchdogs and validate timing on the hardware.</p>
 <h2 id="multiple-logical-nodes-on-one-device">Multiple logical nodes on one device<a class="headerlink" href="#multiple-logical-nodes-on-one-device" title="Permanent link">¶</a></h2>
 <p>Several manifests can describe several logical nodes on one controller, as
-supported by <code>NodeHost</code>. One device-level supervisor must validate their combined
+supported by <code>DeviceHost</code>. One device-level supervisor must validate their combined
 package requirements, memory budget, pins, and exclusive peripherals. They share
 an interpreter and filesystem, so incompatible versions of a package cannot be
 installed independently for each node.</p>
 <p>For the initial design, a critical failure in any required local node invalidates
 the device's readiness. Multiple manifests are not isolated failure domains.</p>
-<h2 id="relationship-to-the-current-runtime">Relationship to the current runtime<a class="headerlink" href="#relationship-to-the-current-runtime" title="Permanent link">¶</a></h2>
-<p>The current Boot Manager sequences startup modules, NodeRuntime manages local
-service lifecycle, and Catalog advertises profiles. Current <code>NodeRuntime.boot()</code>
+<h2 id="runtime-requirements">Runtime requirements<a class="headerlink" href="#runtime-requirements" title="Permanent link">¶</a></h2>
+<p>The Boot Manager sequences startup modules, FabricNode manages local
+service lifecycle, and Catalog advertises profiles. <code>FabricNode.boot()</code>
 starts application services before runtime facilities and signal transports;
 implementing this proposal requires separating management startup, service
-preparation, and gated activation. Current <code>NodeHost</code> startup cleanup does not
+preparation, and gated activation. <code>DeviceHost</code> startup cleanup does not
 establish a robot-wide readiness barrier.</p>
-<p>See <a href="registries.html">Service and app registries</a> for software discovery,
+<p>See <a href="registries.html">Service and behavior registries</a> for software discovery,
 dependency resolution, private sources, and deployment locks.</p></article>
-<nav class="pager" aria-label="Adjacent pages"><a href="ros-integration.html"><small>Previous</small>ROS 2 integration</a><a href="registries.html"><small>Next</small>Service &amp; app registries</a></nav>
-<footer>Somatic Mesh · A distributed compute framework and management system for small devices</footer></main>
+<nav class="pager" aria-label="Adjacent pages"><a href="ros-integration.html"><small>Previous</small>ROS 2 integration</a><a href="registries.html"><small>Next</small>Software registry design</a></nav>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
 <aside class="on-page"><h2>On this page</h2><div class="toc">
 <ul>
 <li><a href="#device-provisioning-and-bootstrap">Device provisioning and bootstrap</a><ul>
@@ -200,7 +199,7 @@ dependency resolution, private sources, and deployment locks.</p></article>
 <li><a href="#coordinated-startup">Coordinated startup</a></li>
 <li><a href="#critical-faults-and-safe-states">Critical faults and safe states</a></li>
 <li><a href="#multiple-logical-nodes-on-one-device">Multiple logical nodes on one device</a></li>
-<li><a href="#relationship-to-the-current-runtime">Relationship to the current runtime</a></li>
+<li><a href="#runtime-requirements">Runtime requirements</a></li>
 </ul>
 </li>
 </ul>

@@ -4,16 +4,16 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-for path in (ROOT / 'RPStack').glob('*/*/src'):
+for path in (ROOT / 'SomaticMesh').glob('*/*/src'):
     sys.path.insert(0, str(path))
-from rpstack.node_runtime.node import NodeRuntime
+from somatic_mesh.fabric_node.node import FabricNode
 
 
 async def main():
     nodes = []
     try:
         for name in ('arm', 'base', 'controller'):
-            node = NodeRuntime.load(str(Path(__file__).with_name(name + '.json')))
+            node = FabricNode.load(str(Path(__file__).with_name(name + '.json')))
             nodes.append(node)
             await node.boot()
         controller = nodes[-1]

@@ -1,7 +1,5 @@
 # Signals
 
-In the target Somatic Mesh model, signals let Actors respond to events and coordinate Behaviors. Today's envelopes address configured entities and logical nodes; stable Actor addressing across placement changes is proposed work. The examples below retain the existing routing contract.
-
 Signals connect publishers and subscribers within an entity. Applications use the same envelope through local delivery, in-process transports, ESP-NOW, or ROS adapters.
 
 See [ROS 2 integration](ros-integration.html) for direct typed ROSMicroPy
@@ -10,7 +8,7 @@ signal envelope remains available alongside those native interfaces.
 
 ## Publish and subscribe
 
-Inside an app with a node reference:
+Inside a Behavior with a node reference:
 
 ```python
 subscription = node.signals.subscribe(
@@ -31,7 +29,7 @@ Create a unique `run_id` for each request. Subscribe before sending so a quick r
 
 ```mermaid
 flowchart LR
-    App[Publishing app] --> Bus[Entity signal bus]
+    Behavior[Publishing behavior] --> Bus[Entity signal bus]
     Bus --> Local[Local subscribers]
     Bus --> Transport[Configured transport]
     Transport --> Peer[Peer node bus]
@@ -44,4 +42,4 @@ Publishing enqueues a bounded message; transport tasks perform network I/O. Sign
 
 Duplicate suppression and bounded relaying do not make physical commands exactly-once across arbitrary failures. The slide demo retries readiness probes but sends each move command once. A lost reply produces a timeout, which does not prove that motion stopped.
 
-Names beginning `_rp.` are reserved for runtime protocols. Application names such as `slide.move` and `motion.target.reached` belong to application contracts.
+Names beginning `_sm.` are reserved for runtime protocols. Application names such as `slide.move` and `motion.target.reached` belong to application contracts.

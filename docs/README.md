@@ -1,6 +1,6 @@
-# Somatic Mesh documentation site
+# Primitive Fabric documentation site
 
-Product prose uses Somatic Mesh, Actors, Behaviors, the Fabric, and The Loom. Describe Actor placement, recovery, ILA, and the new deployment separation as proposals until implemented. Preserve current `rpstack` imports, `PrimitiveFabric/` paths, schema names, commands, and Robot Architect UI references wherever readers need them to operate the existing system.
+Product prose uses Primitive Fabric, Actors, Behaviors, the Fabric, and The Loom. Use the implemented Actor/Behavior APIs directly. Keep automatic placement, recovery, ILA, and deployment separation in design/roadmap pages until implemented. Code snippets and schema identifiers must match the source and examples.
 
 The authored documentation is in `content/`; `navigation.json` defines left-menu
 order and groups. CSS/JavaScript live in `assets/`. The Python builder produces
@@ -42,7 +42,7 @@ pinned in `requirements.txt`. No JavaScript framework or Node build is needed.
 In repository **Settings → Pages → Build and deployment**, select
 **GitHub Actions** as the source. Do not select **Deploy from a branch**:
 GitHub's built-in branch publisher recursively fetches submodules, including
-`RobotArchitect`, which its repository-scoped token cannot access.
+`TheLoom`, which its repository-scoped token cannot access.
 
 The `Documentation Pages` workflow checks out `docs/` without submodules, builds
 and link-checks the site, and verifies that committed generated files are current.

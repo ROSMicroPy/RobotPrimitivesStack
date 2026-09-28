@@ -18,8 +18,8 @@ def _pause():
 
 def _prepare_document(path, log):
     # Imports may recurse through the filesystem and compiler. Keep that work
-    # off the ESP32 worker's C stack, including selected drivers and apps.
-    from rpstack.node_runtime.manifest import load_document, load_entry_point, ServiceManifest
+    # off the ESP32 worker's C stack, including selected drivers and actors.
+    from somatic_mesh.fabric_node.manifest import load_document, load_entry_point, ServiceManifest
     document = load_document(path)
     entries = []
     for spec in document.get('services', {}).values():
@@ -28,10 +28,10 @@ def _prepare_document(path, log):
         implementation = spec.get('implementation')
         if implementation:
             entries.append(manifest.implementation(implementation)['entry_point'])
-    for spec in document.get('runtime', []) + document.get('apps', []):
-        entries.append(spec['entry_point'])
+    for spec in document.get('runtime', []) + document.get('actors', []):
+        entries.append(spec.get('entry_point', spec.get('behavior')))
     for spec in document.get('signals', {}).get('transports', []):
-        entries.append(spec['entry_point'])
+        entries.append(spec.get('entry_point', spec.get('behavior')))
     for entry in entries:
         log('importing ' + entry)
         load_entry_point(entry)
@@ -59,10 +59,10 @@ class _Session:
 
     def prepare(self):
         self.log('loading runtime on foreground stack')
-        from rpstack.support import asyncio
-        from rpstack.node_runtime import NodeRuntime
+        from somatic_mesh.support import asyncio
+        from somatic_mesh.fabric_node import FabricNode
         self.asyncio = asyncio
-        self.node_factory = NodeRuntime
+        self.node_factory = FabricNode
         if self.role == 'slide':
             self.log('loading slide manifest')
             self.provider_document = _prepare_document(self.provider_path, self.log)
@@ -126,7 +126,7 @@ class _Session:
                 address = wifi.wlan.ifconfig()[0] if wifi and wifi.wlan else '127.0.0.1'
                 url = 'http://' + address + ':' + str(http.server.port)
                 self.update(gateway_url=url)
-                self.log('RobotArchitect gateway: ' + url)
+                self.log('The Loom gateway: ' + url)
             if provider is not None:
                 self.update(slide=self.slide_status(provider))
                 self.log('pulse mode: ' + str(self.read()['slide'].get('pulse_mode')) +
@@ -168,19 +168,19 @@ class _Session:
         result = None
         error = None
         try:
-            # At most one demo is active. Copy only the app configuration that
+            # At most one demo is active. Copy only the behavior configuration that
             # this launch changes; retain the preloaded manifest as a template.
             document = dict(self.client_document)
-            document["apps"] = [dict(spec) for spec in document["apps"]]
-            document["apps"][0]["config"] = dict(document["apps"][0].get("config", {}))
-            config = document['apps'][0].setdefault('config', {})
+            document["actors"] = [dict(spec) for spec in document["actors"]]
+            document["actors"][0]["config"] = dict(document["actors"][0].get("config", {}))
+            config = document['actors'][0].setdefault('config', {})
             config.update(position_mm=job['position_mm'], timeout_s=job['timeout_s'],
                           command=job['command'], steps=job['steps'],
                           min_mm=job['min_mm'], max_mm=job['max_mm'])
             client = self.node_factory(document)
             await client.boot()
             await client.wait()
-            result = client.apps['move'].received[-1]['payload']
+            result = client.actors['move'].behavior.received[-1]['payload']
         except asyncio.CancelledError:
             error = 'demo cancelled'
         except Exception as exc:

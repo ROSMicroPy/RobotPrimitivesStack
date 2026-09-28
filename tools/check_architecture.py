@@ -61,7 +61,7 @@ def probe(manifest, script):
 
 # Check every source map before testing representative standalone package installations.
 def main():
-    manifests = [p for base in ('RPStack', 'examples') for p in (ROOT / base).rglob('package*.json')]
+    manifests = [p for base in ('SomaticMesh', 'examples') for p in (ROOT / base).rglob('package*.json')]
     for manifest in manifests:
         document = json.loads(manifest.read_text())
         for _, source in document.get('urls', []):
@@ -75,35 +75,37 @@ def main():
     for manifest in manifests:
         with tempfile.TemporaryDirectory() as directory:
             stage(manifest, Path(directory))
-    lean = "\nassert not any(n.startswith(('rpstack.execution_engine', 'rpstack.signals', 'rpstack.node_runtime')) for n in sys.modules)\n"
-    probe('RPStack/foundation/support/package.json', 'from rpstack.support import asyncio, call, now_ms, elapsed_ms\n' + lean)
+    lean = "\nassert not any(n.startswith(('somatic_mesh.execution_engine', 'somatic_mesh.signals', 'somatic_mesh.fabric_node')) for n in sys.modules)\n"
+    probe('SomaticMesh/foundation/support/package.json', 'from somatic_mesh.support import asyncio, call, now_ms, elapsed_ms\n' + lean)
     for package, name in [('motor_control', 'Motor'), ('distance_sensor', 'DistanceSensor'), ('distance_to_position', 'DistanceToPositionAdapter')]:
-        probe('RPStack/services/' + package + '/package.json', 'from rpstack.' + package + ' import ' + name + lean)
-    probe('RPStack/apps/slide_commands/package.json', 'from rpstack.apps.slide_commands import MoveOnceApp\nassert "rpstack.linear_slide" not in sys.modules\nassert "rpstack.node_runtime" not in sys.modules')
+        probe('SomaticMesh/services/' + package + '/package.json', 'from somatic_mesh.' + package + ' import ' + name + lean)
+    probe('SomaticMesh/behaviors/slide_commands/package.json', 'from somatic_mesh.behaviors.slide_commands import MoveOnceBehavior\nassert "somatic_mesh.linear_slide" not in sys.modules\nassert "somatic_mesh.fabric_node" not in sys.modules')
     packages = {
-        'runtime/node_runtime': 'from rpstack.node_runtime import NodeRuntime, ServiceRegistry',
-        'transports/espnow': 'from rpstack.espnow import Framing, EspNowTransport\nfrom rpstack.espnow.shared import SharedEspNowTransport',
-        'transports/ros_signals': 'from rpstack.ros_signals import RosTransport',
-        'apps/robot_gateway': 'from rpstack.apps.robot_gateway import GatewayApp',
-        'apps/ros_gateway': 'from rpstack.apps.ros_gateway import SlideRosGateway\nassert "rclpy" not in sys.modules',
-        'platform/env': 'from rpstack.env.cmds.envcmd import EnvCommand\nfrom rpstack.env.cmds.exportcmd import ExportCommand',
-        'services/linear_slide': 'from rpstack.linear_slide import LinearSlide\nassert "rpstack.apps.slide_commands" not in sys.modules',
+        'runtime/fabric_node': 'from somatic_mesh.fabric_node import FabricNode, ServiceRegistry',
+        'transports/espnow': 'from somatic_mesh.espnow import Framing, EspNowTransport\nfrom somatic_mesh.espnow.shared import SharedEspNowTransport',
+        'transports/ros_signals': 'from somatic_mesh.ros_signals import RosTransport',
+        'behaviors/robot_gateway': 'from somatic_mesh.behaviors.robot_gateway import GatewayBehavior',
+        'behaviors/ros_gateway': 'from somatic_mesh.behaviors.ros_gateway import SlideRosBehavior\nassert "rclpy" not in sys.modules',
+        'platform/env': 'from somatic_mesh.env.cmds.envcmd import EnvCommand\nfrom somatic_mesh.env.cmds.exportcmd import ExportCommand',
+        'services/linear_slide': 'from somatic_mesh.linear_slide import LinearSlide\nassert "somatic_mesh.behaviors.slide_commands" not in sys.modules',
     }
     for package, script in packages.items():
-        probe('RPStack/' + package + '/package.json', script)
+        probe('SomaticMesh/' + package + '/package.json', script)
     # Local example manifests must supply dependencies even without remote recursion.
     for example in ('linear_slide', 'mesh_gateway', 'slide_nodes', 'ros_slide'):
         probe('examples/' + example + '/package.json', '''
 import json
 from pathlib import Path
-from rpstack.node_runtime.manifest import load_entry_point
+from somatic_mesh.fabric_node.manifest import load_entry_point
 for path in Path('.').glob('*.json'):
     document = json.loads(path.read_text())
-    if document.get('manifest') != 'rp.node/v1':
+    if document.get('manifest') != 'somatic.node/v1':
         continue
-    specs = document.get('runtime', []) + document.get('apps', []) + document.get('signals', {}).get('transports', [])
+    specs = document.get('runtime', []) + document.get('signals', {}).get('transports', [])
     for spec in specs:
         load_entry_point(spec['entry_point'])
+    for actor in document.get('actors', []):
+        load_entry_point(actor['behavior'])
     for component in document.get('components', {}).values():
         if component.get('entry_point'):
             load_entry_point(component['entry_point'])

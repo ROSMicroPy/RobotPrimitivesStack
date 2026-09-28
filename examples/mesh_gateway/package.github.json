@@ -1,5 +1,5 @@
 {
-  "name": "rp-mesh-gateway-node",
+  "name": "somatic-mesh-gateway-node",
   "version": "0.1.1",
   "urls": [
     [
@@ -13,20 +13,20 @@
   ],
   "deps": [
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/runtime/node_runtime",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/runtime/fabric_node",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/transports/espnow",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/transports/espnow",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/platform/env",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/platform/env",
+      "main"
     ],
     [
-      "github:ROSMicroPy/RobotPrimitivesStack/RPStack/apps/robot_gateway",
-      "archdef"
+      "github:ROSMicroPy/RobotPrimitivesStack/SomaticMesh/behaviors/robot_gateway",
+      "main"
     ]
   ]
 }

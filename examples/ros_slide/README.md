@@ -1,9 +1,9 @@
 # Linear slide with ROSMicroPy and ROS 2
 
-The controller runs RPStack on ROSMicroPy and communicates with a micro-ROS agent.
+The controller runs Primitive Fabric on ROSMicroPy and communicates with a micro-ROS agent.
 It publishes a typed prismatic-joint measurement directly through the firmware's
 `rclpy` API. An optional desktop gateway adds a standard ROS action, richer typed
-position feedback, and diagnostics. No Robot Architect process is required.
+position feedback, and diagnostics. No The Loom process is required.
 
 ## Controller
 
@@ -21,7 +21,7 @@ Set `WIFI_SSID` and `WIFI_PASSWORD` using the existing environment configuration
 then start the node on the device:
 
 ```python
-from rpstack.node_runtime import run_manifest
+from somatic_mesh.fabric_node import run_manifest
 run_manifest('/lib/ros_slide.json')
 ```
 
@@ -49,19 +49,19 @@ build the interface definitions and run the gateway from the repository root:
 
 ```sh
 source /opt/ros/jazzy/setup.bash
-colcon --log-base /tmp/rpstack-ros-log build --base-paths ros2 \
-  --build-base /tmp/rpstack-ros-build --install-base /tmp/rpstack-ros-install
-source /tmp/rpstack-ros-install/setup.bash
+colcon --log-base /tmp/somatic_mesh-ros-log build --base-paths ros2 \
+  --build-base /tmp/somatic_mesh-ros-build --install-base /tmp/somatic_mesh-ros-install
+source /tmp/somatic_mesh-ros-install/setup.bash
 python3 examples/ros_slide/run_gateway.py
 ```
 
 Source the same ROS and interface setup files in another terminal:
 
 ```sh
-ros2 topic echo /rpstack/slide_device/joint_states
-ros2 topic echo /rpstack/slide/position
-ros2 topic echo /rpstack/slide/diagnostics
-ros2 action send_goal /rpstack/slide/move rpstack_interfaces/action/MoveLinear \
+ros2 topic echo /somatic_mesh/slide_device/joint_states
+ros2 topic echo /somatic_mesh/slide/position
+ros2 topic echo /somatic_mesh/slide/diagnostics
+ros2 action send_goal /somatic_mesh/slide/move somatic_mesh_interfaces/action/MoveLinear \
   '{target_m: 0.1}' --feedback
 ```
 
@@ -75,7 +75,7 @@ must not be treated as evidence that no movement occurred.
 The transport's optional `publishers` profile maps measured slide signals to
 `sensor_msgs/msg/JointState`. Publishers are registered before starting the native
 ROS worker, and the existing String envelope transport remains available for
-RPStack execution. Only the configured service on the local node is projected;
+Primitive Fabric execution. Only the configured service on the local node is projected;
 relayed peers and invalid samples are excluded.
 
 The firmware currently lacks a synchronized ROS clock API, so its direct joint
@@ -91,4 +91,4 @@ to the desktop adapter until equivalent firmware APIs exist.
 Only one ROSMicroPy transport may own the native worker on a device. Stopping and
 recreating that worker still requires reboot; application service reset keeps it
 running. Health diagnostics and action arbitration do not add authentication to the
-RPStack signal protocol.
+Primitive Fabric signal protocol.

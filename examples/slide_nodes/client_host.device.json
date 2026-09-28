@@ -1,5 +1,5 @@
 {
-  "manifest": "rp.node/v1",
+  "manifest": "somatic.node/v1",
   "name": "slide-client-gateway",
   "identity": {
     "entity": "SlideDemo",
@@ -15,27 +15,28 @@
     "transports": [
       {
         "id": "link",
-        "entry_point": "rpstack.espnow.shared:SharedEspNowTransport",
+        "entry_point": "somatic_mesh.espnow.shared:SharedEspNowTransport",
         "config": {
           "channel": 6
         }
       }
     ]
   },
-  "apps": [
+  "actors": [
     {
       "id": "gateway",
-      "entry_point": "rpstack.apps.robot_gateway:GatewayApp",
       "requires": [
         "http",
         "catalog"
-      ]
+      ],
+      "behavior": "somatic_mesh.behaviors.robot_gateway:GatewayBehavior",
+      "version": "0.1.0"
     }
   ],
   "runtime": [
     {
       "id": "wifi",
-      "entry_point": "rpstack.node_runtime.network:WifiService",
+      "entry_point": "somatic_mesh.fabric_node.network:WifiService",
       "config": {
         "ssid_env": "WIFI_SSID",
         "password_env": "WIFI_PASSWORD"
@@ -43,14 +44,14 @@
     },
     {
       "id": "http",
-      "entry_point": "rpstack.micropyserver:NodeRestApi",
+      "entry_point": "somatic_mesh.micropyserver:FabricRestApi",
       "config": {
         "port": 80
       }
     },
     {
       "id": "catalog",
-      "entry_point": "rpstack.catalog:Catalog"
+      "entry_point": "somatic_mesh.catalog:Catalog"
     }
   ]
 }

@@ -26,7 +26,7 @@
   },
   {
     "group": "Basic concepts",
-    "slug": "apps",
+    "slug": "actors",
     "title": "Apps & Behaviors"
   },
   {
@@ -62,7 +62,7 @@
   {
     "group": "Architecture",
     "slug": "registries",
-    "title": "Service & app registries"
+    "title": "Software registry design"
   },
   {
     "group": "Guides",

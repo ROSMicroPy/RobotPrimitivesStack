@@ -1,0 +1,31 @@
+{
+  "name": "somatic-catalog",
+  "version": "0.1.1",
+  "urls": [
+    [
+      "somatic_mesh/__init__.py",
+      "src/somatic_mesh/__init__.py"
+    ],
+    [
+      "somatic_mesh/catalog/__init__.py",
+      "src/somatic_mesh/catalog/__init__.py"
+    ],
+    [
+      "somatic_mesh/catalog/capabilities.py",
+      "src/somatic_mesh/catalog/capabilities.py"
+    ],
+    [
+      "somatic_mesh/catalog/registry.py",
+      "src/somatic_mesh/catalog/registry.py"
+    ],
+    [
+      "somatic_mesh/catalog/schema.py",
+      "src/somatic_mesh/catalog/schema.py"
+    ],
+    [
+      "somatic_mesh/catalog/discovery.py",
+      "src/somatic_mesh/catalog/discovery.py"
+    ]
+  ],
+  "deps": []
+}

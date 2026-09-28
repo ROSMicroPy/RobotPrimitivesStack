@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apps &amp; Behaviors · Primitive Fabric</title><meta name="description" content="Primitive Fabric documentation: Apps &amp; Behaviors">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header><a class="brand" href="index.html"><span class="mark">PF</span> Primitive Fabric <small>Documentation</small></a>
+<button id="menu" aria-controls="sidebar" aria-expanded="false">Menu</button>
+<a class="repo" href="https://github.com/ROSMicroPy/RobotPrimitivesStack">GitHub ↗</a></header>
+<div class="layout"><aside id="sidebar"><label for="search">Search documentation</label>
+<input id="search" type="search" placeholder="Find a topic…" autocomplete="off">
+<div id="results" aria-live="polite"></div><nav aria-label="Documentation"><h2>Start here</h2><a href="index.html">Overview</a><a href="getting-started.html">Getting Started</a><h2>Basic concepts</h2><a href="concepts.html">The mental model</a><a href="nodes.html">Nodes &amp; manifests</a><a href="signals.html">Signals</a><a href="actors.html" aria-current="page">Apps &amp; Behaviors</a><h2>Architecture</h2><a href="architecture.html">Architecture &amp; layers</a><a href="fabric-management.html">Fabric management &amp; recovery</a><a href="runtime.html">Host runtime</a><a href="services.html">Services &amp; capabilities</a><a href="ros-integration.html">ROS 2 integration</a><a href="bootstrap.html">Provisioning &amp; bootstrap</a><a href="registries.html">Software registry design</a><h2>Guides</h2><a href="deployment.html">Multiple Devices</a><a href="linear-slide.html">Linear Slide</a><a href="calibration.html">Calibration</a><h2>Reference</h2><a href="api.html">API Reference</a><a href="troubleshooting.html">Troubleshooting</a></nav></aside>
+<main id="main"><div class="eyebrow">Basic concepts</div><article><h1 id="actors-and-behaviors">Actors and Behaviors<a class="headerlink" href="#actors-and-behaviors" title="Permanent link">¶</a></h1>
+<p>An Actor binds a node-local identity, configuration, lifecycle mode, and optional Behavior version to one implementation. <code>FabricNode.actors</code> contains the running Actor objects. Reusable Behavior packages live in <code>SomaticMesh/behaviors/</code>; complete deployments live in <code>examples/</code>.</p>
+<h2 id="implement-a-behavior">Implement a Behavior<a class="headerlink" href="#implement-a-behavior" title="Permanent link">¶</a></h2>
+<pre><code class="language-python">from somatic_mesh.support import Behavior
+
+class AnnounceBehavior(Behavior):
+    async def run(self):
+        self.node.publish_signal('participant.ready', {'actor': self.actor.id})
+        return 'ready'
+</code></pre>
+<p><code>Behavior.__init__(actor)</code> exposes <code>self.actor</code> and <code>self.node</code>. Subclasses with configuration accept <code>(actor, **config)</code> and call <code>super().__init__(actor)</code>. Implement <code>start()</code> to prepare resources, <code>run()</code> for cooperative work, and <code>stop()</code> for cleanup. The base class supplies no-op preparation and cleanup hooks.</p>
+<h2 id="assign-it-to-an-actor">Assign it to an Actor<a class="headerlink" href="#assign-it-to-an-actor" title="Permanent link">¶</a></h2>
+<p>Node manifest fragment:</p>
+<pre><code class="language-json">{
+  &quot;actors&quot;: [{
+    &quot;id&quot;: &quot;announcer&quot;,
+    &quot;behavior&quot;: &quot;my_behaviors:AnnounceBehavior&quot;,
+    &quot;version&quot;: &quot;1.0.0&quot;,
+    &quot;mode&quot;: &quot;oneshot&quot;,
+    &quot;config&quot;: {}
+  }]
+}
+</code></pre>
+<p><code>behavior</code> is a Python entry point. <code>version</code> is optional deployment metadata; the runtime does not resolve or install that version. <code>config</code> is passed to the factory and excluded from public discovery. <code>requires</code> names runtime components or earlier Actors on this node. IDs must be nonempty, unique, and distinct from runtime component IDs.</p>
+<p><code>resident</code> is the default mode. Unexpected resident completion or any uncaught execution failure triggers node health handling. <code>oneshot</code> Actors may complete normally. A node containing only oneshot Actors finishes <code>wait()</code> when all of them finish, propagating failures.</p>
+<pre><code class="language-python">actor = node.actors['announcer']
+result = await actor.wait()
+print(actor.id, actor.address, actor.task_id, actor.state)
+print(actor.describe())
+</code></pre>
+<p>The Actor owns its Behavior instance and execution task. <code>actor.behavior</code> exposes implementation-specific data, while <code>describe()</code> exposes only identity, assignment, lifecycle mode, state, and task ID. Task outcomes and errors are available through the node's task registry.</p>
+<h2 id="lifecycle-and-resource-ownership">Lifecycle and resource ownership<a class="headerlink" href="#lifecycle-and-resource-ownership" title="Permanent link">¶</a></h2>
+<p>The node starts capability services and runtime facilities before Actors. Each Actor constructs its Behavior, calls <code>start()</code>, and schedules <code>run()</code> as a managed Actor task. Shutdown cancels execution and stops Behaviors in reverse startup order. Partial startup failure unwinds already constructed Behaviors, including the one whose preparation failed.</p>
+<p>The host owns the event loop, shared transports, and service lifecycle. Behaviors release only their own subscriptions and resources. Use managed service operations for hardware work so resource claims and cancellation remain effective. Node <code>stop()</code> gates service operations and stops managed motion/workflows while runtime controls and resident Actor infrastructure remain available; <code>shutdown()</code> closes the whole node.</p>
+<h2 id="assign-a-workflow">Assign a workflow<a class="headerlink" href="#assign-a-workflow" title="Permanent link">¶</a></h2>
+<pre><code class="language-json">{
+  &quot;actors&quot;: [{
+    &quot;id&quot;: &quot;sequence&quot;,
+    &quot;behavior&quot;: &quot;somatic_mesh.execution_engine:WorkflowBehavior&quot;,
+    &quot;mode&quot;: &quot;oneshot&quot;,
+    &quot;config&quot;: {&quot;flow&quot;: &quot;announce&quot;}
+  }],
+  &quot;flows&quot;: {
+    &quot;announce&quot;: {
+      &quot;start&quot;: &quot;ready&quot;,
+      &quot;nodes&quot;: {&quot;ready&quot;: {&quot;emit&quot;: &quot;sequence.ready&quot;}}
+    }
+  }
+}
+</code></pre>
+<p>An Actor-owned workflow must not also declare <code>autostart: true</code>. The Behavior waits for the flow's result and cancels its flow when Actor execution is cancelled. Direct <code>node.start_flow(name)</code> remains available for explicitly requested runs. Distributed workflow steps specify peer nodes and execute through the remote-action protocol.</p>
+<p>Placement is fixed by deployment. Signals address nodes, not automatically relocated Actor identities. Checkpoint/restore, dynamic placement, and recovery require the additional <a href="fabric-management.html">Fabric management design</a>.</p></article>
+<nav class="pager" aria-label="Adjacent pages"><a href="signals.html"><small>Previous</small>Signals</a><a href="architecture.html"><small>Next</small>Architecture &amp; layers</a></nav>
+<footer>Primitive Fabric · A distributed compute framework and management system for small devices</footer></main>
+<aside class="on-page"><h2>On this page</h2><div class="toc">
+<ul>
+<li><a href="#actors-and-behaviors">Actors and Behaviors</a><ul>
+<li><a href="#implement-a-behavior">Implement a Behavior</a></li>
+<li><a href="#assign-it-to-an-actor">Assign it to an Actor</a></li>
+<li><a href="#lifecycle-and-resource-ownership">Lifecycle and resource ownership</a></li>
+<li><a href="#assign-a-workflow">Assign a workflow</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div>
+<script type="module">
+const diagrams = document.querySelectorAll('.mermaid');
+if (diagrams.length) {
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', fontFamily: 'system-ui', flowchart: { useMaxWidth: true } });
+    await mermaid.run({ nodes: diagrams });
+  } catch (error) {
+    for (const diagram of diagrams) {
+      const note = document.createElement('p');
+      note.textContent = 'Diagram rendering unavailable. Mermaid source is shown below.';
+      diagram.before(note);
+    }
+    console.error(error);
+  }
+}
+</script></body></html>
